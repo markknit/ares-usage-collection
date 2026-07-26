@@ -1,0 +1,5 @@
+SCHOOL_CODE="MISUUNI"
+REPORT_BUILD_COMMAND="/usr/local/sbin/ares_build_reports.sh"
+SOURCE_CSV="/mnt/sda3/var/www/tracker/reports/combined_usage.csv"
+EXPORT_DIR="/mnt/sda3/var/www/tracker/uploads"
+RETENTION_DAYS=60

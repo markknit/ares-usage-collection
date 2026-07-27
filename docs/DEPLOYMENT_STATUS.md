@@ -24,8 +24,8 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Host: `tsavo3`
 - School/export code: `TSAVO3`
 - Report source: `/mnt/sda3/var/www/tracker/reports/combined_usage.csv`
-- Local export endpoint: `http://ares.edu/tracker/prepare_usage_upload.php?collection=AUTO`
-- Collection schedule: `http://ares.edu/tracker/collection_schedule.json`
+- Local export endpoint: `http://ares.local/tracker/prepare_usage_upload.php?collection=AUTO`
+- Collection schedule: `http://ares.local/tracker/collection_schedule.json`
 
 ### Validation completed
 
@@ -41,13 +41,14 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Response content type was CSV.
 - Response supplied a timestamped `ARES_USAGE_TSAVO3_AUTO_*.csv` filename.
 - Downloaded CSV size matched the generated report.
+- Android phone successfully downloaded the expected timestamped CSV from `ares.local` while connected to the ARES network.
 
 ### Next milestone
 
-Validate Android collection from the `tsavo3` ARES Wi-Fi network:
+Validate delayed Android upload to the central OneDrive Incoming folder:
 
-1. Connect the pilot Android phone to the school network.
-2. Download a generated CSV from the local endpoint.
-3. Preserve the file while the phone has no internet connection.
-4. Upload it to the central OneDrive Incoming folder after internet access returns.
-5. Confirm successful receipt before implementing the remaining phone automation.
+1. Preserve the downloaded CSV while the phone has no internet connection.
+2. Configure and test the Round Sync upload task.
+3. Restore internet access to the phone.
+4. Confirm the CSV reaches the central OneDrive Incoming folder.
+5. Confirm the file is removed from the phone only after successful upload.

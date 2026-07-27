@@ -1,0 +1,23 @@
+﻿# Live credentials and configurations
+rclone.conf
+ARES-RoundSync-Config.zip
+*-RoundSync-Config.zip
+.env
+.env.*
+secrets/
+credentials/
+private/
+
+# Runtime files
+*.log
+logs/
+runtime/
+tmp/
+__pycache__/
+*.pyc
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

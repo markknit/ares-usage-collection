@@ -47,6 +47,18 @@ Deploy:
 
 Add a narrowly scoped sudoers entry allowing the web-server account to run only the report wrapper.
 
-## 6. Central processing
+## 6. Cloud upload target
 
-Run `central-monitoring/process_incoming.py` on a schedule against the OneDrive Incoming folder. It validates names and CSV structure, suppresses exact duplicates by SHA-256, archives accepted files, removes accepted incoming files, and optionally runs the existing reporting command.
+The validated pilot target is Google Drive through the Round Sync remote `ARESGoogleDrive`.
+
+Use this destination folder:
+
+`ARESGoogleDrive:ARES Usage Uploads/Incoming`
+
+Round Sync performs a **Copy** from `Download/ARES-Usage`. Successfully confirmed files are moved locally to `Download/ARES-Usage-Sent` by the later MacroDroid workflow.
+
+## 7. Central processing
+
+Run `central-monitoring/process_incoming.py` on a schedule against the Google Drive Incoming folder through rclone. The processor is provider-neutral: pass the configured rclone remote path with `--remote` and the archive destination with `--archive`.
+
+It validates names and CSV structure, suppresses exact duplicates by SHA-256, archives accepted files, removes accepted incoming files, and optionally runs the existing reporting command.

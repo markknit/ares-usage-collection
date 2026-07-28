@@ -28,6 +28,8 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Collection schedule: `http://ares.local/tracker/collection_schedule.json`
 - Cloud remote: `ARESGoogleDrive`
 - Cloud incoming folder: `ARES Usage Uploads/Incoming`
+- Phone pending folder: `Download/ARES_Usage`
+- Phone sent folder: `Download/ARES_Usage_Sent`
 
 ### Validation completed
 
@@ -45,7 +47,8 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Downloaded CSV size matched the generated report.
 - Android phone successfully downloaded the expected timestamped CSV from `ares.local` while connected to the ARES network.
 - Round Sync connected directly to Google Drive through the `ARESGoogleDrive` remote.
-- A manual Round Sync copy task uploaded the downloaded ARES CSV to Google Drive successfully.
+- Chrome saved the downloaded CSV in the general `Download` folder rather than the Round Sync source folder.
+- After the CSV was manually moved to `Download/ARES_Usage`, Round Sync was restarted and the task uploaded the file to Google Drive successfully.
 
 ### Next milestone
 
@@ -54,5 +57,5 @@ Automate the tested phone workflow with MacroDroid:
 1. Confirm the Round Sync task ID and success/failure notification text.
 2. Test failed connectivity and confirm the pending CSV remains on the phone.
 3. Create the internet-connected MacroDroid trigger that launches the Round Sync task.
-4. Move successfully confirmed files to `Download/ARES-Usage-Sent`.
+4. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
 5. Export and validate the school-specific MacroDroid configuration.

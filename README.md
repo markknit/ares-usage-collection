@@ -12,7 +12,7 @@ This package implements the centrally hosted Android setup workflow for ARES usa
 - Administrator readiness page.
 - School configuration generator.
 - Local ARES report endpoint, schedule file, and export wrapper.
-- Central OneDrive incoming-file processor.
+- Provider-neutral central incoming-file processor using rclone; the pilot cloud target is Google Drive.
 - Deployment, master-phone, release, and testing documentation.
 
 ## Not included yet

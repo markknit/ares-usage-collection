@@ -52,14 +52,17 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - After the CSV was manually moved to `Download/ARES_Usage`, Round Sync was restarted and the task uploaded the file to Google Drive successfully.
 - MacroDroid was rejected for the pilot because unattended free use requires recurring advertisement-based renewal or a paid upgrade.
 - Automate by LlamaLab was installed successfully and opened without requiring an upgrade or recurring advertisement renewal.
+- A pinned Round Sync home-screen shortcut successfully launched the upload task.
+- Automate successfully launched the same Round Sync task through an App start block targeting `ca.pkay.rcloneexplorer.Activities.ShortcutServiceActivity` with action `START_TASK` and the task ID supplied as a Long.
+- The Automate-triggered Round Sync task copied the pending CSV to Google Drive successfully.
 
 ### Next milestone
 
-Automate the tested phone workflow with Automate:
+Automate the remaining phone workflow with Automate:
 
-1. Validate a minimal Automate flow that starts the existing Round Sync task by task ID.
+1. Add an internet-available trigger before the validated Round Sync App start block.
 2. Confirm Automate receives the Round Sync success and failure notifications.
-3. Add the internet-available trigger.
-4. Automate moving downloaded CSV files from `Download` to `Download/ARES_Usage`.
-5. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
+3. Automate moving downloaded CSV files from `Download` to `Download/ARES_Usage`.
+4. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
+5. Test delayed retry, phone restart, duplicate handling, and battery restrictions.
 6. Export and validate the school-specific Automate flow.

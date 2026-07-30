@@ -30,6 +30,7 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Cloud incoming folder: `ARES Usage Uploads/Incoming`
 - Phone pending folder: `Download/ARES_Usage`
 - Phone sent folder: `Download/ARES_Usage_Sent`
+- Phone automation app: Automate by LlamaLab
 
 ### Validation completed
 
@@ -49,13 +50,16 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - Round Sync connected directly to Google Drive through the `ARESGoogleDrive` remote.
 - Chrome saved the downloaded CSV in the general `Download` folder rather than the Round Sync source folder.
 - After the CSV was manually moved to `Download/ARES_Usage`, Round Sync was restarted and the task uploaded the file to Google Drive successfully.
+- MacroDroid was rejected for the pilot because unattended free use requires recurring advertisement-based renewal or a paid upgrade.
+- Automate by LlamaLab was installed successfully and opened without requiring an upgrade or recurring advertisement renewal.
 
 ### Next milestone
 
-Automate the tested phone workflow with MacroDroid:
+Automate the tested phone workflow with Automate:
 
-1. Confirm the Round Sync task ID and success/failure notification text.
-2. Test failed connectivity and confirm the pending CSV remains on the phone.
-3. Create the internet-connected MacroDroid trigger that launches the Round Sync task.
-4. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
-5. Export and validate the school-specific MacroDroid configuration.
+1. Validate a minimal Automate flow that starts the existing Round Sync task by task ID.
+2. Confirm Automate receives the Round Sync success and failure notifications.
+3. Add the internet-available trigger.
+4. Automate moving downloaded CSV files from `Download` to `Download/ARES_Usage`.
+5. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
+6. Export and validate the school-specific Automate flow.

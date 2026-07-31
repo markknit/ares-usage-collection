@@ -55,14 +55,15 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - A pinned Round Sync home-screen shortcut successfully launched the upload task.
 - Automate successfully launched the same Round Sync task through an App start block targeting `ca.pkay.rcloneexplorer.Activities.ShortcutServiceActivity` with action `START_TASK` and the task ID supplied as a Long.
 - The Automate-triggered Round Sync task copied the pending CSV to Google Drive successfully.
+- The Automate network block was tested with internet unavailable. The flow waited at the network check and, without a second manual start, resumed automatically when internet connectivity was restored.
+- After connectivity returned, the validated App start block launched Round Sync and the pending CSV was processed successfully.
 
 ### Next milestone
 
 Automate the remaining phone workflow with Automate:
 
-1. Add an internet-available trigger before the validated Round Sync App start block.
-2. Confirm Automate receives the Round Sync success and failure notifications.
-3. Automate moving downloaded CSV files from `Download` to `Download/ARES_Usage`.
-4. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
-5. Test delayed retry, phone restart, duplicate handling, and battery restrictions.
-6. Export and validate the school-specific Automate flow.
+1. Confirm Automate receives the Round Sync success and failure notifications.
+2. Automate moving downloaded CSV files from `Download` to `Download/ARES_Usage`.
+3. Move successfully confirmed files to `Download/ARES_Usage_Sent`.
+4. Test delayed retry, phone restart, duplicate handling, and battery restrictions.
+5. Export and validate the school-specific Automate flow.

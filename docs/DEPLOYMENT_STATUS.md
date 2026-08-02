@@ -52,6 +52,20 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - The Automate network block was tested with internet unavailable. The flow waited at the network check and, without a second manual start, resumed automatically when internet connectivity was restored.
 - Automate's native Google Drive upload block successfully uploaded a pilot CSV from `Download/ARES_Usage` to the central Google Drive incoming folder.
 - The direct Automate upload test confirmed that Round Sync is not required for the target phone architecture.
+- The complete direct upload path was validated using these Automate blocks in sequence:
+  1. `Flow beginning`
+  2. `Data network default` with `Proceed: Immediately`
+  3. `Data network default` with `Proceed: When changed`
+  4. `File exists`
+  5. `Google Drive upload`
+  6. `File move`
+  7. `Toast show`
+- With internet already available, the immediate `Data network default` path proceeded without waiting for a connectivity transition.
+- With internet initially unavailable, the second `Data network default` block waited and then resumed automatically after connectivity returned.
+- `File exists` prevented an upload attempt when the configured pending CSV was absent.
+- `Google Drive upload` completed successfully to `ARES Usage Uploads/Incoming`.
+- `File move` ran only from the successful output of `Google Drive upload` and moved the uploaded CSV from `Download/ARES_Usage` to `Download/ARES_Usage_Sent`.
+- The success `Toast show` block executed after the file move completed.
 
 ### Superseded pilot path
 
@@ -67,12 +81,12 @@ Do not continue building new deployment logic around Round Sync unless the nativ
 
 ### Next milestone
 
-Complete the direct Automate workflow:
+Add and validate the scheduled collection-download workflow:
 
-1. Add an immediate internet-state check plus a wait-for-reconnection branch.
-2. Upload pending `ARES_USAGE_*.csv` files with the native Google Drive upload block.
-3. Move a file to `Download/ARES_Usage_Sent` only after the upload block completes successfully.
-4. Add the ARES Wi-Fi and collection-date logic that automatically requests the usage CSV from `ares.local` when a collection is due.
+1. Detect the configured ARES Wi-Fi network both when already connected and when connected later.
+2. Check whether a collection is due inside the approved date window.
+3. Request the usage CSV from `ares.local` and save it directly into `Download/ARES_Usage`.
+4. Pass the exact downloaded file path into the validated direct upload flow.
 5. Prevent duplicate collection downloads and repeated uploads.
 6. Test offline failure, delayed retry, phone restart, duplicate handling, and battery restrictions.
 7. Update the setup portal and deployment documentation to remove Round Sync requirements.

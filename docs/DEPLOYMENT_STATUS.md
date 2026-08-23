@@ -2,7 +2,7 @@
 
 ## tsavo3 pilot school server
 
-Validated on 2026-07-27.
+Pilot validation updated 2026-08-23.
 
 ### Role
 
@@ -13,6 +13,7 @@ Validated on 2026-07-27.
 - `/usr/local/sbin/ares_prepare_usage_upload.sh`
 - `/etc/ares/usage-upload.conf`
 - `/mnt/sda3/var/www/tracker/prepare_usage_upload.php`
+- `/mnt/sda3/var/www/tracker/prepare_due_usage_upload.php`
 - `/mnt/sda3/var/www/tracker/collection_schedule.json`
 - `/mnt/sda3/var/www/tracker/uploads/`
 - `/etc/sudoers.d/ares-usage-export`
@@ -25,6 +26,7 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - School/export code: `TSAVO3`
 - Report source: `/mnt/sda3/var/www/tracker/reports/combined_usage.csv`
 - Local export endpoint: `http://ares.local/tracker/prepare_usage_upload.php?collection=AUTO`
+- Scheduled collection endpoint: `http://ares.local/tracker/prepare_due_usage_upload.php`
 - Collection schedule: `http://ares.local/tracker/collection_schedule.json`
 - Cloud incoming folder: `ARES Usage Uploads/Incoming`
 - Phone pending folder: `Download/ARES_Usage`
@@ -66,6 +68,11 @@ The runtime configuration and sudoers file are server-local and are not stored i
 - `Google Drive upload` completed successfully to `ARES Usage Uploads/Incoming`.
 - `File move` ran only from the successful output of `Google Drive upload` and moved the uploaded CSV from `Download/ARES_Usage` to `Download/ARES_Usage_Sent`.
 - The success `Toast show` block executed after the file move completed.
+- On 2026-08-23, the scheduled download flow was tested on the real `ARES2` network with direct access to `tsavo3`.
+- The initial `HTTP request` test failed with Android `EISDIR (is a directory)` because `Download/ARES_Usage` had been entered in `Request content path`.
+- Clearing `Request content path`, leaving it blank for the GET request, and placing `Download/ARES_Usage` in `Response path` corrected the configuration.
+- After that correction, the modified Flow B completed successfully against the real ARES2/server path.
+- Required `HTTP request` configuration for the scheduled GET is therefore: request method `GET`, blank `Request content path`, `Save response` to file, and `Response path` set to `Download/ARES_Usage`.
 
 ### Superseded pilot path
 
@@ -81,13 +88,13 @@ Do not continue building new deployment logic around Round Sync unless the nativ
 
 ### Next milestone
 
-Add and validate the scheduled collection-download workflow:
+Complete the scheduled collection workflow:
 
-1. Detect the configured ARES Wi-Fi network both when already connected and when connected later.
-2. Check whether a collection is due inside the approved date window.
-3. Request the usage CSV from `ares.local` and save it directly into `Download/ARES_Usage`.
-4. Pass the exact downloaded file path into the validated direct upload flow.
-5. Prevent duplicate collection downloads and repeated uploads.
+1. Confirm the exact downloaded file path is passed from Flow B into the validated upload flow.
+2. Confirm the downloaded file reaches `ARES Usage Uploads/Incoming` and is moved locally to `Download/ARES_Usage_Sent`.
+3. Add persistent `last_completed` handling so a completed collection is not downloaded again at the next scheduled attempt.
+4. Validate Flow A scheduling at the configured daily times and confirm it starts Flow B automatically.
+5. Test fallback from `ARES2` to `ARES`.
 6. Test offline failure, delayed retry, phone restart, duplicate handling, and battery restrictions.
 7. Update the setup portal and deployment documentation to remove Round Sync requirements.
 8. Export and validate the school-specific Automate flow.

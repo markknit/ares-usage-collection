@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ARES Sync</string>
+    <string name="mvp_description">ARES usage collection connectivity MVP</string>
+    <string name="status_starting">Starting…</string>
+    <string name="status_ready">Ready for ARES network testing.</string>
+</resources>

@@ -2,36 +2,45 @@
 
 ARES Sync is the replacement for the Automate/legacy-extension phone workflow.
 
-## MVP goal
+## Current experiment: API 30 Wi-Fi switching
 
-Prove on the pilot Android phone that a normal Android application can:
+The pilot Android 16 / API 36 phone reports that concurrent local-only Wi-Fi is not supported. Android documents different `WifiNetworkSpecifier` behavior for apps targeting Android 11 / API 30 or lower: the primary Wi-Fi network is disconnected before the requested local/peer Wi-Fi connection is established.
 
-1. request the local-only `ARES2` Wi-Fi network with supported Android APIs;
-2. reach `http://ares.local/` over the network returned to the application;
-3. download the due usage CSV into app-private storage; and
-4. repeat the same specific network request without editing a flow or using deprecated Android Wi-Fi APIs.
+This build therefore keeps `compileSdk = 36` but temporarily uses `targetSdk = 30` to test whether Android can:
 
-The MVP intentionally does not yet include scheduling, central HTTPS upload, enrollment, or the final guided setup portal.
+1. leave the phone's current Internet Wi-Fi;
+2. connect to the open `ARES2` SSID using `WifiNetworkSpecifier`;
+3. reach `http://ares.local/tracker/prepare_due_usage_upload.php`;
+4. download the due usage CSV into app-private storage;
+5. release the ARES2 request; and
+6. automatically reconnect the phone to its prior Internet Wi-Fi.
 
-## Current diagnostic build
+The automatic test restores exact `ARES2` matching. Because this build targets API 30, it requests `ACCESS_FINE_LOCATION` at runtime as required by Android's pre-Android-13 Wi-Fi permission model.
 
-The first exact-SSID device test reached Android's network picker, but the picker reported no matching networks even though the phone's normal Wi-Fi screen and the server both confirmed the broadcast SSID `ARES2`.
+A second **Test current Wi-Fi connection** button is included as a diagnostic fallback. If the automatic switch fails, manually connect the phone to `ARES2`, return to the app, and use that button to verify the `ARES2 -> ares.local -> CSV` path independently of Wi-Fi switching.
 
-The diagnostic build therefore temporarily:
+## Acceptance test
 
-- matches open Wi-Fi networks whose SSID begins with `ARES` rather than only the exact `ARES2` SSID;
-- reports whether Wi-Fi is enabled and whether the device supports concurrent local-only station connections; and
-- on Android API 34 and newer, reports the platform local-only connection failure reason when available.
+Start with the phone connected to a normal saved Internet Wi-Fi network, then tap **Test automatic ARES2 switch**. A successful test requires:
 
-If multiple `ARES*` networks are shown in the system picker, select `ARES2` for the pilot test. The production build should return to the narrowest reliable network match after device behavior is confirmed.
+- Android supplies an ARES2 network to the app;
+- the ARES endpoint returns HTTP 200 or 204;
+- a due CSV is saved when HTTP 200 is returned;
+- ARES Sync releases its ARES2 request after the server test; and
+- Android reconnects to the prior Internet Wi-Fi without manual intervention.
+
+Repeat the test a second time to determine whether Android requires another network approval prompt.
 
 ## Build
 
-Open `android/ares-sync` as a project in Android Studio and build the `app` module.
+Open `android/ares-sync` as a project in Android Studio and build the `app` module. The project requires Android 10 / API 29 or newer and JDK 17.
 
-The project targets Android API 36, requires Android 10 (API 29) or newer, and uses JDK 17 source compatibility.
+## Distribution caveat
+
+The API 30 target is an ARES-controlled deployment compatibility experiment and does not satisfy current Google Play target-SDK requirements. It is not intended as a Play Store release configuration.
 
 ## Security
 
 - No Wi-Fi passwords, API credentials, OAuth tokens, or school-private data belong in this repository.
+- `ARES2` is currently an open local network, so no Wi-Fi credential is embedded in the app.
 - Cleartext HTTP is permitted only for the local hostname `ares.local`; future central upload traffic must use HTTPS.

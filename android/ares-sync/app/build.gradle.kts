@@ -9,9 +9,9 @@ android {
     defaultConfig {
         applicationId = "org.areseducation.sync"
         minSdk = 29
-        targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        targetSdk = 30
+        versionCode = 2
+        versionName = "0.2.0-switch-test"
     }
 
     buildTypes {

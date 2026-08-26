@@ -8,7 +8,6 @@ import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
-import android.os.PatternMatcher;
 
 public final class AresWifiConnector {
     private final Context context;
@@ -33,15 +32,28 @@ public final class AresWifiConnector {
     public String getDiagnostics() {
         StringBuilder result = new StringBuilder();
         result.append("Android API: ").append(Build.VERSION.SDK_INT).append("\n");
+        result.append("App target SDK: ").append(context.getApplicationInfo().targetSdkVersion).append("\n");
         result.append("Wi-Fi enabled: ").append(wifiManager != null && wifiManager.isWifiEnabled());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && wifiManager != null) {
             result.append("\nConcurrent local-only Wi-Fi: ")
                     .append(wifiManager.isStaConcurrencyForLocalOnlyConnectionsSupported());
-        } else {
-            result.append("\nConcurrent local-only Wi-Fi: unavailable on this Android version");
         }
-        result.append("\nDiagnostic network match: ARES*");
+        result.append("\nConnection mode under test: legacy primary Wi-Fi switch");
+        result.append("\nNetwork match: exact ARES2");
         return result.toString();
+    }
+
+    public Network getCurrentWifiNetwork() {
+        if (connectivityManager == null) {
+            return null;
+        }
+        for (Network network : connectivityManager.getAllNetworks()) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return network;
+            }
+        }
+        return null;
     }
 
     public void requestAres2(Callback callback) {
@@ -49,7 +61,7 @@ public final class AresWifiConnector {
 
         try {
             WifiNetworkSpecifier specifier = new WifiNetworkSpecifier.Builder()
-                    .setSsidPattern(new PatternMatcher("ARES", PatternMatcher.PATTERN_PREFIX))
+                    .setSsid("ARES2")
                     .build();
 
             NetworkRequest request = new NetworkRequest.Builder()

@@ -38,16 +38,15 @@ public final class MainActivity extends Activity {
         }
 
         setButtonsEnabled(false);
-        setStatus("Requesting exact ARES2 connection…\n\n"
-                + "This build targets Android 11/API 30 compatibility behavior. "
-                + "Android should temporarily leave the current Wi-Fi network before connecting to ARES2.\n\n"
+        setStatus("Starting API 28 direct Wi-Fi switch test…\n\n"
+                + "ARES Sync will remember the current saved Wi-Fi, request a direct switch to ARES2, test ares.local, then request restoration of the previous Wi-Fi.\n\n"
                 + wifiConnector.getDiagnostics());
 
         wifiConnector.requestAres2(new AresWifiConnector.Callback() {
             @Override
             public void onAvailable(Network network) {
                 runOnUiThread(() -> setStatus(
-                        "✓ Android supplied an ARES2 Wi-Fi network\n"
+                        "✓ Phone reports ARES2 connected\n"
                                 + "Testing http://ares.local…\n\n"
                                 + wifiConnector.getDiagnostics()));
                 runServerTest(network, true);
@@ -56,7 +55,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onUnavailable() {
                 runOnUiThread(() -> {
-                    setStatus("✗ Android could not satisfy the ARES2 switch request.\n\n"
+                    setStatus("✗ Direct Wi-Fi control did not reach ARES2 before the timeout.\n\n"
                             + wifiConnector.getDiagnostics());
                     setButtonsEnabled(true);
                 });
@@ -65,7 +64,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onFailure(String message) {
                 runOnUiThread(() -> {
-                    setStatus("✗ ARES2 connection failed\n\nReason: " + message
+                    setStatus("✗ Direct ARES2 switch failed\n\n" + message
                             + "\n\n" + wifiConnector.getDiagnostics());
                     setButtonsEnabled(true);
                 });
@@ -74,7 +73,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    setStatus("✗ Wi-Fi request failed\n\n" + message
+                    setStatus("✗ Direct Wi-Fi control error\n\n" + message
                             + "\n\n" + wifiConnector.getDiagnostics());
                     setButtonsEnabled(true);
                 });
@@ -97,14 +96,14 @@ public final class MainActivity extends Activity {
         runServerTest(wifiNetwork, false);
     }
 
-    private void runServerTest(Network network, boolean releaseAfterTest) {
+    private void runServerTest(Network network, boolean restoreAfterTest) {
         AresServerClient.testAndDownload(
                 this,
                 network,
                 new AresServerClient.Callback() {
                     @Override
                     public void onSuccess(AresServerClient.Result result) {
-                        if (releaseAfterTest) {
+                        if (restoreAfterTest) {
                             wifiConnector.release();
                         }
                         runOnUiThread(() -> {
@@ -126,29 +125,44 @@ public final class MainActivity extends Activity {
                                 message.append("No collection is currently due.\n");
                             }
 
-                            if (releaseAfterTest) {
-                                message.append("✓ Released ARES2 request\n");
-                                message.append("Now watch whether Android reconnects to the previous Internet Wi-Fi.\n");
+                            if (restoreAfterTest) {
+                                message.append("✓ Previous Wi-Fi restore requested\n");
+                                message.append("An 8-second status check will appear below.\n");
                             }
 
                             message.append("\n").append(wifiConnector.getDiagnostics());
-                            setStatus(message.toString());
+                            String initialStatus = message.toString();
+                            setStatus(initialStatus);
                             setButtonsEnabled(true);
+
+                            if (restoreAfterTest) {
+                                statusText.postDelayed(() ->
+                                        setStatus(initialStatus
+                                                + "\n\n--- 8-second restore check ---\n"
+                                                + wifiConnector.getDiagnostics()), 8000L);
+                            }
                         });
                     }
 
                     @Override
                     public void onError(String message) {
-                        if (releaseAfterTest) {
+                        if (restoreAfterTest) {
                             wifiConnector.release();
                         }
                         runOnUiThread(() -> {
-                            setStatus("✗ Server/download test failed\n\n" + message
-                                    + (releaseAfterTest
-                                    ? "\n\nARES2 request released; observe whether normal Wi-Fi reconnects."
+                            String initialStatus = "✗ Server/download test failed\n\n" + message
+                                    + (restoreAfterTest
+                                    ? "\n\nPrevious Wi-Fi restore requested."
                                     : "")
-                                    + "\n\n" + wifiConnector.getDiagnostics());
+                                    + "\n\n" + wifiConnector.getDiagnostics();
+                            setStatus(initialStatus);
                             setButtonsEnabled(true);
+                            if (restoreAfterTest) {
+                                statusText.postDelayed(() ->
+                                        setStatus(initialStatus
+                                                + "\n\n--- 8-second restore check ---\n"
+                                                + wifiConnector.getDiagnostics()), 8000L);
+                            }
                         });
                     }
                 });
@@ -178,7 +192,7 @@ public final class MainActivity extends Activity {
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             beginSwitchTest();
         } else {
-            setStatus("Location permission is required by Android for this API-30 Wi-Fi compatibility test.");
+            setStatus("Location permission is required by Android for this API-28 legacy Wi-Fi control test.");
         }
     }
 
@@ -193,7 +207,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        wifiConnector.release();
+        wifiConnector.close();
         super.onDestroy();
     }
 }

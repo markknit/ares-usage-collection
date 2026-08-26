@@ -4,17 +4,30 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+@SuppressWarnings("deprecation")
 public final class AresWifiConnector {
+    private static final String ARES_SSID = "ARES2";
+    private static final long SWITCH_TIMEOUT_MS = 30000L;
+    private static final long POLL_INTERVAL_MS = 500L;
+
     private final Context context;
     private final ConnectivityManager connectivityManager;
     private final WifiManager wifiManager;
-    private ConnectivityManager.NetworkCallback activeCallback;
-    private WifiManager.LocalOnlyConnectionFailureListener failureListener;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private volatile int previousNetworkId = -1;
+    private volatile String previousSsid = "unknown";
+    private volatile int aresNetworkId = -1;
+    private volatile String lastLegacyResults = "not run";
 
     public interface Callback {
         void onAvailable(Network network);
@@ -33,14 +46,25 @@ public final class AresWifiConnector {
         StringBuilder result = new StringBuilder();
         result.append("Android API: ").append(Build.VERSION.SDK_INT).append("\n");
         result.append("App target SDK: ").append(context.getApplicationInfo().targetSdkVersion).append("\n");
-        result.append("Wi-Fi enabled: ").append(wifiManager != null && wifiManager.isWifiEnabled());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && wifiManager != null) {
-            result.append("\nConcurrent local-only Wi-Fi: ")
-                    .append(wifiManager.isStaConcurrencyForLocalOnlyConnectionsSupported());
-        }
-        result.append("\nConnection mode under test: legacy primary Wi-Fi switch");
-        result.append("\nNetwork match: exact ARES2");
+        result.append("Wi-Fi enabled: ").append(wifiManager != null && wifiManager.isWifiEnabled()).append("\n");
+        result.append("Connection mode under test: API 28 direct WifiManager control\n");
+        result.append("Current SSID: ").append(getCurrentSsid()).append("\n");
+        result.append("Previous SSID: ").append(previousSsid).append("\n");
+        result.append("ARES2 network id: ").append(aresNetworkId).append("\n");
+        result.append("Legacy API results: ").append(lastLegacyResults);
         return result.toString();
+    }
+
+    public String getCurrentSsid() {
+        if (wifiManager == null) {
+            return "Wi-Fi manager unavailable";
+        }
+        try {
+            WifiInfo info = wifiManager.getConnectionInfo();
+            return normalizeSsid(info == null ? null : info.getSSID());
+        } catch (SecurityException ex) {
+            return "permission unavailable";
+        }
     }
 
     public Network getCurrentWifiNetwork() {
@@ -57,81 +81,180 @@ public final class AresWifiConnector {
     }
 
     public void requestAres2(Callback callback) {
-        release();
+        executor.execute(() -> performLegacySwitch(callback));
+    }
+
+    private void performLegacySwitch(Callback callback) {
+        if (wifiManager == null || connectivityManager == null) {
+            callback.onError("Wi-Fi or connectivity service is unavailable.");
+            return;
+        }
 
         try {
-            WifiNetworkSpecifier specifier = new WifiNetworkSpecifier.Builder()
-                    .setSsid("ARES2")
-                    .build();
-
-            NetworkRequest request = new NetworkRequest.Builder()
-                    .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                    .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .setNetworkSpecifier(specifier)
-                    .build();
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && wifiManager != null) {
-                failureListener = (failedSpecifier, failureReason) ->
-                        callback.onFailure(describeFailure(failureReason));
-                wifiManager.addLocalOnlyConnectionFailureListener(
-                        context.getMainExecutor(), failureListener);
+            if (!wifiManager.isWifiEnabled()) {
+                callback.onError("Wi-Fi is disabled. Enable Wi-Fi before running this test.");
+                return;
             }
 
-            activeCallback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(Network network) {
+            WifiInfo before = wifiManager.getConnectionInfo();
+            previousNetworkId = before == null ? -1 : before.getNetworkId();
+            previousSsid = normalizeSsid(before == null ? null : before.getSSID());
+
+            if (ARES_SSID.equals(previousSsid)) {
+                aresNetworkId = previousNetworkId;
+                Network network = waitForWifiNetwork(5000L);
+                if (network != null) {
                     callback.onAvailable(network);
+                } else {
+                    callback.onFailure("Phone reports ARES2 as the current SSID, but Android did not expose its Wi-Fi Network object.");
                 }
+                return;
+            }
 
-                @Override
-                public void onUnavailable() {
-                    callback.onUnavailable();
+            List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
+            int configuredCount = configuredNetworks == null ? 0 : configuredNetworks.size();
+            aresNetworkId = findNetworkId(configuredNetworks, ARES_SSID);
+
+            if (aresNetworkId < 0) {
+                WifiConfiguration aresConfig = new WifiConfiguration();
+                aresConfig.SSID = quoteSsid(ARES_SSID);
+                aresConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                aresNetworkId = wifiManager.addNetwork(aresConfig);
+            }
+
+            if (aresNetworkId < 0) {
+                lastLegacyResults = "configuredNetworks=" + configuredCount
+                        + ", addNetwork=-1";
+                callback.onFailure("ARES2 was not available as a configured network and Android refused to add the open ARES2 configuration.\n\n"
+                        + getDiagnostics());
+                clearPreviousState();
+                return;
+            }
+
+            boolean disconnectResult = wifiManager.disconnect();
+            sleepQuietly(500L);
+            boolean enableResult = wifiManager.enableNetwork(aresNetworkId, true);
+            boolean reconnectResult = wifiManager.reconnect();
+
+            lastLegacyResults = "configuredNetworks=" + configuredCount
+                    + ", disconnect=" + disconnectResult
+                    + ", enableNetwork=" + enableResult
+                    + ", reconnect=" + reconnectResult;
+
+            if (!enableResult) {
+                restorePreviousNetwork();
+                callback.onFailure("Android rejected enableNetwork(ARES2).\n\n" + getDiagnostics());
+                return;
+            }
+
+            long deadline = System.currentTimeMillis() + SWITCH_TIMEOUT_MS;
+            while (System.currentTimeMillis() < deadline) {
+                if (ARES_SSID.equals(getCurrentSsid())) {
+                    Network network = waitForWifiNetwork(8000L);
+                    if (network != null) {
+                        callback.onAvailable(network);
+                        return;
+                    }
                 }
-            };
+                sleepQuietly(POLL_INTERVAL_MS);
+            }
 
-            connectivityManager.requestNetwork(request, activeCallback, 30000);
-        } catch (SecurityException | IllegalArgumentException | IllegalStateException ex) {
+            String failedDiagnostics = getDiagnostics();
+            restorePreviousNetwork();
+            callback.onUnavailable();
+            lastLegacyResults = lastLegacyResults + "; timeout before ARES2 association\n" + failedDiagnostics;
+        } catch (SecurityException ex) {
+            restorePreviousNetwork();
+            callback.onError("SecurityException: " + ex.getMessage());
+        } catch (RuntimeException ex) {
+            restorePreviousNetwork();
             callback.onError(ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
     }
 
-    private String describeFailure(int reason) {
-        if (reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_ASSOCIATION) {
-            return "Association failure";
+    private int findNetworkId(List<WifiConfiguration> configuredNetworks, String ssid) {
+        if (configuredNetworks == null) {
+            return -1;
         }
-        if (reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_AUTHENTICATION) {
-            return "Authentication failure";
+        for (WifiConfiguration configuration : configuredNetworks) {
+            if (configuration != null && ssid.equals(normalizeSsid(configuration.SSID))) {
+                return configuration.networkId;
+            }
         }
-        if (reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_IP_PROVISIONING) {
-            return "IP provisioning failure";
-        }
-        if (reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_NOT_FOUND) {
-            return "Access point not found";
-        }
-        if (reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_NO_RESPONSE) {
-            return "Access point did not respond";
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
-                && reason == WifiManager.STATUS_LOCAL_ONLY_CONNECTION_FAILURE_USER_REJECT) {
-            return "Connection request rejected by user";
-        }
-        return "Unknown local-only Wi-Fi failure (code " + reason + ")";
+        return -1;
     }
 
-    public void release() {
-        if (activeCallback != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(activeCallback);
-            } catch (IllegalArgumentException ignored) {
-                // Callback had already been released by Android.
+    private Network waitForWifiNetwork(long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            Network network = getCurrentWifiNetwork();
+            if (network != null) {
+                return network;
             }
-            activeCallback = null;
+            sleepQuietly(250L);
+        }
+        return null;
+    }
+
+    public synchronized void release() {
+        restorePreviousNetwork();
+    }
+
+    private synchronized void restorePreviousNetwork() {
+        if (wifiManager == null) {
+            clearPreviousState();
+            return;
         }
 
-        if (failureListener != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-                && wifiManager != null) {
-            wifiManager.removeLocalOnlyConnectionFailureListener(failureListener);
-            failureListener = null;
+        if (previousNetworkId < 0 || ARES_SSID.equals(previousSsid)) {
+            clearPreviousState();
+            return;
+        }
+
+        try {
+            boolean disconnectResult = wifiManager.disconnect();
+            boolean enableResult = wifiManager.enableNetwork(previousNetworkId, true);
+            boolean reconnectResult = wifiManager.reconnect();
+            lastLegacyResults = lastLegacyResults
+                    + "; restore(disconnect=" + disconnectResult
+                    + ", enableNetwork=" + enableResult
+                    + ", reconnect=" + reconnectResult + ")";
+        } catch (SecurityException ex) {
+            lastLegacyResults = lastLegacyResults + "; restore SecurityException=" + ex.getMessage();
+        } finally {
+            clearPreviousState();
+        }
+    }
+
+    private void clearPreviousState() {
+        previousNetworkId = -1;
+        previousSsid = "none";
+    }
+
+    public void close() {
+        release();
+        executor.shutdownNow();
+    }
+
+    private static String normalizeSsid(String ssid) {
+        if (ssid == null || ssid.isEmpty() || "<unknown ssid>".equalsIgnoreCase(ssid)) {
+            return "unknown";
+        }
+        if (ssid.length() >= 2 && ssid.startsWith("\"") && ssid.endsWith("\"")) {
+            return ssid.substring(1, ssid.length() - 1);
+        }
+        return ssid;
+    }
+
+    private static String quoteSsid(String ssid) {
+        return "\"" + ssid + "\"";
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 }

@@ -8,10 +8,10 @@ android {
 
     defaultConfig {
         applicationId = "org.areseducation.sync"
-        minSdk = 29
-        targetSdk = 30
-        versionCode = 2
-        versionName = "0.2.0-switch-test"
+        minSdk = 28
+        targetSdk = 28
+        versionCode = 3
+        versionName = "0.3.0-direct-wifi-test"
     }
 
     buildTypes {

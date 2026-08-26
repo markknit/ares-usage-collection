@@ -2,57 +2,62 @@
 
 ARES Sync is the replacement for the Automate/legacy-extension phone workflow.
 
-## Current experiment: Android Wi-Fi switching
+## Validated pilot results
 
-The pilot Android 16 / API 36 phone reports that concurrent local-only Wi-Fi is not supported. An API 30 `WifiNetworkSpecifier` compatibility experiment was tested because Android documents legacy behavior for apps targeting Android 11 / API 30 or lower, where the primary Wi-Fi may be disconnected before a requested local/peer Wi-Fi connection is established.
+On the real pilot Android API 36 phone and tsavo3 server:
 
-The API 30 experiment did not work on the pilot phone. With the phone connected to a normal Internet Wi-Fi network, Android returned `onUnavailable()` for the exact open `ARES2` request and did not perform a primary-Wi-Fi handoff.
+- manual connection to `ARES2` followed by **Test current Wi-Fi connection** reaches `ares.local`;
+- the scheduled collection endpoint returns HTTP 200;
+- collection metadata is returned;
+- the usage CSV downloads successfully into app-private pending storage; and
+- the phone reports that concurrent local-only Wi-Fi is not supported.
 
-A separate current-network test was successful. While manually connected to `ARES2`, ARES Sync reached `http://ares.local/tracker/prepare_due_usage_upload.php`, received HTTP 200, and saved the returned usage CSV into app-private pending storage.
+This validates the real `ARES2 -> ares.local -> scheduled endpoint -> CSV -> app-private storage` path independently of Wi-Fi switching.
 
-## Validated pilot result
+The API 30 `WifiNetworkSpecifier` compatibility experiment was also tested on the real phone. Android returned the request as unavailable and did not disconnect the primary Wi-Fi or connect to `ARES2`. That path is therefore considered unsuccessful on the pilot device.
 
-On 2026-08-25, the **Test current Wi-Fi connection** path was validated on the real pilot Android API 36 phone while manually connected to `ARES2`:
+## Current experiment: API 28 direct Wi-Fi control
 
-- `ares.local` was reached successfully;
-- the scheduled collection endpoint returned HTTP 200;
-- collection metadata was returned;
-- a 26,561-byte usage CSV was downloaded successfully; and
-- the file was saved into ARES Sync app-private pending storage.
+Android's `WifiManager` compatibility documentation states that legacy methods including `disconnect()`, `enableNetwork()`, `reconnect()`, and full configured-network access are forced to fail for ordinary apps targeting Android 10 / API 29 or higher. This build temporarily targets API 28 to test the remaining legacy compatibility path directly.
 
-This proves the real `ARES2 -> ares.local -> scheduled endpoint -> CSV -> app-private storage` integration.
+The build keeps `compileSdk = 36` but uses `minSdk = 28` and `targetSdk = 28` for this controlled test. It is not intended for Google Play distribution.
 
-On the same phone, the **Test automatic ARES2 switch** path failed with:
+The **Test automatic ARES2 switch** button now attempts to:
 
-- Android API: 36;
-- app target SDK: 30;
-- Wi-Fi enabled: true;
-- concurrent local-only Wi-Fi: false;
-- exact `ARES2` match; and
-- Android unable to satisfy the switch request.
+1. record the phone's current Wi-Fi network ID and SSID;
+2. locate the saved open `ARES2` configuration, or add it if Android permits;
+3. call the legacy Wi-Fi disconnect / enable / reconnect controls;
+4. wait until Android reports `ARES2` as the connected SSID;
+5. obtain the active Wi-Fi `Network` and run the already-validated `ares.local` download test;
+6. request restoration of the previously connected Wi-Fi network; and
+7. report an additional status check eight seconds after restoration is requested.
 
-Therefore the unresolved problem is specifically automatic Wi-Fi switching on the pilot phone, not server reachability, DNS, endpoint execution, CSV generation, or app-private file storage.
+The UI reports the return values from the legacy APIs so a failed device test can distinguish configured-network access, disconnect, enable, reconnect, association, and restore failures.
 
-## Next compatibility experiment
+The **Test current Wi-Fi connection** button remains available as the validated manual diagnostic path.
 
-Before redesigning the transport architecture, test a controlled-deployment build targeting Android 9 / API 28 that uses the legacy `WifiManager` network-control APIs. Android documents that `disconnect()`, `enableNetwork()`, `reconnect()`, and related configured-network operations are forced to fail for apps targeting Android 10 / API 29 or higher, while lower-target apps remain exempt. This is a sideload-only compatibility experiment, not a Play Store configuration.
+## Acceptance test
 
-A successful API 28 test must prove that ARES Sync can:
+Start with the phone connected to a normal saved Internet Wi-Fi network and `ARES2` available nearby. Tap **Test automatic ARES2 switch**.
 
-1. identify or add the open `ARES2` Wi-Fi configuration;
-2. disconnect the current Wi-Fi;
-3. connect to `ARES2` without manual intervention;
-4. reach the ARES endpoint and download the due usage CSV;
-5. disconnect/release `ARES2`; and
-6. reconnect to the prior saved Internet Wi-Fi automatically.
+A successful API 28 experiment requires:
+
+- the legacy Wi-Fi API calls return success;
+- the phone leaves the original Wi-Fi and associates with `ARES2`;
+- the ARES endpoint returns HTTP 200 or 204;
+- a due CSV is saved when HTTP 200 is returned;
+- ARES Sync requests restoration of the prior saved Wi-Fi; and
+- the eight-second status check shows the phone back on the prior Wi-Fi without manual intervention.
+
+If the legacy APIs return failure or Android does not switch, ordinary sideloaded-app Wi-Fi control will be treated as exhausted for this pilot device and the architecture should move to a managed/device-owner or network-design alternative.
 
 ## Build
 
-Open `android/ares-sync` as a project in Android Studio and build the `app` module. The project requires Android 10 / API 29 or newer at runtime and JDK 17. Experimental target SDK values are used only to test Android Wi-Fi compatibility behavior on the controlled pilot device.
+Open `android/ares-sync` as a project in Android Studio and build the `app` module. This experiment uses JDK 17 and compiles against Android API 36.
 
 ## Distribution caveat
 
-Low target-SDK builds are ARES-controlled deployment compatibility experiments and do not satisfy current Google Play target-SDK requirements. They are not intended as Play Store release configurations.
+The API 28 target deliberately uses legacy compatibility behavior and does not satisfy current Google Play target-SDK requirements. This is an ARES-controlled sideloaded-device experiment only.
 
 ## Security
 

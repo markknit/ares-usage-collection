@@ -27,6 +27,7 @@ public final class AresWifiConnector {
     private volatile int previousNetworkId = -1;
     private volatile String previousSsid = "unknown";
     private volatile int aresNetworkId = -1;
+    private volatile boolean previousNetworkDisabled = false;
     private volatile String lastLegacyResults = "not run";
 
     public interface Callback {
@@ -47,7 +48,7 @@ public final class AresWifiConnector {
         result.append("Android API: ").append(Build.VERSION.SDK_INT).append("\n");
         result.append("App target SDK: ").append(context.getApplicationInfo().targetSdkVersion).append("\n");
         result.append("Wi-Fi enabled: ").append(wifiManager != null && wifiManager.isWifiEnabled()).append("\n");
-        result.append("Connection mode under test: API 28 direct WifiManager control\n");
+        result.append("Connection mode under test: API 28 forced prior-network disable\n");
         result.append("Current SSID: ").append(getCurrentSsid()).append("\n");
         result.append("Previous SSID: ").append(previousSsid).append("\n");
         result.append("ARES2 network id: ").append(aresNetworkId).append("\n");
@@ -99,6 +100,7 @@ public final class AresWifiConnector {
             WifiInfo before = wifiManager.getConnectionInfo();
             previousNetworkId = before == null ? -1 : before.getNetworkId();
             previousSsid = normalizeSsid(before == null ? null : before.getSSID());
+            previousNetworkDisabled = false;
 
             if (ARES_SSID.equals(previousSsid)) {
                 aresNetworkId = previousNetworkId;
@@ -131,12 +133,19 @@ public final class AresWifiConnector {
                 return;
             }
 
+            String disablePreviousText = "not-applicable";
+            if (previousNetworkId >= 0 && previousNetworkId != aresNetworkId) {
+                previousNetworkDisabled = wifiManager.disableNetwork(previousNetworkId);
+                disablePreviousText = Boolean.toString(previousNetworkDisabled);
+            }
+
             boolean disconnectResult = wifiManager.disconnect();
-            sleepQuietly(500L);
+            sleepQuietly(750L);
             boolean enableResult = wifiManager.enableNetwork(aresNetworkId, true);
             boolean reconnectResult = wifiManager.reconnect();
 
             lastLegacyResults = "configuredNetworks=" + configuredCount
+                    + ", disablePrevious=" + disablePreviousText
                     + ", disconnect=" + disconnectResult
                     + ", enableNetwork=" + enableResult
                     + ", reconnect=" + reconnectResult;
@@ -216,7 +225,8 @@ public final class AresWifiConnector {
             boolean enableResult = wifiManager.enableNetwork(previousNetworkId, true);
             boolean reconnectResult = wifiManager.reconnect();
             lastLegacyResults = lastLegacyResults
-                    + "; restore(disconnect=" + disconnectResult
+                    + "; restore(previousWasDisabled=" + previousNetworkDisabled
+                    + ", disconnect=" + disconnectResult
                     + ", enableNetwork=" + enableResult
                     + ", reconnect=" + reconnectResult + ")";
         } catch (SecurityException ex) {
@@ -229,6 +239,7 @@ public final class AresWifiConnector {
     private void clearPreviousState() {
         previousNetworkId = -1;
         previousSsid = "none";
+        previousNetworkDisabled = false;
     }
 
     public void close() {

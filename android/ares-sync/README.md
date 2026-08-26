@@ -19,6 +19,18 @@ The automatic test restores exact `ARES2` matching. Because this build targets A
 
 A second **Test current Wi-Fi connection** button is included as a diagnostic fallback. If the automatic switch fails, manually connect the phone to `ARES2`, return to the app, and use that button to verify the `ARES2 -> ares.local -> CSV` path independently of Wi-Fi switching.
 
+## Validated pilot result
+
+On 2026-08-25, the **Test current Wi-Fi connection** path was validated on the real pilot Android API 36 phone while manually connected to `ARES2`:
+
+- `ares.local` was reached successfully;
+- the scheduled collection endpoint returned HTTP 200;
+- collection metadata was returned;
+- a 26,561-byte usage CSV was downloaded successfully; and
+- the file was saved into ARES Sync app-private pending storage.
+
+This proves the real `ARES2 -> ares.local -> scheduled endpoint -> CSV -> app-private storage` integration. Automatic switching away from and back to the phone's normal Internet Wi-Fi remains the unresolved MVP test.
+
 ## Acceptance test
 
 Start with the phone connected to a normal saved Internet Wi-Fi network, then tap **Test automatic ARES2 switch**. A successful test requires:

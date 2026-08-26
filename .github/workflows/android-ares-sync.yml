@@ -24,3 +24,8 @@ jobs:
           gradle-version: '8.13'
       - name: Build debug APK
         run: gradle -p android/ares-sync :app:assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ares-sync-debug-apk
+          path: android/ares-sync/app/build/outputs/apk/debug/app-debug.apk

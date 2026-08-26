@@ -19,12 +19,20 @@
         android:text="@string/mvp_description"
         android:textSize="16sp" />
 
+    <Button
+        android:id="@+id/testButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/test_connection" />
+
     <TextView
         android:id="@+id/statusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="24dp"
         android:text="@string/status_starting"
+        android:textIsSelectable="true"
         android:textSize="18sp" />
 
 </LinearLayout>

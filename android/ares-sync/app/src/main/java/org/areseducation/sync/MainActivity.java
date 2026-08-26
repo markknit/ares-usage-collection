@@ -35,13 +35,17 @@ public final class MainActivity extends Activity {
         }
 
         testButton.setEnabled(false);
-        setStatus("Requesting ARES2…\n\nAndroid may ask you to approve the Wi-Fi connection.");
+        setStatus("Requesting ARES Wi-Fi…\n\n"
+                + "Diagnostic build: Android will show networks beginning with ARES. "
+                + "Choose ARES2 if it appears.\n\n"
+                + wifiConnector.getDiagnostics());
 
         wifiConnector.requestAres2(new AresWifiConnector.Callback() {
             @Override
             public void onAvailable(android.net.Network network) {
                 runOnUiThread(() -> setStatus(
-                        "✓ ARES2 network available\n\nTesting http://ares.local…"));
+                        "✓ ARES Wi-Fi network available\n\nTesting http://ares.local…\n\n"
+                                + wifiConnector.getDiagnostics()));
 
                 AresServerClient.testAndDownload(
                         MainActivity.this,
@@ -51,7 +55,7 @@ public final class MainActivity extends Activity {
                             public void onSuccess(AresServerClient.Result result) {
                                 runOnUiThread(() -> {
                                     StringBuilder message = new StringBuilder();
-                                    message.append("✓ ARES2 network available\n");
+                                    message.append("✓ ARES Wi-Fi network available\n");
                                     message.append("✓ ARES server reached\n");
                                     message.append("HTTP status: ").append(result.statusCode).append("\n");
 
@@ -69,6 +73,7 @@ public final class MainActivity extends Activity {
                                         message.append("No collection is currently due.");
                                     }
 
+                                    message.append("\n\n").append(wifiConnector.getDiagnostics());
                                     setStatus(message.toString());
                                     testButton.setEnabled(true);
                                 });
@@ -77,7 +82,9 @@ public final class MainActivity extends Activity {
                             @Override
                             public void onError(String message) {
                                 runOnUiThread(() -> {
-                                    setStatus("✓ ARES2 network available\n✗ Server/download test failed\n\n" + message);
+                                    setStatus("✓ ARES Wi-Fi network available\n"
+                                            + "✗ Server/download test failed\n\n"
+                                            + message + "\n\n" + wifiConnector.getDiagnostics());
                                     testButton.setEnabled(true);
                                 });
                             }
@@ -87,7 +94,17 @@ public final class MainActivity extends Activity {
             @Override
             public void onUnavailable() {
                 runOnUiThread(() -> {
-                    setStatus("✗ ARES2 connection was not established.\n\nConfirm the ARES2 hotspot is active and try again.");
+                    setStatus("✗ Android could not satisfy the ARES Wi-Fi request.\n\n"
+                            + wifiConnector.getDiagnostics());
+                    testButton.setEnabled(true);
+                });
+            }
+
+            @Override
+            public void onFailure(String message) {
+                runOnUiThread(() -> {
+                    setStatus("✗ Local-only Wi-Fi connection failed\n\nReason: " + message
+                            + "\n\n" + wifiConnector.getDiagnostics());
                     testButton.setEnabled(true);
                 });
             }
@@ -95,7 +112,8 @@ public final class MainActivity extends Activity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    setStatus("✗ Wi-Fi request failed\n\n" + message);
+                    setStatus("✗ Wi-Fi request failed\n\n" + message
+                            + "\n\n" + wifiConnector.getDiagnostics());
                     testButton.setEnabled(true);
                 });
             }

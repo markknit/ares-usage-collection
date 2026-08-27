@@ -37,14 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Choose ARES Wi-Fi and collect" />
-
-        <Button
-            android:id="@+id/currentWifiButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Collect using current Wi-Fi" />
+            android:text="Connect to ARES or ARES2 wifi network" />
 
         <TextView
             android:id="@+id/statusText"

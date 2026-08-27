@@ -6,15 +6,17 @@ ARES Sync is the replacement for the Automate/legacy-extension phone workflow.
 
 On the real pilot Android API 36 phone and tsavo3 server, manual connection to `ARES2` followed by the current-network test reaches `ares.local`, returns HTTP 200 from the scheduled collection endpoint, downloads the usage CSV, and saves it in app-private pending storage.
 
+The guided teacher-assisted handoff was then validated on the real phone: the teacher selected the ARES Wi-Fi network through Android's system Wi-Fi UI, returned to ARES Sync, and the due usage file downloaded successfully. This validates the production-oriented handoff from system Wi-Fi selection through ARES server download.
+
 Automatic Wi-Fi switching has been exhausted on this pilot device. The API 36 local-only request, API 30 `WifiNetworkSpecifier` compatibility path, API 28 direct `WifiManager` path, forced prior-network disable path, and Automate-owned exclusive-connect path all failed to produce a reliable automatic handoff to `ARES2`.
 
 ## Current MVP architecture: teacher-assisted Wi-Fi handoff
 
-ARES Sync now targets API 36 again and does not attempt to control Wi-Fi directly. The production-oriented flow is:
+ARES Sync targets API 36 and does not attempt to control Wi-Fi directly. The production-oriented flow is:
 
 1. A collection date becomes due according to the phone's ARES collection schedule.
 2. ARES Sync posts a reminder notification.
-3. The teacher taps the reminder and then taps **Choose ARES Wi-Fi and collect**.
+3. The teacher taps the reminder and then taps **Connect to ARES or ARES2 wifi network**.
 4. ARES Sync opens Android's own Wi-Fi panel.
 5. The teacher selects either `ARES2` or `ARES`.
 6. When the teacher returns to ARES Sync, the app automatically tests the selected Wi-Fi for `http://ares.local/tracker/prepare_due_usage_upload.php`.
@@ -22,7 +24,7 @@ ARES Sync now targets API 36 again and does not attempt to control Wi-Fi directl
 8. A successful download marks that collection ID complete on the phone and cancels its reminder.
 9. The teacher can reconnect the phone to its normal Internet Wi-Fi. Central HTTPS upload remains a later milestone.
 
-A **Collect using current Wi-Fi** button remains available for setup/testing when the phone is already connected to `ARES2` or `ARES`.
+The earlier **Collect using current Wi-Fi** button has been removed so the teacher has a single guided action for collection.
 
 ## 2026 collection schedule
 

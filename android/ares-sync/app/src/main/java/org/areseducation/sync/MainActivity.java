@@ -19,7 +19,6 @@ public final class MainActivity extends Activity {
     private TextView scheduleText;
     private TextView statusText;
     private Button chooseWifiButton;
-    private Button currentWifiButton;
     private AresWifiConnector wifiConnector;
     private boolean awaitingWifiSelection;
 
@@ -31,7 +30,6 @@ public final class MainActivity extends Activity {
         scheduleText = findViewById(R.id.scheduleText);
         statusText = findViewById(R.id.statusText);
         chooseWifiButton = findViewById(R.id.chooseWifiButton);
-        currentWifiButton = findViewById(R.id.currentWifiButton);
         wifiConnector = new AresWifiConnector(this);
 
         CollectionNotification.ensureChannel(this);
@@ -40,7 +38,6 @@ public final class MainActivity extends Activity {
         handleIntent(getIntent());
 
         chooseWifiButton.setOnClickListener(view -> openWifiPanel());
-        currentWifiButton.setOnClickListener(view -> tryCollectionOnCurrentWifi(false));
 
         requestNotificationPermissionIfNeeded();
     }
@@ -58,7 +55,7 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (awaitingWifiSelection) {
             awaitingWifiSelection = false;
-            statusText.postDelayed(() -> tryCollectionOnCurrentWifi(true), 1200L);
+            statusText.postDelayed(this::tryCollectionOnCurrentWifi, 1200L);
         }
     }
 
@@ -68,11 +65,11 @@ public final class MainActivity extends Activity {
             CollectionSchedule.Collection collection = CollectionSchedule.find(collectionId);
             if (collection != null && !CollectionSchedule.isCompleted(this, collection.id)) {
                 setStatus(collection.label + " collection is due.\n\n"
-                        + "Tap Choose ARES Wi-Fi, select ARES2 or ARES in Android's Wi-Fi panel, then return to ARES Sync. The download will start automatically.");
+                        + "Tap Connect to ARES or ARES2 wifi network, select ARES2 or ARES in Android's Wi-Fi panel, then return to ARES Sync. The download will start automatically.");
                 return;
             }
         }
-        setStatus("Ready. When a collection is due, choose ARES2 or ARES at the school. ARES Sync will test ares.local and download the due usage file automatically after you return.");
+        setStatus("Ready. When a collection is due, connect to ARES2 or ARES at the school. ARES Sync will test ares.local and download the due usage file automatically after you return.");
     }
 
     private void openWifiPanel() {
@@ -86,21 +83,19 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void tryCollectionOnCurrentWifi(boolean fromPicker) {
+    private void tryCollectionOnCurrentWifi() {
         Network wifiNetwork = wifiConnector.getCurrentWifiNetwork();
         if (wifiNetwork == null) {
             setStatus("No Wi-Fi connection is currently available.\n\n"
-                    + "Tap Choose ARES Wi-Fi and select ARES2 or ARES, then return to ARES Sync.\n\n"
+                    + "Tap Connect to ARES or ARES2 wifi network, select ARES2 or ARES, then return to ARES Sync.\n\n"
                     + wifiConnector.getDiagnostics());
             setButtonsEnabled(true);
             return;
         }
 
         setButtonsEnabled(false);
-        setStatus((fromPicker
-                ? "Wi-Fi selection returned. Checking for the ARES server…"
-                : "Checking the current Wi-Fi for the ARES server…")
-                + "\n\n" + wifiConnector.getDiagnostics());
+        setStatus("Wi-Fi selection returned. Checking for the ARES server…\n\n"
+                + wifiConnector.getDiagnostics());
 
         AresServerClient.testAndDownload(
                 this,
@@ -199,7 +194,6 @@ public final class MainActivity extends Activity {
 
     private void setButtonsEnabled(boolean enabled) {
         chooseWifiButton.setEnabled(enabled);
-        currentWifiButton.setEnabled(enabled);
     }
 
     private void setStatus(String message) {

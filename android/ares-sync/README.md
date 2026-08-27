@@ -22,7 +22,9 @@ A final forced-switch variant explicitly attempted to disable the prior `Android
 
 Android's `WifiManager.disableNetwork()` documentation states that applications are not allowed to disable networks created by other applications. This matches the observed pilot behavior: ARES Sync can see the existing network configuration, but an ordinary sideloaded app cannot reliably suppress that network and force the handoff.
 
-Therefore ordinary sideloaded-app automatic Wi-Fi switching is considered exhausted on this pilot Android 16 / API 36 device. The remaining problem is platform-controlled Wi-Fi association, not ARES server reachability, DNS, endpoint execution, CSV generation, saved-network discovery, or app-private storage.
+An Automate-specific ownership test was also performed. `ARES2` was first forgotten in Android settings, then Automate's **Wi-Fi network connect** block was configured to add `ARES2` itself and request an **Exclusive** connection. The test was run twice on the same Android 16 / API 36 phone and failed both times. Therefore Automate ownership of the ARES2 configuration does not provide a practical automatic-switch workaround on this pilot device.
+
+Therefore ordinary sideloaded-app automatic Wi-Fi switching is considered exhausted on this pilot Android 16 / API 36 device. The remaining problem is platform-controlled Wi-Fi association, not ARES server reachability, DNS, endpoint execution, CSV generation, saved-network discovery, Automate ownership, or app-private storage.
 
 ## Wi-Fi experiments completed
 
@@ -59,9 +61,15 @@ The app then attempted to call `disableNetwork()` on the prior `AndroidWifi` con
 
 This closes the ordinary-app direct-control path for the pilot phone.
 
+### Automate-owned ARES2 exclusive-connect test
+
+To test whether Automate could gain additional control by owning the network configuration, `ARES2` was removed from Android's saved networks and Automate was configured to add the open `ARES2` network itself using **Wi-Fi network connect** with **Add network: Yes** and **Exclusive: Yes**. The test failed twice and did not produce a working automatic handoff to `ARES2`.
+
+This closes the Automate-based automatic-switch workaround for the pilot phone as well.
+
 ## Architecture implication
 
-Do not spend additional MVP time trying ordinary-app Wi-Fi switching variants on this phone. The validated download path should be retained, but unattended collection now requires a different connection strategy.
+Do not spend additional MVP time trying ordinary-app or Automate Wi-Fi switching variants on this phone. The validated download path should be retained, but unattended collection now requires a different connection strategy.
 
 The leading alternatives are:
 

@@ -1,4 +1,4 @@
-﻿# Live credentials and configurations
+# Live credentials and configurations
 rclone.conf
 ARES-RoundSync-Config.zip
 *-RoundSync-Config.zip
@@ -7,6 +7,11 @@ ARES-RoundSync-Config.zip
 secrets/
 credentials/
 private/
+central-monitoring/web-upload/config.php
+
+# Uploaded monitoring data must never enter Git
+central-monitoring/web-upload/incoming/*
+!central-monitoring/web-upload/incoming/.htaccess
 
 # Runtime files
 *.log

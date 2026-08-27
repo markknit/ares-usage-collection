@@ -1,0 +1,39 @@
+name: Central monitor upload
+
+on:
+  push:
+    paths:
+      - 'central-monitoring/web-upload/**'
+      - 'tests/test_web_upload.php'
+      - '.github/workflows/central-upload.yml'
+      - '.gitignore'
+  pull_request:
+    paths:
+      - 'central-monitoring/web-upload/**'
+      - 'tests/test_web_upload.php'
+      - '.github/workflows/central-upload.yml'
+      - '.gitignore'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Lint PHP
+        run: |
+          php -l central-monitoring/web-upload/index.php
+          php -l central-monitoring/web-upload/upload_lib.php
+          php -l central-monitoring/web-upload/config.example.php
+          php -l tests/test_web_upload.php
+      - name: Run upload validation tests
+        run: php tests/test_web_upload.php
+      - name: Verify secrets and live uploads are absent
+        run: |
+          test ! -f central-monitoring/web-upload/config.php
+          if find central-monitoring/web-upload/incoming -maxdepth 1 -type f ! -name '.htaccess' | grep -q .; then
+            echo 'Unexpected uploaded file found in repository'
+            exit 1
+          fi

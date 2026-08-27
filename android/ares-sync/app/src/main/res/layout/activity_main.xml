@@ -23,19 +23,28 @@
             android:text="@string/mvp_description"
             android:textSize="16sp" />
 
+        <TextView
+            android:id="@+id/scheduleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Checking collection schedule…"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
         <Button
-            android:id="@+id/switchTestButton"
+            android:id="@+id/chooseWifiButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Test automatic ARES2 switch" />
+            android:text="Choose ARES Wi-Fi and collect" />
 
         <Button
-            android:id="@+id/currentNetworkTestButton"
+            android:id="@+id/currentWifiButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Test current Wi-Fi connection" />
+            android:text="Collect using current Wi-Fi" />
 
         <TextView
             android:id="@+id/statusText"

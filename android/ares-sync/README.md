@@ -4,92 +4,56 @@ ARES Sync is the replacement for the Automate/legacy-extension phone workflow.
 
 ## Validated pilot results
 
-On the real pilot Android API 36 phone and tsavo3 server:
+On the real pilot Android API 36 phone and tsavo3 server, manual connection to `ARES2` followed by the current-network test reaches `ares.local`, returns HTTP 200 from the scheduled collection endpoint, downloads the usage CSV, and saves it in app-private pending storage.
 
-- manual connection to `ARES2` followed by **Test current Wi-Fi connection** reaches `ares.local`;
-- the scheduled collection endpoint returns HTTP 200;
-- collection metadata is returned;
-- the usage CSV downloads successfully into app-private pending storage; and
-- the phone reports that concurrent local-only Wi-Fi is not supported.
+Automatic Wi-Fi switching has been exhausted on this pilot device. The API 36 local-only request, API 30 `WifiNetworkSpecifier` compatibility path, API 28 direct `WifiManager` path, forced prior-network disable path, and Automate-owned exclusive-connect path all failed to produce a reliable automatic handoff to `ARES2`.
 
-This validates the real `ARES2 -> ares.local -> scheduled endpoint -> CSV -> app-private storage` path independently of Wi-Fi switching.
+## Current MVP architecture: teacher-assisted Wi-Fi handoff
 
-The API 30 `WifiNetworkSpecifier` compatibility experiment was also tested on the real phone. Android returned the request as unavailable and did not disconnect the primary Wi-Fi or connect to `ARES2`. That path is therefore considered unsuccessful on the pilot device.
+ARES Sync now targets API 36 again and does not attempt to control Wi-Fi directly. The production-oriented flow is:
 
-The API 28 direct `WifiManager` compatibility experiment was then tested on the same phone. Android exposed saved `ARES2` as network ID 1. The legacy calls to `disconnect()`, `enableNetwork()`, and `reconnect()` returned `true`, but Android did not associate with `ARES2` before timeout and returned to the previous `AndroidWifi` network.
+1. A collection date becomes due according to the phone's ARES collection schedule.
+2. ARES Sync posts a reminder notification.
+3. The teacher taps the reminder and then taps **Choose ARES Wi-Fi and collect**.
+4. ARES Sync opens Android's own Wi-Fi panel.
+5. The teacher selects either `ARES2` or `ARES`.
+6. When the teacher returns to ARES Sync, the app automatically tests the selected Wi-Fi for `http://ares.local/tracker/prepare_due_usage_upload.php`.
+7. If the ARES server is reachable, the due CSV downloads into app-private pending storage.
+8. A successful download marks that collection ID complete on the phone and cancels its reminder.
+9. The teacher can reconnect the phone to its normal Internet Wi-Fi. Central HTTPS upload remains a later milestone.
 
-A final forced-switch variant explicitly attempted to disable the prior `AndroidWifi` network before connecting to `ARES2`. On the real device the diagnostic result was `disablePrevious=false`, while `disconnect=true`, `enableNetwork=true`, and `reconnect=true`. Android therefore refused to remove the existing saved network from association candidates, and again never associated with `ARES2` before timeout.
+A **Collect using current Wi-Fi** button remains available for setup/testing when the phone is already connected to `ARES2` or `ARES`.
 
-Android's `WifiManager.disableNetwork()` documentation states that applications are not allowed to disable networks created by other applications. This matches the observed pilot behavior: ARES Sync can see the existing network configuration, but an ordinary sideloaded app cannot reliably suppress that network and force the handoff.
+## 2026 collection schedule
 
-An Automate-specific ownership test was also performed. `ARES2` was first forgotten in Android settings, then Automate's **Wi-Fi network connect** block was configured to add `ARES2` itself and request an **Exclusive** connection. The test was run twice on the same Android 16 / API 36 phone and failed both times. Therefore Automate ownership of the ARES2 configuration does not provide a practical automatic-switch workaround on this pilot device.
+The app schedule matches the repository's canonical `local-server/collection_schedule.json` and uses the `Africa/Nairobi` timezone:
 
-Therefore ordinary sideloaded-app automatic Wi-Fi switching is considered exhausted on this pilot Android 16 / API 36 device. The remaining problem is platform-controlled Wi-Fi association, not ARES server reachability, DNS, endpoint execution, CSV generation, saved-network discovery, Automate ownership, or app-private storage.
+- `2026-Q3-MID` — 2026-08-14
+- `2026-Q3-END` — 2026-09-25
+- `2026-Q4-MID` — 2026-11-06
+- `2026-Q4-END` — 2026-12-11
 
-## Wi-Fi experiments completed
+The real tsavo3 pilot endpoint previously reported `2026-Q3-MID` with a server due date of 2026-08-03. That deployed-server mismatch must be reconciled separately; the app intentionally follows the repository schedule rather than the stale/mismatched pilot value.
 
-### API 36 local-only request
+Reminders are scheduled for 08:00 Africa/Nairobi on each due date using Android `AlarmManager`. They are date reminders, not exact-to-the-minute alarms. The app also checks for overdue incomplete collections when opened, so a missed alarm does not remove the collection from the workflow. Reminder alarms are rescheduled after reboot.
 
-The phone reports `Concurrent local-only Wi-Fi: false`, so the modern secondary local-only Wi-Fi request cannot be satisfied on this device.
+## Permissions
 
-### API 30 `WifiNetworkSpecifier` compatibility test
+The guided design deliberately removes the experimental Wi-Fi-control permissions. It requires:
 
-The exact open `ARES2` request returned unavailable. Android did not perform the legacy primary-Wi-Fi handoff on this pilot device.
+- Internet access for the local HTTP request;
+- network-state access to identify the current Wi-Fi transport;
+- boot-completed access to restore scheduled reminders after reboot; and
+- notification permission on Android 13+ so due-date prompts can be shown.
 
-### API 28 direct `WifiManager` test
-
-The app successfully:
-
-1. read the saved network list;
-2. found `ARES2` as network ID 1;
-3. remembered the prior Wi-Fi;
-4. received `true` from legacy disconnect / enable / reconnect calls; and
-5. received `true` from the restore calls.
-
-However, Android did not actually associate with `ARES2` before timeout. A `true` return from these deprecated APIs therefore does not provide a reliable automatic network switch on the pilot Android 16 device.
-
-### API 28 forced prior-network disable test
-
-The app then attempted to call `disableNetwork()` on the prior `AndroidWifi` configuration before enabling `ARES2`. The real device returned:
-
-- `disablePrevious=false`;
-- `disconnect=true`;
-- `enableNetwork=true`;
-- `reconnect=true`;
-- timeout before `ARES2` association; and
-- final observed SSID `AndroidWifi`.
-
-This closes the ordinary-app direct-control path for the pilot phone.
-
-### Automate-owned ARES2 exclusive-connect test
-
-To test whether Automate could gain additional control by owning the network configuration, `ARES2` was removed from Android's saved networks and Automate was configured to add the open `ARES2` network itself using **Wi-Fi network connect** with **Add network: Yes** and **Exclusive: Yes**. The test failed twice and did not produce a working automatic handoff to `ARES2`.
-
-This closes the Automate-based automatic-switch workaround for the pilot phone as well.
-
-## Architecture implication
-
-Do not spend additional MVP time trying ordinary-app or Automate Wi-Fi switching variants on this phone. The validated download path should be retained, but unattended collection now requires a different connection strategy.
-
-The leading alternatives are:
-
-1. provision ARES Sync as a managed/device-owner or other qualifying device-policy application with privileged Wi-Fi control;
-2. change the ARES network design or operating procedure so the phone is already connected to `ARES2` when collection occurs, eliminating the need for the app to force a switch;
-3. use a different local transport, such as Bluetooth, for server-to-phone collection while leaving the phone's normal network connection alone; or
-4. accept a user-assisted Wi-Fi handoff and automate the collection/download/upload steps around it.
-
-For teacher-owned or already-provisioned phones, device-owner provisioning is likely too intrusive because fully managed device-owner setup is designed for organization-owned devices and normally requires provisioning while the device is unprovisioned. A different transport or a user-assisted handoff is therefore likely more practical unless ARES deploys dedicated managed phones.
+ARES Sync does not request location permission or nearby-Wi-Fi control permission in this design because Android itself owns the Wi-Fi selection UI.
 
 ## Build
 
-Open `android/ares-sync` as a project in Android Studio and build the `app` module. The current diagnostic builds use JDK 17 and compile against Android API 36.
-
-## Distribution caveat
-
-The low target-SDK builds were ARES-controlled compatibility experiments and do not satisfy current Google Play target-SDK requirements. They are not intended as Play Store release configurations.
+Open `android/ares-sync` in Android Studio. The app uses JDK 17, `compileSdk = 36`, `targetSdk = 36`, and `minSdk = 29`.
 
 ## Security
 
 - No Wi-Fi passwords, API credentials, OAuth tokens, or school-private data belong in this repository.
-- `ARES2` is currently an open local network, so no Wi-Fi credential is embedded in the app.
+- `ARES2` and `ARES` selection is performed by the teacher through Android's system Wi-Fi UI; no Wi-Fi credential is embedded in the app.
 - Cleartext HTTP is permitted only for the local hostname `ares.local`; future central upload traffic must use HTTPS.

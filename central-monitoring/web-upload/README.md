@@ -6,6 +6,16 @@ This directory contains the HTTPS upload endpoint intended for deployment at:
 
 It accepts one ARES usage CSV at a time using `POST multipart/form-data`, validates the existing ARES filename contract, requires a private upload key, and stores the file in a protected `incoming` directory.
 
+## Validated deployment
+
+The production endpoint at `https://areseducation.org/monitor_upload/` has been deployed and its live HTTPS health check returned:
+
+```json
+{"service":"ares-monitor-upload","status":"ready","upload_method":"POST multipart/form-data","file_field":"usage_file"}
+```
+
+This confirms the public PHP endpoint is reachable over HTTPS. An authenticated CSV upload remains the next live validation step.
+
 ## Files
 
 - `index.php` — public health-check and upload endpoint.

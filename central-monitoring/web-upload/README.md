@@ -1,14 +1,19 @@
-# ARES central monitoring web upload
+# ARES central monitoring web service
 
-This directory contains the HTTPS upload endpoint intended for deployment at:
+This directory contains the HTTPS monitoring upload and device enrollment endpoints intended for deployment at:
 
 `https://areseducation.org/monitor_upload/`
 
-It accepts one ARES usage CSV at a time using `POST multipart/form-data`, validates the existing ARES filename contract, requires a private upload key, and stores the file in a protected `incoming` directory.
+The service has two responsibilities:
 
-## Validated deployment
+1. Accept validated ARES usage CSV files into protected incoming storage.
+2. Enroll an ARES Sync phone to one canonical school and issue a unique device credential.
 
-The production endpoint at `https://areseducation.org/monitor_upload/` has been deployed and validated over live HTTPS.
+Live credentials, the real school registry, enrollment codes, device records, and uploaded CSV files must never be committed to Git.
+
+## Validated upload deployment
+
+The production upload endpoint at `https://areseducation.org/monitor_upload/` has been deployed and validated over live HTTPS.
 
 The health check returned:
 
@@ -22,37 +27,124 @@ No live upload credential or uploaded CSV is stored in this repository.
 
 ## Files
 
-- `index.php` — public health-check and upload endpoint.
-- `upload_lib.php` — validation and helper functions.
-- `config.example.php` — configuration template; copy to `config.php` on the server.
-- `.htaccess` — prevents direct access to `config.php` and directory listing on Apache/LiteSpeed.
-- `incoming/.htaccess` — blocks direct web access to uploaded CSVs.
+- `index.php` - public upload health check and authenticated CSV upload endpoint.
+- `upload_lib.php` - upload validation and helper functions.
+- `schools.php` - school-name search endpoint used during enrollment.
+- `enroll.php` - one-time enrollment endpoint that binds a phone to a canonical school.
+- `enrollment_lib.php` - school matching, one-time-code, and device credential helpers.
+- `generate_enrollment_codes.php` - CLI-only administrator tool for creating one-time school enrollment codes.
+- `school_registry.example.json` - public example of the registry schema only; it contains no live school roster.
+- `config.example.php` - configuration template; copy to `config.php` on the server.
+- `.htaccess` - prevents direct access to `config.php` and directory listing on Apache/LiteSpeed.
+- `incoming/.htaccess` - blocks direct web access to uploaded CSVs.
+- `data/.htaccess` - blocks direct web access to the live school registry and enrollment state.
 
-`config.php` and uploaded files are excluded by the repository `.gitignore` and must never be committed.
+`config.php`, `data/schools.json`, `data/enrollment_state.json`, and uploaded files are excluded by `.gitignore` and must never be committed.
 
 ## Deployment
 
-1. Copy the contents of `central-monitoring/web-upload/` into the web directory that serves `https://areseducation.org/monitor_upload/`.
-2. Copy `config.example.php` to `config.php` on the server.
-3. Generate a private upload key, for example:
+Copy the contents of `central-monitoring/web-upload/` into the web directory that serves `https://areseducation.org/monitor_upload/`.
 
-   ```bash
-   php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
-   ```
+Copy `config.example.php` to `config.php` on the server if `config.php` does not already exist. If an upload configuration is already live, preserve its existing `upload_key` and add the enrollment settings rather than replacing the file blindly.
 
-4. Put that value in `config.php` as `upload_key`. Do not put the real key in GitHub, documentation, chat logs, or an APK source file.
-5. Make sure PHP can write to the configured `storage_dir`.
-6. Keep the included `.htaccess` files in place if the site uses Apache/LiteSpeed. If the host does not honor `.htaccess`, configure the web server to deny access to `config.php` and `incoming/`, or preferably set `storage_dir` to an absolute directory outside the public web root.
+Generate two independent 64-character secrets. For example:
 
-The pilot configuration can use:
+```bash
+php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+```
+
+Use one as `upload_key` and a different one as `enrollment_secret`. Never place the real values in GitHub, documentation, chat logs, or APK source.
+
+For the pilot, the protected paths can be:
 
 ```php
 'storage_dir' => __DIR__ . '/incoming',
+'school_registry_path' => __DIR__ . '/data/schools.json',
+'enrollment_state_path' => __DIR__ . '/data/enrollment_state.json',
 ```
 
-because the included `incoming/.htaccess` denies web access. Storage outside the document root is preferred when the hosting account permits it.
+Keep the included `.htaccess` files in place if the site uses Apache/LiteSpeed. If the host does not honor `.htaccess`, configure the web server to deny direct access to `config.php`, `incoming/`, and `data/`, or preferably move those paths outside the public document root.
 
-## Health check
+## School registry
+
+The live registry is `data/schools.json` and is intentionally not tracked by Git. Each school has a stable internal ID that should remain unchanged even if its display name is corrected later.
+
+Schema:
+
+```json
+{
+  "version": 1,
+  "schools": [
+    {
+      "school_id": "ARES-S0001",
+      "canonical_name": "Example Secondary School",
+      "aliases": ["Example Sec"],
+      "active": true
+    }
+  ]
+}
+```
+
+The initial pilot registry can be replaced later with the final ARES school list. Existing `school_id` values should be retained when a school is merely renamed or corrected.
+
+## School search endpoint
+
+ARES Sync will call:
+
+```text
+GET /monitor_upload/schools.php?q=<partial school name>
+```
+
+Queries shorter than two characters are rejected. The endpoint returns at most eight active matches. Search normalization tolerates common school-name variations such as `secondary` versus `sec`, `primary` versus `pry`, `saint` versus `st`, and `airbase` versus `air base`.
+
+The teacher must select a returned canonical school. Free-form teacher text is never stored as the school identity.
+
+## One-time enrollment codes
+
+Enrollment codes are short, teacher-entered codes in the form `XXXX-XXXX`. The alphabet omits easily confused characters such as `I`, `O`, `0`, and `1`.
+
+The server stores only an HMAC of each enrollment code, not its plaintext value. Each code is assigned to one school and can be used only once.
+
+Generate codes from the deployed directory with:
+
+```bash
+php generate_enrollment_codes.php --all > private_enrollment_codes.csv
+```
+
+The CSV contains plaintext codes and is sensitive. Store it securely and do not commit it.
+
+To generate or replace a code for one school:
+
+```bash
+php generate_enrollment_codes.php --school=ARES-S0001 --rotate
+```
+
+`--rotate` revokes any unused previous code for that school before creating the replacement.
+
+## Enrollment endpoint
+
+ARES Sync submits the teacher-selected canonical school plus the short enrollment code:
+
+```text
+POST /monitor_upload/enroll.php
+Content-Type: application/json
+```
+
+Example body:
+
+```json
+{
+  "school_id": "ARES-S0001",
+  "enrollment_code": "ABCD-EFGH",
+  "device_label": "Teacher phone"
+}
+```
+
+A successful enrollment returns HTTP `201` and includes the canonical school ID/name, a unique device ID, and a random 256-bit device credential returned only once. The server stores only the SHA-256 hash of the device credential. A reused code, a code assigned to another school, or an inactive/unknown school is rejected.
+
+The Android application should store the returned device credential privately and should never show it to the teacher during normal operation.
+
+## Upload health check
 
 A browser or GET request to:
 
@@ -79,16 +171,16 @@ curl -i \
 
 Expected responses:
 
-- `201` with `status: stored` — new file accepted.
-- `200` with `status: duplicate` — exact same filename and content already exists; safe retry.
-- `400` — invalid filename, file, CSV, or upload request.
-- `401` — missing or invalid upload key.
-- `409` — same filename already exists with different content.
-- `503` — server configuration or storage is not ready.
+- `201` with `status: stored` - new file accepted.
+- `200` with `status: duplicate` - exact same filename and content already exists; safe retry.
+- `400` - invalid filename, file, CSV, or upload request.
+- `401` - missing or invalid upload key.
+- `409` - same filename already exists with different content.
+- `503` - server configuration or storage is not ready.
 
 ## Filename contract
 
-The endpoint uses the same filename contract as `central-monitoring/process_incoming.py`:
+The upload endpoint uses the same filename contract as `central-monitoring/process_incoming.py`:
 
 `ARES_USAGE_<SCHOOL>_<COLLECTION>_<YYYY-MM-DD_HH-MM-SS>.csv`
 
@@ -101,13 +193,12 @@ This preserves compatibility with the existing central processing logic.
 
 ## Security model
 
-- Production POSTs require HTTPS.
-- Uploads require a private key supplied through `X-ARES-Upload-Key` or `Authorization: Bearer ...`.
+- Production upload and enrollment POSTs require HTTPS.
+- Pilot CSV uploads currently use a private upload key; the Android production path will move to per-device credentials.
+- Enrollment codes are school-specific, HMAC-protected at rest, and one-time-use.
+- Device credentials are random 256-bit values and are stored server-side only as SHA-256 hashes.
+- Free-form school text never becomes the canonical identity; the selected `school_id` does.
+- Registry and enrollment state files are denied direct web access and excluded from Git.
 - Filenames are strict and cannot contain directory paths.
-- Files over the configured size limit are rejected.
-- Files must contain plausible CSV content.
-- Writes use a temporary file followed by an atomic rename.
-- Exact retries are idempotent.
-- `config.php` and live uploaded CSVs are excluded from Git.
-
-The pilot uses one server-side upload key. A later enrollment milestone should replace this with per-device credentials so no shared long-lived secret has to be embedded in the production application.
+- Uploaded files must contain plausible CSV content and stay below the configured size limit.
+- Exact upload retries are idempotent.

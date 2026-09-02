@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "schools": [
+    {
+      "school_id": "ARES-S0001",
+      "canonical_name": "Example Secondary School",
+      "aliases": ["Example Sec"],
+      "active": true
+    },
+    {
+      "school_id": "ARES-S0002",
+      "canonical_name": "Example Girls Secondary School",
+      "aliases": ["Example Girls"],
+      "active": true
+    }
+  ]
+}

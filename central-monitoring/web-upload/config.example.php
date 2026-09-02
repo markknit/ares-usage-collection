@@ -9,6 +9,10 @@ return [
     // Generate this independently from upload_key.
     'enrollment_secret' => 'REPLACE_WITH_DIFFERENT_RANDOM_64_CHARACTER_SECRET',
 
+    // Separate administrator key used only to authorize enrollment-code generation.
+    // Generate this independently from both upload_key and enrollment_secret.
+    'enrollment_admin_key' => 'REPLACE_WITH_THIRD_RANDOM_64_CHARACTER_SECRET',
+
     // For the pilot these protected directories can live beside index.php.
     // If the host allows it, absolute paths outside the public web root are even better.
     'storage_dir' => __DIR__ . '/incoming',

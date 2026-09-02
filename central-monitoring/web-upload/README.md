@@ -8,13 +8,17 @@ It accepts one ARES usage CSV at a time using `POST multipart/form-data`, valida
 
 ## Validated deployment
 
-The production endpoint at `https://areseducation.org/monitor_upload/` has been deployed and its live HTTPS health check returned:
+The production endpoint at `https://areseducation.org/monitor_upload/` has been deployed and validated over live HTTPS.
+
+The health check returned:
 
 ```json
 {"service":"ares-monitor-upload","status":"ready","upload_method":"POST multipart/form-data","file_field":"usage_file"}
 ```
 
-This confirms the public PHP endpoint is reachable over HTTPS. An authenticated CSV upload remains the next live validation step.
+On 2026-09-01, an authenticated synthetic CSV upload was tested against the production endpoint. The first POST returned HTTP `201` with `status: stored`. Repeating the exact same upload returned HTTP `200` with `status: duplicate`, and the protected `incoming` directory contained only one copy of the file. This validates live authentication, multipart upload handling, CSV and filename validation, writable incoming storage, and idempotent retry behavior.
+
+No live upload credential or uploaded CSV is stored in this repository.
 
 ## Files
 

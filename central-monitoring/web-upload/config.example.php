@@ -5,13 +5,19 @@ return [
     // Never commit the real key.
     'upload_key' => 'REPLACE_WITH_RANDOM_64_CHARACTER_SECRET',
 
-    // For the pilot this protected directory can live beside index.php.
-    // If the host allows it, an absolute path outside the public web root is even better.
+    // Separate secret used to HMAC short enrollment codes before they are stored.
+    // Generate this independently from upload_key.
+    'enrollment_secret' => 'REPLACE_WITH_DIFFERENT_RANDOM_64_CHARACTER_SECRET',
+
+    // For the pilot these protected directories can live beside index.php.
+    // If the host allows it, absolute paths outside the public web root are even better.
     'storage_dir' => __DIR__ . '/incoming',
+    'school_registry_path' => __DIR__ . '/data/schools.json',
+    'enrollment_state_path' => __DIR__ . '/data/enrollment_state.json',
 
     // Current ARES usage files are small; 2 MiB leaves ample headroom.
     'max_bytes' => 2 * 1024 * 1024,
 
-    // Production uploads must use HTTPS.
+    // Production uploads and enrollment must use HTTPS.
     'require_https' => true,
 ];

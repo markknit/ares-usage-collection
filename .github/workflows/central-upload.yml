@@ -5,12 +5,14 @@ on:
     paths:
       - 'central-monitoring/web-upload/**'
       - 'tests/test_web_upload.php'
+      - 'tests/test_enrollment.php'
       - '.github/workflows/central-upload.yml'
       - '.gitignore'
   pull_request:
     paths:
       - 'central-monitoring/web-upload/**'
       - 'tests/test_web_upload.php'
+      - 'tests/test_enrollment.php'
       - '.github/workflows/central-upload.yml'
       - '.gitignore'
 
@@ -26,14 +28,27 @@ jobs:
         run: |
           php -l central-monitoring/web-upload/index.php
           php -l central-monitoring/web-upload/upload_lib.php
+          php -l central-monitoring/web-upload/enrollment_lib.php
+          php -l central-monitoring/web-upload/schools.php
+          php -l central-monitoring/web-upload/enroll.php
+          php -l central-monitoring/web-upload/generate_enrollment_codes.php
           php -l central-monitoring/web-upload/config.example.php
           php -l tests/test_web_upload.php
+          php -l tests/test_enrollment.php
       - name: Run upload validation tests
         run: php tests/test_web_upload.php
-      - name: Verify secrets and live uploads are absent
+      - name: Run enrollment validation tests
+        run: php tests/test_enrollment.php
+      - name: Verify secrets, private school data, and live uploads are absent
         run: |
           test ! -f central-monitoring/web-upload/config.php
+          test ! -f central-monitoring/web-upload/data/schools.json
+          test ! -f central-monitoring/web-upload/data/enrollment_state.json
           if find central-monitoring/web-upload/incoming -maxdepth 1 -type f ! -name '.htaccess' | grep -q .; then
             echo 'Unexpected uploaded file found in repository'
+            exit 1
+          fi
+          if find central-monitoring/web-upload/data -maxdepth 1 -type f ! -name '.htaccess' | grep -q .; then
+            echo 'Unexpected private enrollment data found in repository'
             exit 1
           fi

@@ -32,7 +32,9 @@ No live upload credential or uploaded CSV is stored in this repository.
 - `schools.php` - school-name search endpoint used during enrollment.
 - `enroll.php` - one-time enrollment endpoint that binds a phone to a canonical school.
 - `enrollment_lib.php` - school matching, one-time-code, and device credential helpers.
-- `generate_enrollment_codes.php` - CLI-only administrator tool for creating one-time school enrollment codes.
+- `enrollment_admin_lib.php` - authenticated web-admin helpers for enrollment-code generation.
+- `admin_enrollment_code.php` - HTTPS-only administrator endpoint for generating or rotating one school enrollment code without shell access.
+- `generate_enrollment_codes.php` - CLI-only administrator tool for bulk or shell-based enrollment-code generation.
 - `school_registry.example.json` - public example of the registry schema only; it contains no live school roster.
 - `config.example.php` - configuration template; copy to `config.php` on the server.
 - `.htaccess` - prevents direct access to `config.php` and directory listing on Apache/LiteSpeed.
@@ -47,13 +49,13 @@ Copy the contents of `central-monitoring/web-upload/` into the web directory tha
 
 Copy `config.example.php` to `config.php` on the server if `config.php` does not already exist. If an upload configuration is already live, preserve its existing `upload_key` and add the enrollment settings rather than replacing the file blindly.
 
-Generate two independent 64-character secrets. For example:
+Generate three independent 64-character secrets. For example:
 
 ```bash
 php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
 ```
 
-Use one as `upload_key` and a different one as `enrollment_secret`. Never place the real values in GitHub, documentation, chat logs, or APK source.
+Use separate values as `upload_key`, `enrollment_secret`, and `enrollment_admin_key`. Never place the real values in GitHub, documentation, chat logs, or APK source.
 
 For the pilot, the protected paths can be:
 
@@ -113,13 +115,39 @@ php generate_enrollment_codes.php --all > private_enrollment_codes.csv
 
 The CSV contains plaintext codes and is sensitive. Store it securely and do not commit it.
 
-To generate or replace a code for one school:
+To generate or replace a code for one school from a shell:
 
 ```bash
 php generate_enrollment_codes.php --school=ARES-S0001 --rotate
 ```
 
 `--rotate` revokes any unused previous code for that school before creating the replacement.
+
+## HTTPS enrollment-code administration
+
+Shared hosting may not provide usable shell access. `admin_enrollment_code.php` provides a narrow HTTPS-only alternative for generating one school's enrollment code.
+
+Configure a third independent secret in `config.php`:
+
+```php
+'enrollment_admin_key' => '64_CHARACTER_RANDOM_SECRET',
+```
+
+The administrator key is never sent to ARES Sync and should be kept only on an administrator's machine and the server. The endpoint accepts it through `X-ARES-Admin-Key` or `Authorization: Bearer ...`.
+
+Example request:
+
+```bash
+curl -i \
+  -H "X-ARES-Admin-Key: <ADMIN_KEY>" \
+  -H "Content-Type: application/json" \
+  --data '{"school_id":"ARES-S0001","rotate":true}' \
+  https://areseducation.org/monitor_upload/admin_enrollment_code.php
+```
+
+A successful response returns HTTP `201` with the canonical school and plaintext one-time enrollment code. The code is returned only in that response; only its HMAC is stored in `data/enrollment_state.json`.
+
+If an unused code already exists and `rotate` is false, the endpoint returns `active-enrollment-code-exists` rather than replacing it silently. When `rotate` is true, any unused prior code for that school is revoked before the new code is generated.
 
 ## Enrollment endpoint
 
@@ -195,6 +223,7 @@ This preserves compatibility with the existing central processing logic.
 
 - Production upload and enrollment POSTs require HTTPS.
 - Pilot CSV uploads currently use a private upload key; the Android production path will move to per-device credentials.
+- Enrollment-code administration requires a third independent administrator key and is HTTPS-only.
 - Enrollment codes are school-specific, HMAC-protected at rest, and one-time-use.
 - Device credentials are random 256-bit values and are stored server-side only as SHA-256 hashes.
 - Free-form school text never becomes the canonical identity; the selected `school_id` does.

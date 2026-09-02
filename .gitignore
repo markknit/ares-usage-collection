@@ -13,6 +13,10 @@ central-monitoring/web-upload/config.php
 central-monitoring/web-upload/incoming/*
 !central-monitoring/web-upload/incoming/.htaccess
 
+# Live school registry, enrollment codes, device credentials, and state are private
+central-monitoring/web-upload/data/*
+!central-monitoring/web-upload/data/.htaccess
+
 # Runtime files
 *.log
 logs/

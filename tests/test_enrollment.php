@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../central-monitoring/web-upload/enrollment_lib.php';
+require __DIR__ . '/../central-monitoring/web-upload/enrollment_admin_lib.php';
 
 function enrollment_expect(bool $condition, string $message): void
 {
@@ -34,6 +35,9 @@ $airMatches = ares_search_schools($registry, 'laikipia airbase', 8);
 enrollment_expect(count($airMatches) >= 1 && $airMatches[0]['school_id'] === 'ARES-S0002', 'airbase variation should resolve to canonical school');
 enrollment_expect(ares_search_schools($registry, 'r', 8) === [], 'one-character searches should be rejected');
 enrollment_expect(ares_search_schools($registry, 'retired school', 8) === [], 'inactive schools should not be returned');
+
+enrollment_expect(ares_extract_enrollment_admin_key(['HTTP_X_ARES_ADMIN_KEY' => 'admin-one']) === 'admin-one', 'custom admin header should parse');
+enrollment_expect(ares_extract_enrollment_admin_key(['HTTP_AUTHORIZATION' => 'Bearer admin-two']) === 'admin-two', 'admin bearer header should parse');
 
 $secret = str_repeat('a', 64);
 $codeOne = 'ABCD-EFGH';
@@ -77,7 +81,25 @@ enrollment_expect(str_contains($stored, hash('sha256', $credential)), 'credentia
 $retry = ares_issue_device_credential($statePath, $registry, 'ARES-S0001', $codeOne, $secret, 'Test Phone');
 enrollment_expect(($retry['error'] ?? '') === 'enrollment-code-used', 'one-time enrollment code must not be reusable');
 
+$adminStatePath = $tempDir . DIRECTORY_SEPARATOR . 'admin_enrollment_state.json';
+$generated = ares_generate_enrollment_code_for_school($adminStatePath, $registry, 'ARES-S0001', $secret, false);
+enrollment_expect(($generated['ok'] ?? false) === true, 'admin helper should generate a code');
+enrollment_expect(($generated['school_id'] ?? '') === 'ARES-S0001', 'generated code should be assigned to requested school');
+$generatedCode = (string)($generated['enrollment_code'] ?? '');
+enrollment_expect((bool)preg_match('/^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/', $generatedCode), 'generated code should use teacher-friendly format');
+$adminStored = file_get_contents($adminStatePath);
+enrollment_expect(is_string($adminStored), 'admin enrollment state should be readable');
+enrollment_expect(!str_contains($adminStored, $generatedCode), 'plaintext generated code must not be stored');
+enrollment_expect(str_contains($adminStored, ares_enrollment_code_hash($generatedCode, $secret)), 'generated code HMAC should be stored');
+
+$duplicateGeneration = ares_generate_enrollment_code_for_school($adminStatePath, $registry, 'ARES-S0001', $secret, false);
+enrollment_expect(($duplicateGeneration['error'] ?? '') === 'active-enrollment-code-exists', 'admin helper should not silently replace an active code');
+$rotated = ares_generate_enrollment_code_for_school($adminStatePath, $registry, 'ARES-S0001', $secret, true);
+enrollment_expect(($rotated['ok'] ?? false) === true, 'admin helper should rotate an active code when requested');
+enrollment_expect(($rotated['enrollment_code'] ?? '') !== $generatedCode, 'rotated code should be new');
+
 unlink($statePath);
+unlink($adminStatePath);
 rmdir($tempDir);
 
 echo "ARES enrollment tests passed\n";

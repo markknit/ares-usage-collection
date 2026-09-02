@@ -29,8 +29,10 @@ jobs:
           php -l central-monitoring/web-upload/index.php
           php -l central-monitoring/web-upload/upload_lib.php
           php -l central-monitoring/web-upload/enrollment_lib.php
+          php -l central-monitoring/web-upload/enrollment_admin_lib.php
           php -l central-monitoring/web-upload/schools.php
           php -l central-monitoring/web-upload/enroll.php
+          php -l central-monitoring/web-upload/admin_enrollment_code.php
           php -l central-monitoring/web-upload/generate_enrollment_codes.php
           php -l central-monitoring/web-upload/config.example.php
           php -l tests/test_web_upload.php

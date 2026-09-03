@@ -25,6 +25,22 @@ On 2026-09-01, an authenticated synthetic CSV upload was tested against the prod
 
 No live upload credential or uploaded CSV is stored in this repository.
 
+## Validated live enrollment deployment
+
+On 2026-09-03, the live school registry and enrollment service at `https://areseducation.org/monitor_upload/` were validated end to end using the pilot Misuuni school record.
+
+The live checks confirmed:
+
+- `GET /monitor_upload/schools.php?q=misuuni` returned the canonical school `ARES-S0016` / `Misuuni Sec`.
+- The HTTPS administrator endpoint generated a school-specific one-time enrollment code and returned HTTP `201`.
+- `POST /monitor_upload/enroll.php` accepted the selected school plus that code and returned HTTP `201`, a unique `ARES-D-...` device ID, and a 256-bit device credential.
+- Reusing the same enrollment code returned HTTP `400` with `enrollment-code-used`.
+- `data/enrollment_state.json` stored only an HMAC of the enrollment code and a SHA-256 hash of the device credential; the plaintext enrollment code and raw device credential were absent.
+- An independent SHA-256 calculation of the issued device credential matched the stored `credential_hash` exactly.
+- Direct HTTPS requests to both `data/schools.json` and `data/enrollment_state.json` returned HTTP `403`, confirming that the protected enrollment data is not web-readable.
+
+No live enrollment code, device credential, enrollment-state file, or live school registry is stored in this repository.
+
 ## Files
 
 - `index.php` - public upload health check and authenticated CSV upload endpoint.
@@ -66,6 +82,19 @@ For the pilot, the protected paths can be:
 ```
 
 Keep the included `.htaccess` files in place if the site uses Apache/LiteSpeed. If the host does not honor `.htaccess`, configure the web server to deny direct access to `config.php`, `incoming/`, and `data/`, or preferably move those paths outside the public document root.
+
+### Parent rewrite rules
+
+The `/monitor_upload/` directory is an API/service path and must not be processed by site-wide rules that rewrite `.php` URLs to `.html` or otherwise alter endpoint paths.
+
+On the current Bluehost deployment, the parent `public_html/.htaccess` contained a site-wide `.php` to `.html` redirect. The following exclusion was required immediately after `RewriteEngine On` / `RewriteBase /` and before the extension-redirect rules:
+
+```apache
+# Do not rewrite ARES monitoring API endpoints
+RewriteRule ^monitor_upload/ - [L]
+```
+
+Without this exclusion, POSTs to endpoints such as `admin_enrollment_code.php` are redirected before PHP runs.
 
 ## School registry
 
@@ -148,6 +177,8 @@ curl -i \
 A successful response returns HTTP `201` with the canonical school and plaintext one-time enrollment code. The code is returned only in that response; only its HMAC is stored in `data/enrollment_state.json`.
 
 If an unused code already exists and `rotate` is false, the endpoint returns `active-enrollment-code-exists` rather than replacing it silently. When `rotate` is true, any unused prior code for that school is revoked before the new code is generated.
+
+On Windows PowerShell, when using `curl.exe`, writing the JSON payload to a temporary file and sending it with `--data-binary "@file.json"` avoids command-line quoting that can otherwise produce `invalid-json`.
 
 ## Enrollment endpoint
 

@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ARES Sync</string>
-    <string name="mvp_description">Scheduled ARES usage collection with teacher-assisted connection to ARES2 or ARES.</string>
+    <string name="mvp_description">Enroll this phone to one ARES school, then use guided scheduled usage collection with teacher-assisted connection to ARES2 or ARES.</string>
     <string name="status_starting">Starting…</string>
+    <string name="enrollment_title">First-time setup</string>
+    <string name="enrollment_intro">This phone must be assigned to its school before scheduled collection begins. Internet access is required for setup.</string>
+    <string name="school_search_hint">Type part of the school name</string>
+    <string name="school_search_button">Find school</string>
+    <string name="enrollment_code_hint">Enrollment code (XXXX-XXXX)</string>
+    <string name="enroll_button">Enroll this phone</string>
 </resources>

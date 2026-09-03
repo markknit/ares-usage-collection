@@ -10,8 +10,8 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0-guided-handoff"
+        versionCode = 5
+        versionName = "0.5.0-school-enrollment"
     }
 
     buildTypes {

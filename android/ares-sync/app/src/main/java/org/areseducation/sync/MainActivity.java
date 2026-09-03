@@ -8,14 +8,31 @@ import android.net.Network;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.util.List;
+import java.util.Locale;
 
 public final class MainActivity extends Activity {
     public static final String ACTION_COLLECTION_DUE = "org.areseducation.sync.COLLECTION_DUE";
     public static final String EXTRA_COLLECTION_ID = "collection_id";
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
 
+    private LinearLayout enrollmentPanel;
+    private LinearLayout collectionPanel;
+    private EditText schoolSearchInput;
+    private EditText enrollmentCodeInput;
+    private Button schoolSearchButton;
+    private Button enrollButton;
+    private Spinner schoolSpinner;
+    private TextView enrollmentStatus;
+    private TextView enrolledSchoolText;
     private TextView scheduleText;
     private TextView statusText;
     private Button chooseWifiButton;
@@ -27,36 +44,174 @@ public final class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        enrollmentPanel = findViewById(R.id.enrollmentPanel);
+        collectionPanel = findViewById(R.id.collectionPanel);
+        schoolSearchInput = findViewById(R.id.schoolSearchInput);
+        enrollmentCodeInput = findViewById(R.id.enrollmentCodeInput);
+        schoolSearchButton = findViewById(R.id.schoolSearchButton);
+        enrollButton = findViewById(R.id.enrollButton);
+        schoolSpinner = findViewById(R.id.schoolSpinner);
+        enrollmentStatus = findViewById(R.id.enrollmentStatus);
+        enrolledSchoolText = findViewById(R.id.enrolledSchoolText);
         scheduleText = findViewById(R.id.scheduleText);
         statusText = findViewById(R.id.statusText);
         chooseWifiButton = findViewById(R.id.chooseWifiButton);
         wifiConnector = new AresWifiConnector(this);
 
         CollectionNotification.ensureChannel(this);
-        CollectionReminderScheduler.scheduleAll(this);
-        refreshScheduleStatus();
-        handleIntent(getIntent());
 
+        schoolSearchButton.setOnClickListener(view -> searchForSchool());
+        enrollButton.setOnClickListener(view -> enrollSelectedSchool());
         chooseWifiButton.setOnClickListener(view -> openWifiPanel());
 
-        requestNotificationPermissionIfNeeded();
+        if (EnrollmentStore.isEnrolled(this)) {
+            activateCollectionUi(false);
+        } else {
+            showEnrollmentUi();
+        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleIntent(intent);
-        refreshScheduleStatus();
+        if (EnrollmentStore.isEnrolled(this)) {
+            handleIntent(intent);
+            refreshScheduleStatus();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (awaitingWifiSelection) {
+        if (EnrollmentStore.isEnrolled(this) && awaitingWifiSelection) {
             awaitingWifiSelection = false;
             statusText.postDelayed(this::tryCollectionOnCurrentWifi, 1200L);
         }
+    }
+
+    private void showEnrollmentUi() {
+        enrollmentPanel.setVisibility(View.VISIBLE);
+        collectionPanel.setVisibility(View.GONE);
+        schoolSpinner.setVisibility(View.GONE);
+        enrollmentCodeInput.setVisibility(View.GONE);
+        enrollButton.setVisibility(View.GONE);
+        setEnrollmentControlsEnabled(true);
+        enrollmentStatus.setText("Type at least two letters of the school name, then select the correct school from the results.");
+    }
+
+    private void searchForSchool() {
+        String query = schoolSearchInput.getText().toString().trim();
+        if (query.length() < 2) {
+            enrollmentStatus.setText("Enter at least two letters of the school name.");
+            return;
+        }
+
+        setEnrollmentControlsEnabled(false);
+        schoolSpinner.setVisibility(View.GONE);
+        enrollmentCodeInput.setVisibility(View.GONE);
+        enrollButton.setVisibility(View.GONE);
+        enrollmentStatus.setText("Searching the ARES school list…");
+
+        EnrollmentClient.searchSchools(query, new EnrollmentClient.SearchCallback() {
+            @Override
+            public void onSuccess(List<EnrollmentClient.School> schools) {
+                runOnUiThread(() -> {
+                    setEnrollmentControlsEnabled(true);
+                    if (schools.isEmpty()) {
+                        enrollmentStatus.setText("No matching school was found. Try a shorter or slightly different school name.");
+                        return;
+                    }
+
+                    ArrayAdapter<EnrollmentClient.School> adapter = new ArrayAdapter<>(
+                            MainActivity.this,
+                            android.R.layout.simple_spinner_item,
+                            schools);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    schoolSpinner.setAdapter(adapter);
+                    schoolSpinner.setVisibility(View.VISIBLE);
+                    enrollmentCodeInput.setVisibility(View.VISIBLE);
+                    enrollButton.setVisibility(View.VISIBLE);
+                    enrollmentStatus.setText("Select the exact school, enter its enrollment code, then tap Enroll this phone.");
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    setEnrollmentControlsEnabled(true);
+                    enrollmentStatus.setText("Could not search the school list. Make sure this phone has Internet access, then try again.\n\n" + message);
+                });
+            }
+        });
+    }
+
+    private void enrollSelectedSchool() {
+        Object selected = schoolSpinner.getSelectedItem();
+        if (!(selected instanceof EnrollmentClient.School)) {
+            enrollmentStatus.setText("Search for and select the school first.");
+            return;
+        }
+
+        EnrollmentClient.School school = (EnrollmentClient.School) selected;
+        String code = enrollmentCodeInput.getText().toString().trim().toUpperCase(Locale.US);
+        if (code.isEmpty()) {
+            enrollmentStatus.setText("Enter the enrollment code for " + school.canonicalName + ".");
+            return;
+        }
+
+        enrollmentCodeInput.setText(code);
+        setEnrollmentControlsEnabled(false);
+        enrollmentStatus.setText("Enrolling this phone to " + school.canonicalName + "…");
+
+        String deviceLabel = (Build.MANUFACTURER + " " + Build.MODEL).trim();
+        EnrollmentClient.enroll(
+                school.schoolId,
+                code,
+                deviceLabel,
+                new EnrollmentClient.EnrollmentCallback() {
+                    @Override
+                    public void onSuccess(EnrollmentClient.EnrollmentResult result) {
+                        runOnUiThread(() -> {
+                            EnrollmentStore.save(MainActivity.this, result);
+                            enrollmentCodeInput.setText("");
+                            activateCollectionUi(true);
+                        });
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        runOnUiThread(() -> {
+                            setEnrollmentControlsEnabled(true);
+                            enrollmentStatus.setText("Enrollment failed. Confirm the selected school and code, then try again.\n\n" + message);
+                        });
+                    }
+                });
+    }
+
+    private void activateCollectionUi(boolean justEnrolled) {
+        EnrollmentStore.Enrollment enrollment = EnrollmentStore.get(this);
+        if (enrollment == null) {
+            showEnrollmentUi();
+            return;
+        }
+
+        enrollmentPanel.setVisibility(View.GONE);
+        collectionPanel.setVisibility(View.VISIBLE);
+        enrolledSchoolText.setText("School: " + enrollment.canonicalName
+                + "\nDevice: " + enrollment.deviceId);
+
+        CollectionReminderScheduler.scheduleAll(this);
+        refreshScheduleStatus();
+
+        if (justEnrolled) {
+            setStatus("✓ Setup complete for " + enrollment.canonicalName + ".\n\n"
+                    + "ARES Sync is ready. When a collection is due, use the button below to connect to ARES2 or ARES at the school.");
+        } else {
+            handleIntent(getIntent());
+        }
+
+        requestNotificationPermissionIfNeeded();
     }
 
     private void handleIntent(Intent intent) {
@@ -73,6 +228,11 @@ public final class MainActivity extends Activity {
     }
 
     private void openWifiPanel() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            showEnrollmentUi();
+            return;
+        }
+
         awaitingWifiSelection = true;
         setStatus("Android Wi-Fi controls are opening.\n\n"
                 + "Please choose ARES2 or ARES. Then close the Wi-Fi panel or return to ARES Sync. The collection check will start automatically.");
@@ -84,6 +244,11 @@ public final class MainActivity extends Activity {
     }
 
     private void tryCollectionOnCurrentWifi() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            showEnrollmentUi();
+            return;
+        }
+
         Network wifiNetwork = wifiConnector.getCurrentWifiNetwork();
         if (wifiNetwork == null) {
             setStatus("No Wi-Fi connection is currently available.\n\n"
@@ -151,6 +316,10 @@ public final class MainActivity extends Activity {
     }
 
     private void refreshScheduleStatus() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            return;
+        }
+
         CollectionSchedule.Collection due = CollectionSchedule.getPendingDueCollection(this);
         if (due != null) {
             scheduleText.setText("DUE: " + due.label + "\nScheduled date: " + due.dueDate
@@ -168,6 +337,10 @@ public final class MainActivity extends Activity {
     }
 
     private void requestNotificationPermissionIfNeeded() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            return;
+        }
+
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -187,9 +360,18 @@ public final class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST
                 && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                && EnrollmentStore.isEnrolled(this)) {
             CollectionNotification.showIfDue(this);
         }
+    }
+
+    private void setEnrollmentControlsEnabled(boolean enabled) {
+        schoolSearchInput.setEnabled(enabled);
+        schoolSearchButton.setEnabled(enabled);
+        schoolSpinner.setEnabled(enabled);
+        enrollmentCodeInput.setEnabled(enabled);
+        enrollButton.setEnabled(enabled);
     }
 
     private void setButtonsEnabled(boolean enabled) {

@@ -23,30 +23,118 @@
             android:text="@string/mvp_description"
             android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/scheduleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="Checking collection schedule…"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/chooseWifiButton"
+        <LinearLayout
+            android:id="@+id/enrollmentPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Connect to ARES or ARES2 wifi network" />
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/statusText"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/enrollment_title"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/enrollment_intro"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/schoolSearchInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:hint="@string/school_search_hint"
+                android:inputType="textCapWords"
+                android:maxLines="1" />
+
+            <Button
+                android:id="@+id/schoolSearchButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/school_search_button" />
+
+            <Spinner
+                android:id="@+id/schoolSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/enrollmentCodeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/enrollment_code_hint"
+                android:inputType="textCapCharacters"
+                android:maxLines="1"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/enrollButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/enroll_button"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/enrollmentStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/collectionPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="@string/status_starting"
-            android:textIsSelectable="true"
-            android:textSize="18sp" />
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/enrolledSchoolText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/scheduleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="Checking collection schedule…"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/chooseWifiButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Connect to ARES or ARES2 wifi network" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="@string/status_starting"
+                android:textIsSelectable="true"
+                android:textSize="18sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

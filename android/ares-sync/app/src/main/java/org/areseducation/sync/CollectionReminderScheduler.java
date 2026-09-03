@@ -17,6 +17,14 @@ public final class CollectionReminderScheduler {
             return;
         }
 
+        if (!EnrollmentStore.isEnrolled(context)) {
+            for (CollectionSchedule.Collection collection : CollectionSchedule.all()) {
+                alarmManager.cancel(reminderPendingIntent(context, collection.id));
+                CollectionNotification.cancel(context, collection.id);
+            }
+            return;
+        }
+
         long now = System.currentTimeMillis();
         for (CollectionSchedule.Collection collection : CollectionSchedule.all()) {
             PendingIntent pendingIntent = reminderPendingIntent(context, collection.id);

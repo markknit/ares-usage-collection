@@ -9,6 +9,11 @@ public final class CollectionReminderReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (!EnrollmentStore.isEnrolled(context)) {
+            CollectionReminderScheduler.scheduleAll(context);
+            return;
+        }
+
         String collectionId = intent == null ? null : intent.getStringExtra(EXTRA_COLLECTION_ID);
         CollectionSchedule.Collection collection = CollectionSchedule.find(collectionId);
         if (collection != null

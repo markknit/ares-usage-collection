@@ -2,27 +2,17 @@
 
 Use these instructions whenever this file is supplied in a ChatGPT conversation concerning the ARES Usage Collection project.
 
-## Purpose
+## Relationship to general model routing
 
-Apply the ARES Terra/Sol/Astra routing and measurement policy automatically. The user should normally be able to describe the task without separately asking for model routing or tracking.
+ARES uses the same general principle as `GENERAL_MODEL_ROUTING.md`: use the lowest-cost model reasonably capable of completing the task, apply routing silently when the current model is suitable, and escalate based on reasoning difficulty, uncertainty, risk, or failed attempts rather than task size.
 
-## When to apply routing
+This file adds **ARES-specific controls and measurement**. It does not redefine the general Terra/Sol/Astra policy unnecessarily.
 
-For every **substantial** ARES task involving implementation, debugging, configuration, testing, research, architecture, documentation, or review, assess the appropriate model before significant work begins.
+## When to apply ARES controls
 
-Do not interrupt trivial questions, tiny edits, or low-cost exchanges with routing overhead.
+For substantial ARES work involving implementation, debugging, configuration, testing, research, architecture, documentation, or review, apply the ARES controls below. Do not interrupt trivial questions or tiny edits with tracking overhead.
 
-## Model policy
-
-Recommend the lowest-cost model reasonably capable of completing the task correctly:
-
-- **Terra:** routine inspection, straightforward implementation, configuration edits, tests, documentation, and execution of an established plan.
-- **Sol:** non-obvious debugging, cross-component reasoning, research, substantial design work, or escalation after Terra struggles.
-- **Astra:** persistent problems after Sol, high-risk or difficult-to-reverse architecture, or especially consequential independent review.
-
-Task size alone does not justify escalation. A large mechanical task can remain Terra; a small but subtle high-risk task can require Sol or Astra.
-
-## Mandatory review
+## Mandatory ARES review
 
 Work affecting any of the following requires review by at least Sol even if Terra performs the implementation:
 
@@ -32,46 +22,32 @@ Work affecting any of the following requires review by at least Sol even if Terr
 - potential data loss
 - reporting semantics
 
-## Interaction with the user
+## Cross-surface task continuity
 
-Apply routing silently when the current model is suitable. Do not require the user to type a routing command.
+ARES work may move between ordinary ChatGPT, a ChatGPT Project, Work, Codex, and Git. Treat work pursuing the same outcome as one logical task where practical.
 
-If a different model would materially improve expected cost, reliability, or safety, tell the user which model is recommended and briefly why. Do not create unnecessary switching friction for small tasks.
-
-If the current ChatGPT surface cannot switch models automatically, make the recommendation and allow the user to switch it.
-
-## Escalation
-
-Escalate Terra to Sol when reasoning difficulty, cross-component interaction, or unsuccessful attempts make Terra uneconomical. Escalate Sol to Astra for persistent failure, high-risk architecture, or consequential independent review.
-
-Preserve one logical task identity across escalation where practical. Do not count escalation as a new successful task merely because a stronger model completed it.
-
-## Cross-surface continuity
-
-ARES work may move between ordinary ChatGPT, a ChatGPT Project, Work, Codex, and Git. Treat this as one logical task when it is pursuing the same outcome.
-
-When repository access is available, consult the repository's authoritative detailed policy in `config/ai_model_routing.json` and use `tools/ai_model_router.py` and `tools/ai_task_tracker.py` for implementation work. Preserve the same `AI-Task-ID` across related implementation commits and escalations.
+When repository access is available, consult `config/ai_model_routing.json`, use `tools/ai_model_router.py` and `tools/ai_task_tracker.py` for implementation work, and preserve the same `AI-Task-ID` across related implementation commits and escalations.
 
 ## Outcome and measurement
 
 Use conservative outcomes: success, partial, failed, or abandoned. Do not equate code generation with success. Prefer tests, validation, operational evidence, and human acceptance where appropriate.
 
-The primary operational metric is credits per successful logical task. Also consider first-pass success, retries, escalation, task type, recommended vs. actual model, and human verification.
+For measured ARES work, the primary operational metric is credits per successful logical task. Also consider first-pass success, retries, escalation, task type, recommended vs. actual model, and human verification.
 
-Never invent token or credit usage. OpenAI usage data is authoritative for cost, and task-level attribution should be treated as provisional unless it can be reliably matched.
+Never invent token or credit usage. OpenAI usage data is authoritative for cost, and task-level attribution is provisional unless it can be reliably matched.
 
-## Source of truth and drift
+## Git discipline
 
-For repository work, `config/ai_model_routing.json` is the authoritative detailed routing policy. This context file intentionally contains a concise portable version. If repository access shows that this file conflicts with the current routing configuration, follow the repository configuration and flag the mismatch for correction.
+After every major completed implementation step, validate the work and create a descriptive Git commit before proceeding to the next major step. For AI-assisted repository work, include the AI metadata required by the repository tracking system.
+
+## Source of truth
+
+For repository work, `config/ai_model_routing.json` is the authoritative detailed ARES routing policy. If this portable context conflicts with the repository configuration, follow the repository configuration and flag the mismatch.
 
 ## Starting a new ordinary ChatGPT conversation
 
-If this file has been attached or its contents have been pasted into the conversation, these instructions are active for that conversation. The user does **not** need to invoke them again on each prompt.
+If this file is attached or pasted into an ordinary conversation, the ARES-specific instructions are active for that conversation. The user does not need to invoke them on every prompt.
 
-A suitable first message is simply:
+If a global/general model-routing instruction is already active, this file simply adds the ARES-specific controls above.
 
-`Use the attached ARES context for this conversation. I need to <describe task>.`
-
-After that, proceed normally for the rest of the chat.
-
-This file does not itself change the active ChatGPT model or execute repository scripts. It provides the policy ChatGPT should follow and tells ChatGPT when a model change should be recommended.
+This file does not itself switch the active ChatGPT model or execute repository scripts. When automatic switching is unavailable, ChatGPT should recommend a model change only when it is materially worthwhile or required by the ARES review policy.

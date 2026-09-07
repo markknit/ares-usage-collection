@@ -23,3 +23,21 @@ Before committing:
 5. Use a concise and descriptive commit message.
 
 Avoid combining unrelated changes into one commit.
+
+## AI-assisted development tracking
+
+For major implementation steps completed with OpenAI/Codex assistance, record the model and outcome metadata in the Git commit. Prefer:
+
+```bash
+python3 tools/ai_task_tracker.py commit \
+  --model terra \
+  --type implementation \
+  --retries 0 \
+  --message "Describe completed step"
+```
+
+Use the same `AI-Task-ID` across commits when one logical task spans multiple commits or is escalated between models. Record an escalation rather than silently starting a new task so later analysis includes the cost of unsuccessful earlier attempts.
+
+Default routing is Terra for routine implementation, Sol for harder reasoning/debugging, and Astra for persistent or high-consequence problems. Do not escalate solely because a task is large.
+
+See `docs/AI_MODEL_TRACKING.md` for the tracking schema, routing policy, export command, evaluation metrics, and limitations.

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/upload_lib.php';
+require __DIR__ . '/device_auth_lib.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD') {
     ares_json_response(200, [
@@ -32,15 +33,45 @@ if ($requireHttps && !ares_is_https($_SERVER)) {
     ares_json_response(400, ['accepted' => false, 'error' => 'https-required']);
 }
 
-$expectedKey = trim((string)($config['upload_key'] ?? ''));
-if (strlen($expectedKey) < 32 || strpos($expectedKey, 'REPLACE_') === 0) {
-    ares_json_response(503, ['accepted' => false, 'error' => 'upload-key-not-configured']);
-}
+$deviceId = ares_extract_device_id($_SERVER);
+$deviceCredential = ares_extract_device_credential($_SERVER);
+$deviceAuthRequested = ($deviceId !== '' || $deviceCredential !== '');
+$authMode = 'shared-key';
+$authenticatedSchoolId = null;
+$authenticatedDeviceId = null;
 
-$providedKey = ares_extract_upload_key($_SERVER);
-if ($providedKey === '' || !hash_equals($expectedKey, $providedKey)) {
-    header('WWW-Authenticate: Bearer realm="ARES monitor upload"');
-    ares_json_response(401, ['accepted' => false, 'error' => 'unauthorized']);
+if ($deviceAuthRequested) {
+    if ($deviceId === '' || $deviceCredential === '') {
+        ares_json_response(401, ['accepted' => false, 'error' => 'unauthorized']);
+    }
+
+    $statePath = trim((string)($config['enrollment_state_path'] ?? ''));
+    if ($statePath === '') {
+        ares_json_response(503, ['accepted' => false, 'error' => 'device-auth-not-ready']);
+    }
+
+    $deviceAuth = ares_authenticate_device($statePath, $deviceId, $deviceCredential);
+    if (($deviceAuth['ok'] ?? false) !== true) {
+        if (($deviceAuth['error'] ?? '') === 'device-auth-not-ready') {
+            ares_json_response(503, ['accepted' => false, 'error' => 'device-auth-not-ready']);
+        }
+        ares_json_response(401, ['accepted' => false, 'error' => 'unauthorized']);
+    }
+
+    $authMode = 'device';
+    $authenticatedSchoolId = (string)$deviceAuth['school_id'];
+    $authenticatedDeviceId = (string)$deviceAuth['device_id'];
+} else {
+    $expectedKey = trim((string)($config['upload_key'] ?? ''));
+    if (strlen($expectedKey) < 32 || strpos($expectedKey, 'REPLACE_') === 0) {
+        ares_json_response(503, ['accepted' => false, 'error' => 'upload-key-not-configured']);
+    }
+
+    $providedKey = ares_extract_upload_key($_SERVER);
+    if ($providedKey === '' || !hash_equals($expectedKey, $providedKey)) {
+        header('WWW-Authenticate: Bearer realm="ARES monitor upload"');
+        ares_json_response(401, ['accepted' => false, 'error' => 'unauthorized']);
+    }
 }
 
 if (!isset($_FILES['usage_file']) || !is_array($_FILES['usage_file'])) {
@@ -57,10 +88,24 @@ if ($errorCode !== UPLOAD_ERR_OK) {
     ]);
 }
 
-$filename = (string)($file['name'] ?? '');
-$metadata = ares_parse_usage_filename($filename);
+$sourceFilename = (string)($file['name'] ?? '');
+$metadata = ares_parse_usage_filename($sourceFilename);
 if ($metadata === null) {
     ares_json_response(400, ['accepted' => false, 'error' => 'invalid-filename']);
+}
+
+$filename = $sourceFilename;
+if ($authMode === 'device') {
+    $canonicalFilename = ares_filename_for_school($metadata, (string)$authenticatedSchoolId);
+    if ($canonicalFilename === null) {
+        ares_json_response(500, ['accepted' => false, 'error' => 'canonical-filename-failed']);
+    }
+    $filename = $canonicalFilename;
+    $canonicalMetadata = ares_parse_usage_filename($filename);
+    if ($canonicalMetadata === null) {
+        ares_json_response(500, ['accepted' => false, 'error' => 'canonical-filename-failed']);
+    }
+    $metadata = $canonicalMetadata;
 }
 
 $maxBytes = (int)($config['max_bytes'] ?? (2 * 1024 * 1024));
@@ -98,15 +143,24 @@ if ($incomingSha256 === false) {
 $targetPath = rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
 $targetState = ares_target_state($targetPath, $incomingSha256);
 
+$responseIdentity = [];
+if ($authMode === 'device') {
+    $responseIdentity = [
+        'auth_mode' => 'device',
+        'device_id' => $authenticatedDeviceId,
+        'school_id' => $authenticatedSchoolId,
+    ];
+}
+
 if ($targetState === 'duplicate') {
-    ares_json_response(200, [
+    ares_json_response(200, array_merge([
         'accepted' => true,
         'status' => 'duplicate',
         'filename' => $filename,
         'school' => $metadata['school'],
         'collection' => $metadata['collection'],
         'sha256' => $incomingSha256,
-    ]);
+    ], $responseIdentity));
 }
 
 if ($targetState === 'conflict') {
@@ -137,14 +191,14 @@ if (!rename($tempTarget, $targetPath)) {
 
     $raceState = ares_target_state($targetPath, $incomingSha256);
     if ($raceState === 'duplicate') {
-        ares_json_response(200, [
+        ares_json_response(200, array_merge([
             'accepted' => true,
             'status' => 'duplicate',
             'filename' => $filename,
             'school' => $metadata['school'],
             'collection' => $metadata['collection'],
             'sha256' => $incomingSha256,
-        ]);
+        ], $responseIdentity));
     }
 
     ares_json_response(500, ['accepted' => false, 'error' => 'finalize-failed']);
@@ -152,7 +206,7 @@ if (!rename($tempTarget, $targetPath)) {
 
 @chmod($targetPath, 0600);
 
-ares_json_response(201, [
+ares_json_response(201, array_merge([
     'accepted' => true,
     'status' => 'stored',
     'filename' => $filename,
@@ -160,4 +214,4 @@ ares_json_response(201, [
     'collection' => $metadata['collection'],
     'sha256' => $incomingSha256,
     'bytes' => filesize($targetPath),
-]);
+], $responseIdentity));

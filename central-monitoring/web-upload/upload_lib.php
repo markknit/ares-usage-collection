@@ -21,6 +21,22 @@ function ares_parse_usage_filename(string $name): ?array
     ];
 }
 
+function ares_filename_for_school(array $metadata, string $schoolId): ?string
+{
+    $schoolId = strtoupper(trim($schoolId));
+    $collection = strtoupper(trim((string)($metadata['collection'] ?? '')));
+    $timestamp = trim((string)($metadata['timestamp'] ?? ''));
+
+    if (!preg_match('/^[A-Z0-9][A-Z0-9_-]{2,31}$/', $schoolId)
+        || !preg_match('/^(?:20\d{2}-Q[1-4]-(?:MID|END)|AUTO)$/', $collection)
+        || !preg_match('/^20\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/', $timestamp)) {
+        return null;
+    }
+
+    $filename = 'ARES_USAGE_' . $schoolId . '_' . $collection . '_' . $timestamp . '.csv';
+    return ares_parse_usage_filename($filename) !== null ? $filename : null;
+}
+
 function ares_is_https(array $server): bool
 {
     if (isset($server['HTTPS']) && $server['HTTPS'] !== '' && strtolower((string)$server['HTTPS']) !== 'off') {

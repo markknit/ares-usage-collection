@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "default_model": "terra",
+  "task_type_defaults": {
+    "inspection": "terra",
+    "implementation": "terra",
+    "config": "terra",
+    "tests": "terra",
+    "documentation": "terra",
+    "research": "sol",
+    "debugging": "sol",
+    "architecture": "sol",
+    "review": "sol"
+  },
+  "sol_triggers": {
+    "architecture_impact": ["medium"],
+    "minimum_components": 3,
+    "minimum_files": 6,
+    "minimum_previous_failures": 1,
+    "cross_boundary": true
+  },
+  "astra_triggers": {
+    "architecture_impact": ["high"],
+    "risk": ["high"],
+    "minimum_previous_sol_failures": 2,
+    "irreversible_design": true
+  },
+  "mandatory_review": {
+    "areas": [
+      "collection-integrity",
+      "school-identity",
+      "deduplication",
+      "data-loss",
+      "reporting-semantics"
+    ],
+    "minimum_review_model": "sol"
+  },
+  "notes": {
+    "large_mechanical_tasks": "Task size alone does not justify escalation.",
+    "escalation": "Preserve the same AI-Task-ID when moving from Terra to Sol or Sol to Astra."
+  }
+}

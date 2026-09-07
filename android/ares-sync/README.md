@@ -12,6 +12,10 @@ Automatic Wi-Fi switching has been exhausted on this pilot device. The API 36 lo
 
 The central school registry and one-time enrollment service were validated live before the Android enrollment UI was added. The server resolves canonical schools, issues a unique device ID and credential after one-time-code enrollment, and rejects code reuse.
 
+On 2026-09-07, version `0.5.0-school-enrollment` was validated on the real pilot phone against the pilot server formerly named `Tsavo3` and temporarily renamed `Misuni`. First-launch school enrollment completed successfully. The enrolled app then connected through the teacher-assisted `ARES2` handoff and correctly handled HTTP `204` when no collection was due. A temporary `TEST-DUE` collection dated 2026-09-07 was then added to the live server schedule; repeating the same phone flow returned HTTP `200` and identified the due collection as `TEST-DUE`. This validates that adding school enrollment did not break either the no-content or due-collection local-server paths.
+
+A field UI issue was also identified during enrollment: when the teacher enters the enrollment code, the on-screen keyboard can cover the code-entry field. A future UI pass should ensure the form resizes or scrolls the active code field above the keyboard.
+
 ## First-launch school enrollment
 
 Version `0.5.0-school-enrollment` adds first-time device assignment before collection reminders begin.

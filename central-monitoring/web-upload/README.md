@@ -44,7 +44,8 @@ No live enrollment code, device credential, enrollment-state file, or live schoo
 ## Files
 
 - `index.php` - public upload health check and authenticated CSV upload endpoint.
-- `upload_lib.php` - upload validation and helper functions.
+- `upload_lib.php` - upload validation, canonical filename, and helper functions.
+- `device_auth_lib.php` - per-device upload credential validation against protected enrollment state.
 - `schools.php` - school-name search endpoint used during enrollment.
 - `enroll.php` - one-time enrollment endpoint that binds a phone to a canonical school.
 - `enrollment_lib.php` - school matching, one-time-code, and device credential helpers.
@@ -217,9 +218,36 @@ should return JSON similar to:
 
 The health check does not reveal the upload key or stored filenames.
 
-## Pilot upload test
+## Per-device authenticated upload
 
-Use a valid ARES usage filename and the private key stored only on the server/test machine:
+The Android production path authenticates each upload with the credential issued during enrollment. ARES Sync sends both headers:
+
+```text
+X-ARES-Device-ID: ARES-D-XXXXXXXXXXXX
+X-ARES-Device-Credential: <64-character device credential>
+```
+
+and sends the CSV as multipart field `usage_file`.
+
+The upload endpoint validates the credential against the SHA-256 credential hash in protected `data/enrollment_state.json`. Unknown devices, revoked devices, malformed credentials, and wrong credentials return HTTP `401`. If enrollment state is unavailable or malformed, device authentication returns HTTP `503` rather than falling back to the shared upload key.
+
+For a valid device upload, the server does not trust the school segment in the local server's filename. It preserves the collection ID and timestamp but replaces the filename's school segment with the enrolled canonical `school_id`. For example:
+
+```text
+local filename:
+ARES_USAGE_TSAVO3_2026-Q3-MID_2026-09-07_10-20-30.csv
+
+stored central filename:
+ARES_USAGE_ARES-S0016_2026-Q3-MID_2026-09-07_10-20-30.csv
+```
+
+This keeps `central-monitoring/process_incoming.py` compatible with the existing filename contract while ensuring the permanent central school identity comes from enrollment rather than a legacy hostname.
+
+A successful new upload returns HTTP `201` / `status: stored`. An exact retry returns HTTP `200` / `status: duplicate`. Both are acknowledgements that allow the phone to mark its pending file sent.
+
+## Legacy shared-key upload test
+
+The private shared upload key remains supported for administrator/test uploads that do not send device-authentication headers:
 
 ```bash
 curl -i \
@@ -228,32 +256,37 @@ curl -i \
   https://areseducation.org/monitor_upload/
 ```
 
+For this legacy path, the filename is preserved exactly as submitted.
+
 Expected responses:
 
 - `201` with `status: stored` - new file accepted.
-- `200` with `status: duplicate` - exact same filename and content already exists; safe retry.
+- `200` with `status: duplicate` - exact same canonical filename and content already exists; safe retry.
 - `400` - invalid filename, file, CSV, or upload request.
-- `401` - missing or invalid upload key.
-- `409` - same filename already exists with different content.
-- `503` - server configuration or storage is not ready.
+- `401` - missing/invalid authentication or revoked/unknown device.
+- `409` - same canonical filename already exists with different content.
+- `503` - server configuration, device-auth state, or storage is not ready.
 
 ## Filename contract
 
-The upload endpoint uses the same filename contract as `central-monitoring/process_incoming.py`:
+The upload endpoint and `central-monitoring/process_incoming.py` use:
 
 `ARES_USAGE_<SCHOOL>_<COLLECTION>_<YYYY-MM-DD_HH-MM-SS>.csv`
 
 Examples:
 
-- `ARES_USAGE_TSAVO3_2026-Q3-MID_2026-08-27_10-20-30.csv`
-- `ARES_USAGE_TSAVO3_AUTO_2026-08-27_10-20-30.csv`
+- `ARES_USAGE_ARES-S0016_2026-Q3-MID_2026-09-07_10-20-30.csv`
+- `ARES_USAGE_TSAVO3_AUTO_2026-08-27_10-20-30.csv` for a legacy shared-key upload.
 
-This preserves compatibility with the existing central processing logic.
+Device-authenticated uploads use the enrolled canonical school ID in `<SCHOOL>`.
 
 ## Security model
 
 - Production upload and enrollment POSTs require HTTPS.
-- Pilot CSV uploads currently use a private upload key; the Android production path will move to per-device credentials.
+- Android uploads authenticate with a unique per-device ID and 256-bit device credential; the global upload key is not embedded in the APK.
+- The legacy private upload key remains available only as an administrator/test path when device headers are absent.
+- Device-authenticated filenames are canonicalized to the enrolled `school_id`, preventing the local filename from claiming another permanent school identity.
+- Revoked devices are rejected.
 - Enrollment-code administration requires a third independent administrator key and is HTTPS-only.
 - Enrollment codes are school-specific, HMAC-protected at rest, and one-time-use.
 - Device credentials are random 256-bit values and are stored server-side only as SHA-256 hashes.

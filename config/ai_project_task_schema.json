@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "fields": {
+    "task_id": "Persistent logical task identifier shared across Chat, Work, Codex, and Git commits.",
+    "task_description": "Short human-readable description of the task.",
+    "task_type": "inspection|implementation|config|tests|documentation|research|debugging|architecture|review|other",
+    "surface": "chat|work|codex|other",
+    "recommended_model": "terra|sol|astra|other",
+    "actual_model": "terra|sol|astra|other",
+    "reasoning_level": "When available from OpenAI usage data.",
+    "routing_reason": "Why the recommended model was selected.",
+    "started_at": "ISO-8601 timestamp when available.",
+    "completed_at": "ISO-8601 timestamp when available.",
+    "retries": "Number of meaningful unsuccessful attempts before completion.",
+    "escalated": "yes|no",
+    "escalated_from": "terra|sol|astra|other or blank",
+    "escalated_to": "terra|sol|astra|other or blank",
+    "escalation_reason": "Short explanation when escalation occurs.",
+    "outcome": "success|partial|failed|abandoned",
+    "human_verified": "yes|no|not-applicable",
+    "commit_shas": "Zero or more Git commit SHAs associated with the logical task.",
+    "credits": "OpenAI credits when reliably attributable; otherwise blank.",
+    "credit_attribution_status": "verified|provisional|unmatched",
+    "notes": "Optional evaluator notes, including later rework that changes the outcome assessment."
+  },
+  "principles": [
+    "Use the same task_id across surfaces when one logical task moves between Chat, Work, Codex, or Git implementation.",
+    "Do not infer credits from elapsed time or model list price when OpenAI usage data is not reliably attributable.",
+    "Do not treat a technically completed task as successful until the relevant validation or human review has occurred.",
+    "Preserve failed and escalated attempts so total cost is not biased toward only the successful final model."
+  ]
+}

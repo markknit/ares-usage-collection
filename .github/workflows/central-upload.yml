@@ -28,6 +28,7 @@ jobs:
         run: |
           php -l central-monitoring/web-upload/index.php
           php -l central-monitoring/web-upload/upload_lib.php
+          php -l central-monitoring/web-upload/device_auth_lib.php
           php -l central-monitoring/web-upload/enrollment_lib.php
           php -l central-monitoring/web-upload/enrollment_admin_lib.php
           php -l central-monitoring/web-upload/schools.php

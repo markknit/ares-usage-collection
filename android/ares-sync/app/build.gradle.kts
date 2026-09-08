@@ -10,8 +10,8 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.5.0-school-enrollment"
+        versionCode = 6
+        versionName = "0.6.0-central-upload"
     }
 
     buildTypes {
@@ -28,4 +28,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    implementation("androidx.work:work-runtime:2.11.2")
 }

@@ -18,6 +18,8 @@ A field UI issue was also identified during enrollment: when the teacher enters 
 
 The live central endpoint was subsequently validated with per-device authentication. A device-authenticated synthetic upload was accepted and canonicalized to the enrolled school ID, and the exact retry returned `status: duplicate`. Version `0.6.0-central-upload` builds the corresponding automatic Android delivery path.
 
+On 2026-09-08, version `0.6.0-central-upload` was validated end to end on the real pilot phone using a fresh installation and fresh Misuuni enrollment. The phone connected to `ARES2`, downloaded a real `2026-Q3-MID` collection with HTTP `200`, and showed one file pending Internet delivery. ARES Sync was then left in the background before the phone reconnected to normal Internet. Without reopening the app to trigger delivery, WorkManager completed the central HTTPS upload in the background. When ARES Sync was opened again, the pending count was zero and the last central upload showed HTTP `201`, confirming that the server stored the file and that the app cleared pending state only after acknowledgement. This validates the required teacher workflow in which central delivery occurs automatically after Internet connectivity returns even when ARES Sync is not in the foreground.
+
 ## First-launch school enrollment
 
 Version `0.5.0-school-enrollment` added first-time device assignment before collection reminders begin.

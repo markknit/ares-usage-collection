@@ -1,13 +1,15 @@
-PLACE THESE TESTED, APPROVED FILES IN THIS DIRECTORY:
+ARES SYNC PHONE SETUP DOWNLOAD AREA
 
-1. roundsync-approved.apk
-   Copy the exact Round Sync APK used in pilot testing. Record its SHA-256 hash.
+Required for the current ARES Sync setup portal:
 
-2. ARES-RoundSync-Config.zip
-   Export from the fully tested master phone using Round Sync > Export Config.
+1. ares-sync.apk
+   - Use the exact Android APK approved for the current acceptance/production release.
+   - Record and verify its SHA-256 hash before deployment.
+   - The setup page links to this exact filename.
 
-3. ARES-<SCHOOL_CODE>-Automation.macro
-   Export the tested MacroDroid template once per school after setting school code,
-   Wi-Fi SSID, local ARES URL, schedule URL, Round Sync task ID, and local folder.
+Do not place passwords, enrollment codes, device credentials, OAuth tokens,
+Round Sync configuration exports, live rclone configuration, or private school
+data in this public directory.
 
-The website's administrator page reports missing files.
+Round Sync, MacroDroid, and school-specific automation files are no longer part
+of the target ARES Sync phone architecture.

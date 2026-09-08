@@ -38,6 +38,15 @@ public final class MainActivity extends Activity {
     private Button chooseWifiButton;
     private AresWifiConnector wifiConnector;
     private boolean awaitingWifiSelection;
+    private final Runnable uploadStatusRefresh = new Runnable() {
+        @Override
+        public void run() {
+            if (EnrollmentStore.isEnrolled(MainActivity.this)) {
+                refreshScheduleStatus();
+                statusText.postDelayed(this, 5000L);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +97,21 @@ public final class MainActivity extends Activity {
         if (EnrollmentStore.isEnrolled(this)) {
             CentralUploadScheduler.enqueuePending(this);
             refreshScheduleStatus();
+            statusText.removeCallbacks(uploadStatusRefresh);
+            statusText.postDelayed(uploadStatusRefresh, 1500L);
             if (awaitingWifiSelection) {
                 awaitingWifiSelection = false;
                 statusText.postDelayed(this::tryCollectionOnCurrentWifi, 1200L);
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        if (statusText != null) {
+            statusText.removeCallbacks(uploadStatusRefresh);
+        }
+        super.onPause();
     }
 
     private void showEnrollmentUi() {
@@ -349,12 +368,35 @@ public final class MainActivity extends Activity {
     }
 
     private String pendingUploadLine() {
-        int count = PendingUploadStore.pendingCount(this);
-        if (count <= 0) {
-            return "\nCentral upload: no pending files.";
+        PendingUploadStore.UploadStatus upload = PendingUploadStore.getStatus(this);
+        StringBuilder line = new StringBuilder();
+        if (upload.pendingCount <= 0) {
+            line.append("\nCentral upload: no pending files.");
+            if ("sent".equals(upload.status)) {
+                appendUploadResult(line, upload);
+            }
+            return line.toString();
         }
-        return "\nCentral upload: " + count + " file" + (count == 1 ? "" : "s")
-                + " pending Internet delivery.";
+
+        line.append("\nCentral upload: ").append(upload.pendingCount).append(" file")
+                .append(upload.pendingCount == 1 ? "" : "s")
+                .append(" pending Internet delivery.");
+        if ("waiting".equals(upload.status) || "blocked".equals(upload.status)) {
+            appendUploadResult(line, upload);
+        }
+        return line.toString();
+    }
+
+    private static void appendUploadResult(
+            StringBuilder line,
+            PendingUploadStore.UploadStatus upload) {
+        line.append("\nLast central upload state: ").append(upload.status);
+        if (upload.fileName != null && !upload.fileName.isEmpty()) {
+            line.append(" — ").append(upload.fileName);
+        }
+        if (upload.message != null && !upload.message.isEmpty()) {
+            line.append("\n").append(upload.message);
+        }
     }
 
     private void requestNotificationPermissionIfNeeded() {

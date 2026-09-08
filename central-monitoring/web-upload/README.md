@@ -41,6 +41,19 @@ The live checks confirmed:
 
 No live enrollment code, device credential, enrollment-state file, or live school registry is stored in this repository.
 
+## Validated live per-device upload
+
+On 2026-09-07, the production upload endpoint was validated using an enrolled Misuuni pilot device credential.
+
+The live checks confirmed:
+
+- A device-authenticated multipart upload was accepted using `X-ARES-Device-ID` plus `X-ARES-Device-Credential`.
+- The submitted legacy-host filename `ARES_USAGE_TSAVO3_AUTO_2026-09-07_12-55-00.csv` was stored canonically as `ARES_USAGE_ARES-S0016_AUTO_2026-09-07_12-55-00.csv`.
+- The response identified `auth_mode: device`, the enrolled device ID, and `school_id: ARES-S0016`.
+- Repeating the exact upload returned `status: duplicate`, confirming that device-authenticated retries are idempotent.
+
+This validates the production authentication path the Android uploader will use. No live device credential or uploaded CSV is stored in this repository.
+
 ## Files
 
 - `index.php` - public upload health check and authenticated CSV upload endpoint.

@@ -78,15 +78,20 @@ public final class MainActivity extends Activity {
         if (EnrollmentStore.isEnrolled(this)) {
             handleIntent(intent);
             refreshScheduleStatus();
+            CentralUploadScheduler.enqueuePending(this);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (EnrollmentStore.isEnrolled(this) && awaitingWifiSelection) {
-            awaitingWifiSelection = false;
-            statusText.postDelayed(this::tryCollectionOnCurrentWifi, 1200L);
+        if (EnrollmentStore.isEnrolled(this)) {
+            CentralUploadScheduler.enqueuePending(this);
+            refreshScheduleStatus();
+            if (awaitingWifiSelection) {
+                awaitingWifiSelection = false;
+                statusText.postDelayed(this::tryCollectionOnCurrentWifi, 1200L);
+            }
         }
     }
 
@@ -202,6 +207,7 @@ public final class MainActivity extends Activity {
                 + "\nDevice: " + enrollment.deviceId);
 
         CollectionReminderScheduler.scheduleAll(this);
+        CentralUploadScheduler.enqueuePending(this);
         refreshScheduleStatus();
 
         if (justEnrolled) {
@@ -290,7 +296,10 @@ public final class MainActivity extends Activity {
                                     CollectionReminderScheduler.cancel(MainActivity.this, result.collectionId);
                                     CollectionNotification.cancel(MainActivity.this, result.collectionId);
                                 }
-                                message.append("\nCollection complete. The teacher can reconnect the phone to its normal Internet Wi-Fi.");
+
+                                CentralUploadScheduler.enqueuePending(MainActivity.this);
+                                message.append("\nCollection complete. Secure central upload is queued and will run automatically when validated Internet access is available.");
+                                message.append(" The teacher can reconnect the phone to its normal Internet Wi-Fi.");
                             } else if (result.statusCode == 204) {
                                 message.append("No collection is currently due according to the ARES server.\n");
                             }
@@ -320,20 +329,32 @@ public final class MainActivity extends Activity {
             return;
         }
 
+        String uploadLine = pendingUploadLine();
         CollectionSchedule.Collection due = CollectionSchedule.getPendingDueCollection(this);
         if (due != null) {
             scheduleText.setText("DUE: " + due.label + "\nScheduled date: " + due.dueDate
-                    + " (Africa/Nairobi)\nConnect to ARES2 or ARES at the school to collect.");
+                    + " (Africa/Nairobi)\nConnect to ARES2 or ARES at the school to collect."
+                    + uploadLine);
             return;
         }
 
         CollectionSchedule.Collection next = CollectionSchedule.getNextIncompleteCollection(this);
         if (next != null) {
             scheduleText.setText("Next collection: " + next.label + "\nScheduled date: "
-                    + next.dueDate + " (Africa/Nairobi)");
+                    + next.dueDate + " (Africa/Nairobi)" + uploadLine);
         } else {
-            scheduleText.setText("All configured 2026 collections are marked complete on this phone.");
+            scheduleText.setText("All configured 2026 collections are marked complete on this phone."
+                    + uploadLine);
         }
+    }
+
+    private String pendingUploadLine() {
+        int count = PendingUploadStore.pendingCount(this);
+        if (count <= 0) {
+            return "\nCentral upload: no pending files.";
+        }
+        return "\nCentral upload: " + count + " file" + (count == 1 ? "" : "s")
+                + " pending Internet delivery.";
     }
 
     private void requestNotificationPermissionIfNeeded() {

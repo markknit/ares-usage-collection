@@ -30,7 +30,7 @@ public final class CollectionSchedule {
             new Collection("2026-Q1-END", "Term 1 end-term", "2026-03-25"),
             new Collection("2026-Q2-MID", "Term 2 mid-term", "2026-06-15"),
             new Collection("2026-Q2-END", "Term 2 end-term", "2026-07-24"),
-            new Collection("2026-Q3-MID", "Term 3 mid-term", "2026-10-15"),
+            new Collection("2026-Q3-MID", "Term 3 mid-term", "2026-09-10"),
             new Collection("2026-Q3-END", "Term 3 end-term", "2026-11-25")
     );
 

@@ -10,8 +10,8 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.7.0-background-collection"
+        versionCode = 8
+        versionName = "0.7.0-acceptance-20260910"
     }
 
     buildTypes {

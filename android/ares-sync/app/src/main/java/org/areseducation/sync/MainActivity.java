@@ -410,22 +410,6 @@ public final class MainActivity extends Activity {
             requestPermissions(
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
                     NOTIFICATION_PERMISSION_REQUEST);
-        } else {
-            CollectionNotification.showIfDue(this);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            String[] permissions,
-            int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == NOTIFICATION_PERMISSION_REQUEST
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                && EnrollmentStore.isEnrolled(this)) {
-            CollectionNotification.showIfDue(this);
         }
     }
 

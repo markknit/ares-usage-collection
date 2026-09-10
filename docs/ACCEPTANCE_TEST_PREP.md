@@ -140,6 +140,14 @@ A clean second-server installation was validated on 2026-09-10 without recording
 
 The initial transferred shell script had Windows CRLF line endings; `.gitattributes` was added afterward to enforce LF endings for future checkouts.
 
+## Validated phone-side silent collection checkpoint
+
+On 2026-09-10, a freshly enrolled acceptance-test phone was connected to the school ARES network with the controlled `2026-Q3-MID` collection due. After the overdue scheduler path ran, the app showed exactly one file pending central upload and advanced the next scheduled collection to `2026-11-25`.
+
+That state validates the silent local collection path through the background worker: successful local download, completion marking for `2026-Q3-MID`, queuing of one pending central upload, and advancement to the next collection. The background worker does not update the foreground status text with a manual-download-style “downloaded” message, so the pending-upload count and advanced next date are the expected success indicators.
+
+The exact delivery timing of the inexact Android alarm was not independently validated by this checkpoint; `setAndAllowWhileIdle()` may be deferred by Android. The functional overdue/silent collection path is validated.
+
 ## Known follow-up items not to hide during the test
 
 - The collection schedule currently exists in both the Android app and school server. A single source of truth still needs to be designed.

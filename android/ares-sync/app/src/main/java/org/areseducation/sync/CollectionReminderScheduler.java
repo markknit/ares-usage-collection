@@ -36,7 +36,7 @@ public final class CollectionReminderScheduler {
 
             long triggerAt = ZonedDateTime.of(
                     collection.dueDate,
-                    java.time.LocalTime.of(7, 0),
+                    java.time.LocalTime.of(9, 0),
                     CollectionSchedule.SCHOOL_ZONE)
                     .toInstant()
                     .toEpochMilli();

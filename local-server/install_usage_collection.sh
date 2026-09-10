@@ -206,7 +206,7 @@ Tracker directory: $TRACKER_DIR
 Backup directory: $BACKUP_LOGICAL
 
 Next checks:
-  1. Confirm http://ares.local/tracker/prepare_due_usage_upload.php returns 204 when nothing is due.
+  1. Confirm the due endpoint returns 204 when called with the phone's latest completed collection and no later collection is due.
   2. Use a controlled due collection to test HTTP 200 download from ARES Sync.
   3. Confirm the phone later uploads to the central HTTPS service when Internet returns.
 EOF2

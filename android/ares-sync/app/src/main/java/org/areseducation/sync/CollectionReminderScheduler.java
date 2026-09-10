@@ -26,6 +26,8 @@ public final class CollectionReminderScheduler {
         }
 
         long now = System.currentTimeMillis();
+        CollectionSchedule.Collection overdue = null;
+
         for (CollectionSchedule.Collection collection : CollectionSchedule.all()) {
             PendingIntent pendingIntent = reminderPendingIntent(context, collection.id);
 
@@ -48,8 +50,14 @@ public final class CollectionReminderScheduler {
                         pendingIntent);
             } else {
                 alarmManager.cancel(pendingIntent);
-                CollectionAttemptScheduler.enqueue(context, collection.id);
+                if (overdue == null) {
+                    overdue = collection;
+                }
             }
+        }
+
+        if (overdue != null) {
+            CollectionAttemptScheduler.enqueue(context, overdue.id);
         }
     }
 

@@ -26,10 +26,12 @@ public final class CollectionSchedule {
     }
 
     private static final List<Collection> COLLECTIONS = Arrays.asList(
-            new Collection("2026-Q3-MID", "Quarter 3 mid-quarter", "2026-08-14"),
-            new Collection("2026-Q3-END", "Quarter 3 end-quarter", "2026-09-25"),
-            new Collection("2026-Q4-MID", "Quarter 4 mid-quarter", "2026-11-06"),
-            new Collection("2026-Q4-END", "Quarter 4 end-quarter", "2026-12-11")
+            new Collection("2026-Q1-MID", "Term 1 mid-term", "2026-02-16"),
+            new Collection("2026-Q1-END", "Term 1 end-term", "2026-03-25"),
+            new Collection("2026-Q2-MID", "Term 2 mid-term", "2026-06-15"),
+            new Collection("2026-Q2-END", "Term 2 end-term", "2026-07-24"),
+            new Collection("2026-Q3-MID", "Term 3 mid-term", "2026-10-15"),
+            new Collection("2026-Q3-END", "Term 3 end-term", "2026-11-25")
     );
 
     private CollectionSchedule() {
@@ -72,6 +74,16 @@ public final class CollectionSchedule {
             }
         }
         return null;
+    }
+
+    public static String lastCompletedId(Context context) {
+        String last = null;
+        for (Collection collection : COLLECTIONS) {
+            if (isCompleted(context, collection.id)) {
+                last = collection.id;
+            }
+        }
+        return last;
     }
 
     public static boolean isCompleted(Context context, String id) {

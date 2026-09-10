@@ -19,7 +19,7 @@ Confirm the school exists in the protected central school registry before genera
 
 The school-server installer can install `local-server/collection_schedule.json`, but the dates must be reviewed first.
 
-Before the clean test, decide which collection schedule is authoritative. The pilot Misuuni server and repository schedule have previously differed, so do not treat either copy as automatically correct.
+The current 2026 acceptance-test schedule uses mid-term and end-term collections for Terms 1, 2, and 3. The Android app and school-server schedule must remain aligned until a single authoritative schedule source is implemented.
 
 For the acceptance test, use a valid production-style collection ID such as `2026-Q3-MID`. Do not use `TEST-DUE` for an end-to-end central upload test.
 
@@ -36,6 +36,8 @@ The package must include:
 - the reviewed `local-server/collection_schedule.json`.
 
 The technician will run the installer from the repository/release root.
+
+Windows checkouts must preserve Unix LF line endings for shell scripts. The repository `.gitattributes` file enforces LF for `*.sh` and `*.bash` files.
 
 ## 4. Publish the ARES Sync test APK on the ARES website
 
@@ -75,6 +77,7 @@ After selecting the school:
 2. Use the existing central `enrollment_admin_key` to generate a new one-time code for that school.
 3. Keep the administrator key private. Only the short one-time enrollment code is given to the teacher/tester.
 4. Use a fresh Android installation (a different phone, or uninstall/reinstall ARES Sync) so the first-run enrollment flow is genuinely tested.
+5. On first enrollment, ARES Sync marks schedule entries strictly before the enrollment date as historical/completed. It then sends the latest completed collection as `last_completed` when it asks the school server for a due collection.
 
 ## 7. Confirm the test server prerequisites
 
@@ -93,7 +96,24 @@ http://ares.local/
 
 If PHP-FPM does not run as `www-data`, identify the actual PHP/web worker account so it can be supplied to the installer with `--web-user`.
 
-## 8. Acceptance-test stopping points
+## 8. State-aware no-due check
+
+A bare request to `prepare_due_usage_upload.php` has no phone completion state. If earlier scheduled collections are already past, a bare request is expected to return the earliest due collection.
+
+To reproduce the app's normal no-due request, pass the phone's latest completed collection. For example, after a fresh September 2026 enrollment where Term 1 and Term 2 are historical:
+
+```bash
+curl -sS -D - -o /dev/null \
+  "http://ares.local/tracker/prepare_due_usage_upload.php?last_completed=2026-Q2-END"
+```
+
+Before the Term 3 mid-term due date, the expected response is HTTP `204` with:
+
+```text
+X-ARES-Reason: no-due-collection
+```
+
+## 9. Acceptance-test stopping points
 
 Do not change the ARES Sync UI during this clean test. Record problems as they occur.
 
@@ -102,15 +122,26 @@ The test should stop and be diagnosed if any of these checkpoints fail:
 1. technician installer completes and `AUTO` smoke export is generated;
 2. phone downloads and installs ARES Sync from the ARES website;
 3. fresh school enrollment succeeds;
-4. no-due collection returns HTTP `204` when expected;
+4. state-aware no-due request returns HTTP `204` when no later collection is due;
 5. due collection returns HTTP `200` and one pending central file appears;
 6. app is left in the background and normal internet is restored;
 7. central upload completes without reopening ARES Sync to trigger it;
 8. central server acknowledges the upload and pending count returns to zero.
 
+## Validated school-side acceptance checkpoint
+
+A clean second-server installation was validated on 2026-09-10 without recording school-private data in the repository. The following passed:
+
+- existing usage report builder produced populated `combined_usage.csv`;
+- `ares.local` was reachable on the school network;
+- automated installer completed and generated an `AUTO` smoke export;
+- PHP/nginx `prepare_usage_upload.php?collection=AUTO` returned HTTP `200` and a populated CSV;
+- state-aware `prepare_due_usage_upload.php?last_completed=2026-Q2-END` returned HTTP `204` and `X-ARES-Reason: no-due-collection` before the next scheduled collection.
+
+The initial transferred shell script had Windows CRLF line endings; `.gitattributes` was added afterward to enforce LF endings for future checkouts.
+
 ## Known follow-up items not to hide during the test
 
 - The collection schedule currently exists in both the Android app and school server. A single source of truth still needs to be designed.
-- Android does not yet pass `last_completed` to the school endpoint even though the endpoint supports it.
 - The new HTTPS incoming directory is validated, but final central reporting/processing still needs to be reconciled with the older rclone-based processor.
 - The ARES Sync user interface needs simplification after the functional acceptance test.

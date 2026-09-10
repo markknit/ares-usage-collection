@@ -42,6 +42,7 @@ public final class EnrollmentStore {
                 .putString(KEY_DEVICE_ID, result.deviceId)
                 .putString(KEY_DEVICE_CREDENTIAL, result.deviceCredential)
                 .apply();
+        CollectionSchedule.initializeForEnrollment(context);
     }
 
     static void clear(Context context) {

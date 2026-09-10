@@ -19,7 +19,7 @@ public final class CollectionReminderReceiver extends BroadcastReceiver {
         if (collection != null
                 && !CollectionSchedule.isCompleted(context, collection.id)
                 && !collection.dueDate.isAfter(CollectionSchedule.todayAtSchool())) {
-            CollectionNotification.show(context, collection);
+            CollectionAttemptScheduler.enqueue(context, collection.id);
         }
         CollectionReminderScheduler.scheduleAll(context);
     }

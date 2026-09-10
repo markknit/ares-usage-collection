@@ -76,6 +76,19 @@ public final class CollectionSchedule {
         return null;
     }
 
+    public static void initializeForEnrollment(Context context) {
+        LocalDate today = todayAtSchool();
+        SharedPreferences.Editor editor = context
+                .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit();
+        for (Collection collection : COLLECTIONS) {
+            if (collection.dueDate.isBefore(today)) {
+                editor.putBoolean(COMPLETE_PREFIX + collection.id, true);
+            }
+        }
+        editor.apply();
+    }
+
     public static String lastCompletedId(Context context) {
         String last = null;
         for (Collection collection : COLLECTIONS) {

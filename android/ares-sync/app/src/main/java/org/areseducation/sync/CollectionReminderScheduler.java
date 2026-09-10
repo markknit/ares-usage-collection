@@ -46,6 +46,9 @@ public final class CollectionReminderScheduler {
                         AlarmManager.RTC_WAKEUP,
                         triggerAt,
                         pendingIntent);
+            } else {
+                alarmManager.cancel(pendingIntent);
+                CollectionAttemptScheduler.enqueue(context, collection.id);
             }
         }
     }

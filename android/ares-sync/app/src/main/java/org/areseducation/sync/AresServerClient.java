@@ -52,70 +52,108 @@ public final class AresServerClient {
             Network network,
             Callback callback) {
         EXECUTOR.execute(() -> {
-            HttpURLConnection connection = null;
             try {
-                URL url = new URL(ENDPOINT);
-                connection = (HttpURLConnection) network.openConnection(url);
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(30000);
-                connection.setInstanceFollowRedirects(false);
-                connection.setRequestProperty("Accept", "text/csv");
-
-                int status = connection.getResponseCode();
-                String collection = connection.getHeaderField("X-ARES-Collection");
-                String dueDate = connection.getHeaderField("X-ARES-Due-Date");
-
-                if (status == HttpURLConnection.HTTP_NO_CONTENT) {
-                    callback.onSuccess(new Result(status, collection, dueDate, null, 0));
-                    return;
-                }
-
-                if (status != HttpURLConnection.HTTP_OK) {
-                    callback.onError("ARES server returned HTTP " + status + ".");
-                    return;
-                }
-
-                String fileName = fileNameFromDisposition(
-                        connection.getHeaderField("Content-Disposition"));
-                if (fileName == null) {
-                    fileName = String.format(
-                            Locale.US,
-                            "ARES_USAGE_%d.csv",
-                            System.currentTimeMillis());
-                }
-
-                File pendingDir = new File(context.getFilesDir(), "pending");
-                if (!pendingDir.exists() && !pendingDir.mkdirs()) {
-                    throw new IOException("Could not create app-private pending directory.");
-                }
-
-                File target = new File(pendingDir, safeFileName(fileName));
-                long bytes = 0;
-                try (InputStream input = connection.getInputStream();
-                     FileOutputStream output = new FileOutputStream(target)) {
-                    byte[] buffer = new byte[8192];
-                    int read;
-                    while ((read = input.read(buffer)) != -1) {
-                        output.write(buffer, 0, read);
-                        bytes += read;
-                    }
-                }
-
-                callback.onSuccess(new Result(
-                        status,
-                        collection,
-                        dueDate,
-                        target.getName(),
-                        bytes));
+                callback.onSuccess(downloadBlocking(context, network, null));
             } catch (Exception ex) {
                 callback.onError(ex.getClass().getSimpleName() + ": " + ex.getMessage());
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
             }
         });
+    }
+
+    public static Result downloadBlocking(
+            Context context,
+            Network network,
+            String expectedCollectionId) throws IOException {
+        if (network == null) {
+            throw new IOException("No Wi-Fi network is available.");
+        }
+
+        HttpURLConnection connection = null;
+        File partial = null;
+        try {
+            String endpoint = ENDPOINT;
+            String lastCompleted = CollectionSchedule.lastCompletedId(context);
+            if (lastCompleted != null && !lastCompleted.isEmpty()) {
+                endpoint += "?last_completed=" + lastCompleted;
+            }
+
+            URL url = new URL(endpoint);
+            connection = (HttpURLConnection) network.openConnection(url);
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(30000);
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestProperty("Accept", "text/csv");
+
+            int status = connection.getResponseCode();
+            String collection = connection.getHeaderField("X-ARES-Collection");
+            String dueDate = connection.getHeaderField("X-ARES-Due-Date");
+
+            if (status == HttpURLConnection.HTTP_NO_CONTENT) {
+                return new Result(status, collection, dueDate, null, 0);
+            }
+
+            if (status != HttpURLConnection.HTTP_OK) {
+                throw new IOException("ARES server returned HTTP " + status + ".");
+            }
+
+            if (expectedCollectionId != null && !expectedCollectionId.equals(collection)) {
+                throw new IOException("ARES server returned unexpected collection " + collection + ".");
+            }
+
+            String fileName = fileNameFromDisposition(
+                    connection.getHeaderField("Content-Disposition"));
+            if (fileName == null || fileName.isEmpty()) {
+                throw new IOException("ARES server response did not include a usage filename.");
+            }
+
+            File pendingDir = new File(context.getFilesDir(), "pending");
+            if (!pendingDir.exists() && !pendingDir.mkdirs()) {
+                throw new IOException("Could not create app-private pending directory.");
+            }
+
+            File target = new File(pendingDir, safeFileName(fileName));
+            partial = new File(pendingDir, target.getName() + ".part");
+            if (partial.exists() && !partial.delete()) {
+                throw new IOException("Could not replace a stale partial download.");
+            }
+
+            long bytes = 0;
+            try (InputStream input = connection.getInputStream();
+                 FileOutputStream output = new FileOutputStream(partial)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                    bytes += read;
+                }
+            }
+
+            if (bytes <= 0) {
+                throw new IOException("ARES server returned an empty usage file.");
+            }
+            if (target.exists() && !target.delete()) {
+                throw new IOException("Could not replace an existing pending usage file.");
+            }
+            if (!partial.renameTo(target)) {
+                throw new IOException("Could not finalize the pending usage file.");
+            }
+            partial = null;
+
+            return new Result(
+                    status,
+                    collection,
+                    dueDate,
+                    target.getName(),
+                    bytes);
+        } finally {
+            if (partial != null && partial.exists()) {
+                partial.delete();
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
     private static String fileNameFromDisposition(String disposition) {

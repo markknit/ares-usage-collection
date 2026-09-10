@@ -148,6 +148,21 @@ That state validates the silent local collection path through the background wor
 
 The exact delivery timing of the inexact Android alarm was not independently validated by this checkpoint; `setAndAllowWhileIdle()` may be deferred by Android. The functional overdue/silent collection path is validated.
 
+## Validated end-to-end phone upload checkpoint
+
+On 2026-09-10, after the successful silent local collection above, the phone was returned from the ARES school network to normal Internet access. The pending usage file was then uploaded successfully to the central HTTPS service.
+
+This completes the functional end-to-end acceptance path for the current design:
+
+- fresh phone enrollment to a canonical school;
+- historical-period baselining through `last_completed`;
+- silent local collection over the ARES network;
+- app-private pending-file storage;
+- completion/next-date advancement after a successful local download;
+- deferred central delivery after validated Internet access becomes available.
+
+The visible `/Downloads/ares_usage/prepare_due_usage_upload.php` file observed during testing is legacy residue from the older browser/Downloads workflow. The current Android collection client stores the live pending CSV under the app-private `files/pending/` directory and does not use `/Downloads/ares_usage` for the central-upload path.
+
 ## Known follow-up items not to hide during the test
 
 - The collection schedule currently exists in both the Android app and school server. A single source of truth still needs to be designed.

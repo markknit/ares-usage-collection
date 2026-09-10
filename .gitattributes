@@ -1,0 +1,5 @@
+* text=auto
+
+# Shell scripts are executed on Linux servers and must not acquire Windows CRLF endings.
+*.sh text eol=lf
+*.bash text eol=lf

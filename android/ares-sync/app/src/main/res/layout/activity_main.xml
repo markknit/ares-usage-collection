@@ -3,7 +3,9 @@
     android:id="@+id/screenRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingBottom="28dp">
 
     <LinearLayout
         android:id="@+id/contentRoot"
@@ -16,24 +18,49 @@
             android:id="@+id/headerCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="18dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/aresLogo"
+                android:layout_width="118dp"
+                android:layout_height="68dp"
+                android:adjustViewBounds="true"
+                android:background="#FFFFFFFF"
+                android:contentDescription="ARES Education logo"
+                android:padding="4dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ares_logo" />
 
-            <TextView
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:lineSpacingExtra="3dp"
-                android:tag="muted"
-                android:text="@string/mvp_description"
-                android:textSize="16sp" />
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/appTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.03"
+                    android:tag="title"
+                    android:text="@string/app_name"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/appDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:lineSpacingExtra="2dp"
+                    android:tag="muted"
+                    android:text="@string/mvp_description"
+                    android:textSize="14sp"
+                    android:textStyle="italic" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -47,6 +74,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:tag="section"
                 android:text="@string/enrollment_title"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -64,11 +92,12 @@
                 android:id="@+id/schoolSearchInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="24dp"
                 android:hint="@string/school_search_hint"
+                android:imeOptions="actionSearch"
                 android:inputType="textCapWords"
                 android:maxLines="1"
-                android:minHeight="52dp" />
+                android:minHeight="54dp" />
 
             <Button
                 android:id="@+id/schoolSearchButton"
@@ -82,26 +111,28 @@
                 android:id="@+id/schoolSpinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:minHeight="52dp"
+                android:layout_marginTop="20dp"
+                android:minHeight="54dp"
+                android:spinnerMode="dropdown"
                 android:visibility="gone" />
 
             <EditText
                 android:id="@+id/enrollmentCodeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="20dp"
                 android:hint="@string/enrollment_code_hint"
+                android:imeOptions="actionDone"
                 android:inputType="textCapCharacters"
                 android:maxLines="1"
-                android:minHeight="52dp"
+                android:minHeight="54dp"
                 android:visibility="gone" />
 
             <Button
                 android:id="@+id/enrollButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:minHeight="52dp"
                 android:text="@string/enroll_button"
                 android:visibility="gone" />
@@ -110,7 +141,7 @@
                 android:id="@+id/enrollmentStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="22dp"
                 android:lineSpacingExtra="3dp"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -143,8 +174,8 @@
                     android:id="@+id/enrolledSchoolText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textSize="21sp"
+                    android:layout_marginTop="10dp"
+                    android:textSize="22sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -152,7 +183,7 @@
                 android:id="@+id/scheduleCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="18dp"
                 android:orientation="vertical"
                 android:padding="20dp">
 
@@ -169,7 +200,7 @@
                     android:id="@+id/scheduleText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:lineSpacingExtra="5dp"
                     android:text="Checking collection schedule..."
                     android:textSize="20sp"
@@ -189,7 +220,7 @@
                 android:id="@+id/statusCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="18dp"
                 android:orientation="vertical"
                 android:padding="20dp">
 
@@ -206,7 +237,7 @@
                     android:id="@+id/statusText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:lineSpacingExtra="4dp"
                     android:text="@string/status_starting"
                     android:textIsSelectable="true"
@@ -219,7 +250,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="24dp"
             android:orientation="vertical"
             android:padding="20dp">
 
@@ -244,7 +275,7 @@
                 android:id="@+id/appearanceGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical">
 
                 <RadioButton

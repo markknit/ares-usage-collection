@@ -25,7 +25,7 @@ public final class CollectionNotification {
                 CHANNEL_ID,
                 "ARES collection reminders",
                 NotificationManager.IMPORTANCE_HIGH);
-        channel.setDescription("Reminders to connect the phone to ARES2 or ARES for scheduled usage collection.");
+        channel.setDescription("Alerts when ARES Sync needs help connecting to the school ARES Wi-Fi.");
         manager.createNotificationChannel(channel);
     }
 
@@ -61,11 +61,11 @@ public final class CollectionNotification {
 
         Notification notification = new Notification.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_sync)
-                .setContentTitle("ARES usage collection due")
-                .setContentText("At school, tap to choose ARES2 or ARES and collect usage data.")
+                .setContentTitle("ARES Sync needs the school Wi-Fi")
+                .setContentText("Connect this phone to ARES or ARES2 to finish the scheduled collection.")
                 .setStyle(new Notification.BigTextStyle().bigText(
-                        collection.label + " was due " + collection.dueDate
-                                + ". At school, tap this reminder, choose ARES2 or ARES, then return to ARES Sync. The download will start automatically."))
+                        collection.label + " is due. Connect this phone to the school ARES or ARES2 Wi-Fi. "
+                                + "ARES Sync will collect the usage data automatically."))
                 .setContentIntent(contentIntent)
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)

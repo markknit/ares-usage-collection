@@ -10,8 +10,8 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.8.0-rc1"
+        versionCode = 10
+        versionName = "0.8.0-rc2"
     }
 
     buildTypes {

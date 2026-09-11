@@ -16,6 +16,8 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,6 +25,8 @@ public final class MainActivity extends Activity {
     public static final String ACTION_COLLECTION_DUE = "org.areseducation.sync.COLLECTION_DUE";
     public static final String EXTRA_COLLECTION_ID = "collection_id";
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
+    private static final DateTimeFormatter DISPLAY_DATE =
+            DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.ENGLISH);
 
     private LinearLayout enrollmentPanel;
     private LinearLayout collectionPanel;
@@ -121,7 +125,7 @@ public final class MainActivity extends Activity {
         enrollmentCodeInput.setVisibility(View.GONE);
         enrollButton.setVisibility(View.GONE);
         setEnrollmentControlsEnabled(true);
-        enrollmentStatus.setText("Type at least two letters of the school name, then select the correct school from the results.");
+        enrollmentStatus.setText("Type at least two letters of the school name, then select the correct school.");
     }
 
     private void searchForSchool() {
@@ -135,7 +139,7 @@ public final class MainActivity extends Activity {
         schoolSpinner.setVisibility(View.GONE);
         enrollmentCodeInput.setVisibility(View.GONE);
         enrollButton.setVisibility(View.GONE);
-        enrollmentStatus.setText("Searching the ARES school list…");
+        enrollmentStatus.setText("Searching for the school...");
 
         EnrollmentClient.searchSchools(query, new EnrollmentClient.SearchCallback() {
             @Override
@@ -156,7 +160,7 @@ public final class MainActivity extends Activity {
                     schoolSpinner.setVisibility(View.VISIBLE);
                     enrollmentCodeInput.setVisibility(View.VISIBLE);
                     enrollButton.setVisibility(View.VISIBLE);
-                    enrollmentStatus.setText("Select the exact school, enter its enrollment code, then tap Enroll this phone.");
+                    enrollmentStatus.setText("Select the school, enter its enrollment code, then tap Enroll this phone.");
                 });
             }
 
@@ -164,7 +168,7 @@ public final class MainActivity extends Activity {
             public void onError(String message) {
                 runOnUiThread(() -> {
                     setEnrollmentControlsEnabled(true);
-                    enrollmentStatus.setText("Could not search the school list. Make sure this phone has Internet access, then try again.\n\n" + message);
+                    enrollmentStatus.setText("Could not search the school list. Make sure this phone has Internet access, then try again.\n\nTechnical details: " + message);
                 });
             }
         });
@@ -186,7 +190,7 @@ public final class MainActivity extends Activity {
 
         enrollmentCodeInput.setText(code);
         setEnrollmentControlsEnabled(false);
-        enrollmentStatus.setText("Enrolling this phone to " + school.canonicalName + "…");
+        enrollmentStatus.setText("Enrolling this phone to " + school.canonicalName + "...");
 
         String deviceLabel = (Build.MANUFACTURER + " " + Build.MODEL).trim();
         EnrollmentClient.enroll(
@@ -207,7 +211,7 @@ public final class MainActivity extends Activity {
                     public void onError(String message) {
                         runOnUiThread(() -> {
                             setEnrollmentControlsEnabled(true);
-                            enrollmentStatus.setText("Enrollment failed. Confirm the selected school and code, then try again.\n\n" + message);
+                            enrollmentStatus.setText("Enrollment failed. Confirm the selected school and code, then try again.\n\nTechnical details: " + message);
                         });
                     }
                 });
@@ -222,16 +226,14 @@ public final class MainActivity extends Activity {
 
         enrollmentPanel.setVisibility(View.GONE);
         collectionPanel.setVisibility(View.VISIBLE);
-        enrolledSchoolText.setText("School: " + enrollment.canonicalName
-                + "\nDevice: " + enrollment.deviceId);
+        enrolledSchoolText.setText("School: " + enrollment.canonicalName);
 
         CollectionReminderScheduler.scheduleAll(this);
         CentralUploadScheduler.enqueuePending(this);
         refreshScheduleStatus();
 
         if (justEnrolled) {
-            setStatus("✓ Setup complete for " + enrollment.canonicalName + ".\n\n"
-                    + "ARES Sync is ready. When a collection is due, use the button below to connect to ARES2 or ARES at the school.");
+            setStatus("Setup complete. Everything is ready. No action is required now.");
         } else {
             handleIntent(getIntent());
         }
@@ -244,12 +246,11 @@ public final class MainActivity extends Activity {
             String collectionId = intent.getStringExtra(EXTRA_COLLECTION_ID);
             CollectionSchedule.Collection collection = CollectionSchedule.find(collectionId);
             if (collection != null && !CollectionSchedule.isCompleted(this, collection.id)) {
-                setStatus(collection.label + " collection is due.\n\n"
-                        + "Tap Connect to ARES or ARES2 wifi network, select ARES2 or ARES in Android's Wi-Fi panel, then return to ARES Sync. The download will start automatically.");
+                setStatus("ARES Sync needs the school Wi-Fi for this collection. Connect this phone to ARES or ARES2. Collection will start automatically when the school server is available.");
                 return;
             }
         }
-        setStatus("Ready. When a collection is due, connect to ARES2 or ARES at the school. ARES Sync will test ares.local and download the due usage file automatically after you return.");
+        setStatus("Everything is ready. No action is required now.");
     }
 
     private void openWifiPanel() {
@@ -259,8 +260,7 @@ public final class MainActivity extends Activity {
         }
 
         awaitingWifiSelection = true;
-        setStatus("Android Wi-Fi controls are opening.\n\n"
-                + "Please choose ARES2 or ARES. Then close the Wi-Fi panel or return to ARES Sync. The collection check will start automatically.");
+        setStatus("Choose ARES or ARES2 in Wi-Fi settings, then return to ARES Sync. Collection will start automatically.");
         try {
             startActivity(new Intent(Settings.Panel.ACTION_WIFI));
         } catch (RuntimeException ex) {
@@ -276,16 +276,14 @@ public final class MainActivity extends Activity {
 
         Network wifiNetwork = wifiConnector.getCurrentWifiNetwork();
         if (wifiNetwork == null) {
-            setStatus("No Wi-Fi connection is currently available.\n\n"
-                    + "Tap Connect to ARES or ARES2 wifi network, select ARES2 or ARES, then return to ARES Sync.\n\n"
+            setStatus("No Wi-Fi connection is available. Connect this phone to ARES or ARES2 and try again.\n\nTechnical details: "
                     + wifiConnector.getDiagnostics());
             setButtonsEnabled(true);
             return;
         }
 
         setButtonsEnabled(false);
-        setStatus("Wi-Fi selection returned. Checking for the ARES server…\n\n"
-                + wifiConnector.getDiagnostics());
+        setStatus("Checking the school server...");
 
         AresServerClient.testAndDownload(
                 this,
@@ -294,39 +292,23 @@ public final class MainActivity extends Activity {
                     @Override
                     public void onSuccess(AresServerClient.Result result) {
                         runOnUiThread(() -> {
-                            StringBuilder message = new StringBuilder();
-                            message.append("✓ ARES server reached\n");
-                            message.append("HTTP status: ").append(result.statusCode).append("\n");
-
-                            if (result.collectionId != null && !result.collectionId.isEmpty()) {
-                                message.append("Collection: ").append(result.collectionId).append("\n");
-                            }
-                            if (result.dueDate != null && !result.dueDate.isEmpty()) {
-                                message.append("Server due date: ").append(result.dueDate).append("\n");
-                            }
-
                             if (result.fileName != null) {
-                                message.append("✓ Downloaded: ").append(result.fileName).append("\n");
-                                message.append("Bytes: ").append(result.byteCount).append("\n");
-                                message.append("Saved in app-private pending storage\n");
-
                                 if (CollectionSchedule.find(result.collectionId) != null) {
                                     CollectionSchedule.markCompleted(MainActivity.this, result.collectionId);
                                     CollectionReminderScheduler.cancel(MainActivity.this, result.collectionId);
                                     CollectionNotification.cancel(MainActivity.this, result.collectionId);
                                 }
-
                                 CentralUploadScheduler.enqueuePending(MainActivity.this);
-                                message.append("\nCollection complete. Secure central upload is queued and will run automatically when validated Internet access is available.");
-                                message.append(" The teacher can reconnect the phone to its normal Internet Wi-Fi.");
+                                CollectionReminderScheduler.scheduleAll(MainActivity.this);
+                                refreshScheduleStatus();
+                                setStatus("Usage collection complete. It will be sent automatically when Internet access is available.");
                             } else if (result.statusCode == 204) {
-                                message.append("No collection is currently due according to the ARES server.\n");
+                                CollectionReminderScheduler.scheduleAll(MainActivity.this);
+                                refreshScheduleStatus();
+                                setStatus("No usage collection is due right now.");
+                            } else {
+                                setStatus("The school server responded, but no usage file was received. Please try again.");
                             }
-
-                            CollectionReminderScheduler.scheduleAll(MainActivity.this);
-                            refreshScheduleStatus();
-                            message.append("\n\n").append(wifiConnector.getDiagnostics());
-                            setStatus(message.toString());
                             setButtonsEnabled(true);
                         });
                     }
@@ -334,9 +316,8 @@ public final class MainActivity extends Activity {
                     @Override
                     public void onError(String message) {
                         runOnUiThread(() -> {
-                            setStatus("Could not reach the ARES server over the selected Wi-Fi.\n\n"
-                                    + "Make sure the phone is connected to ARES2 or ARES, then try again.\n\n"
-                                    + message + "\n\n" + wifiConnector.getDiagnostics());
+                            setStatus("Could not collect usage data from the school server. Make sure this phone is connected to ARES or ARES2, then try again.\n\nTechnical details: "
+                                    + message + "\n" + wifiConnector.getDiagnostics());
                             setButtonsEnabled(true);
                         });
                     }
@@ -351,52 +332,44 @@ public final class MainActivity extends Activity {
         String uploadLine = pendingUploadLine();
         CollectionSchedule.Collection due = CollectionSchedule.getPendingDueCollection(this);
         if (due != null) {
-            scheduleText.setText("DUE: " + due.label + "\nScheduled date: " + due.dueDate
-                    + " (Africa/Nairobi)\nConnect to ARES2 or ARES at the school to collect."
+            chooseWifiButton.setVisibility(View.VISIBLE);
+            scheduleText.setText("Usage collection is due\n"
+                    + due.label + " - " + formatDate(due.dueDate)
+                    + "\n\nConnect this phone to the school ARES Wi-Fi. ARES Sync will collect automatically."
                     + uploadLine);
             return;
         }
 
+        chooseWifiButton.setVisibility(View.GONE);
         CollectionSchedule.Collection next = CollectionSchedule.getNextIncompleteCollection(this);
         if (next != null) {
-            scheduleText.setText("Next collection: " + next.label + "\nScheduled date: "
-                    + next.dueDate + " (Africa/Nairobi)" + uploadLine);
+            scheduleText.setText("Next collection\n"
+                    + formatDate(next.dueDate)
+                    + "\n\nEverything is ready. No action required."
+                    + uploadLine);
         } else {
-            scheduleText.setText("All configured 2026 collections are marked complete on this phone."
+            scheduleText.setText("2026 collections complete\n\nNo further collection is scheduled on this phone."
                     + uploadLine);
         }
     }
 
     private String pendingUploadLine() {
         PendingUploadStore.UploadStatus upload = PendingUploadStore.getStatus(this);
-        StringBuilder line = new StringBuilder();
         if (upload.pendingCount <= 0) {
-            line.append("\nCentral upload: no pending files.");
-            if ("sent".equals(upload.status)) {
-                appendUploadResult(line, upload);
-            }
-            return line.toString();
+            return "\n\nUsage data: up to date.";
         }
 
-        line.append("\nCentral upload: ").append(upload.pendingCount).append(" file")
-                .append(upload.pendingCount == 1 ? "" : "s")
-                .append(" pending Internet delivery.");
-        if ("waiting".equals(upload.status) || "blocked".equals(upload.status)) {
-            appendUploadResult(line, upload);
+        if ("blocked".equals(upload.status)) {
+            return "\n\nUsage data: upload needs attention. Connect to the Internet and reopen ARES Sync.";
         }
-        return line.toString();
+
+        return "\n\nUsage data: " + upload.pendingCount + " collection"
+                + (upload.pendingCount == 1 ? "" : "s")
+                + " waiting to send when Internet is available.";
     }
 
-    private static void appendUploadResult(
-            StringBuilder line,
-            PendingUploadStore.UploadStatus upload) {
-        line.append("\nLast central upload state: ").append(upload.status);
-        if (upload.fileName != null && !upload.fileName.isEmpty()) {
-            line.append(" — ").append(upload.fileName);
-        }
-        if (upload.message != null && !upload.message.isEmpty()) {
-            line.append("\n").append(upload.message);
-        }
+    private static String formatDate(LocalDate date) {
+        return DISPLAY_DATE.format(date);
     }
 
     private void requestNotificationPermissionIfNeeded() {

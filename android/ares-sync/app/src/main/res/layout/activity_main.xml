@@ -19,7 +19,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:text="@string/mvp_description"
             android:textSize="16sp" />
 
@@ -113,26 +113,26 @@
                 android:id="@+id/scheduleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="Checking collection schedule…"
-                android:textSize="18sp"
+                android:layout_marginTop="20dp"
+                android:text="@string/status_starting"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <Button
                 android:id="@+id/chooseWifiButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Connect to ARES or ARES2 wifi network" />
+                android:layout_marginTop="22dp"
+                android:text="@string/open_wifi_button"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="24dp"
                 android:text="@string/status_starting"
-                android:textIsSelectable="true"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
 
         </LinearLayout>
 

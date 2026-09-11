@@ -82,19 +82,28 @@ ls -ld /mnt/sda3/var/www/tracker/uploads
 
 The configuration file must not contain passwords, OAuth tokens, central upload credentials, or phone enrollment credentials.
 
-### 2. Confirm normal no-due behavior
+### 2. Confirm normal state-aware no-due behavior
 
-While the schedule has no collection due today, a phone/browser connected to the school ARES network should receive HTTP `204` from:
+A bare request to `prepare_due_usage_upload.php` does not contain the phone's completion state. If earlier scheduled collections are already past, the bare request may legitimately return the earliest due collection rather than HTTP `204`.
+
+To reproduce the app's normal request, pass the latest collection already completed on the phone. For a freshly enrolled phone in September 2026, for example:
+
+```bash
+curl -sS -D - -o /dev/null \
+  "http://ares.local/tracker/prepare_due_usage_upload.php?last_completed=2026-Q2-END"
+```
+
+Before the approved Term 3 mid-term due date, the expected response is HTTP `204` with:
 
 ```text
-http://ares.local/tracker/prepare_due_usage_upload.php
+X-ARES-Reason: no-due-collection
 ```
 
 ### 3. Controlled collection test
 
 For acceptance testing only, back up `collection_schedule.json`, make one valid production collection ID (for example `2026-Q3-MID`) due on the test date, then use ARES Sync to collect it. Do not use `TEST-DUE`, because the central production filename contract intentionally rejects that identifier.
 
-After the test, restore the approved schedule.
+After the test, restore the approved schedule. A phone used in a controlled test that marked a future production collection complete must also be uninstalled/data-cleared and freshly enrolled before real deployment.
 
 ## Re-running the installer
 

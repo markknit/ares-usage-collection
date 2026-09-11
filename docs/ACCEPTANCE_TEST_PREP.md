@@ -19,13 +19,11 @@ Confirm the school exists in the protected central school registry before genera
 
 The school-server installer can install `local-server/collection_schedule.json`, but the dates must be reviewed first.
 
-The current 2026 acceptance-test schedule uses mid-term and end-term collections for Terms 1, 2, and 3. The Android app and school-server schedule must remain aligned until a single authoritative schedule source is implemented.
+The current 2026 production schedule uses mid-term and end-term collections for Terms 1, 2, and 3. The Android app and school-server schedule must remain aligned until a single authoritative schedule source is implemented.
 
-For the acceptance test, use a valid production-style collection ID such as `2026-Q3-MID`. Do not use `TEST-DUE` for an end-to-end central upload test.
+For controlled acceptance testing, use a valid production-style collection ID such as `2026-Q3-MID`. Do not use `TEST-DUE` for an end-to-end central upload test.
 
 ## 3. Prepare the server installation package
-
-Use the `android-central-upload-field-validation` branch until the clean acceptance test is complete.
 
 The package must include:
 
@@ -49,9 +47,9 @@ assets/downloads/ares-sync.apk
 
 Before the teacher test:
 
-1. Take the exact APK built from the validated `android-central-upload-field-validation` branch.
+1. Take the exact APK built from the validated production candidate branch.
 2. Record its SHA-256 hash.
-3. Rename/copy the approved test APK to `ares-sync.apk` in the website's `assets/downloads/` directory.
+3. Rename/copy the approved APK to `ares-sync.apk` in the website's `assets/downloads/` directory.
 4. Deploy the updated `public/index.html`, `public/setup.html`, existing stylesheet assets, and the APK under a stable ARES Education website path.
 5. Open the page on an Android phone and confirm that **Download ARES Sync** actually downloads the APK.
 
@@ -115,7 +113,7 @@ X-ARES-Reason: no-due-collection
 
 ## 9. Acceptance-test stopping points
 
-Do not change the ARES Sync UI during this clean test. Record problems as they occur.
+Do not change the ARES Sync UI during a clean functional test. Record problems as they occur.
 
 The test should stop and be diagnosed if any of these checkpoints fail:
 
@@ -140,7 +138,39 @@ A clean second-server installation was validated on 2026-09-10 without recording
 
 The initial transferred shell script had Windows CRLF line endings; `.gitattributes` was added afterward to enforce LF endings for future checkouts.
 
-## Known follow-up items not to hide during the test
+## Validated phone-side silent collection checkpoint
+
+On 2026-09-10, a freshly enrolled acceptance-test phone was connected to the school ARES network with a controlled `2026-Q3-MID` collection due. After the overdue scheduler path ran, the app showed exactly one file pending central upload and advanced the next scheduled collection to `2026-11-25`.
+
+That state validates the silent local collection path through the background worker: successful local download, completion marking for `2026-Q3-MID`, queuing of one pending central upload, and advancement to the next collection. The background worker does not update the foreground status text with a manual-download-style "downloaded" message, so the pending-upload count and advanced next date are the expected success indicators.
+
+The exact delivery timing of the inexact Android alarm was not independently validated by this checkpoint; `setAndAllowWhileIdle()` may be deferred by Android. The functional overdue/silent collection path is validated.
+
+## Validated end-to-end phone upload checkpoint
+
+On 2026-09-10, after the successful silent local collection above, the phone was returned from the ARES school network to normal Internet access. The pending usage file was then uploaded successfully to the central HTTPS service.
+
+This completes the functional end-to-end acceptance path for the current design:
+
+- fresh phone enrollment to a canonical school;
+- historical-period baselining through `last_completed`;
+- silent local collection over the ARES network;
+- app-private pending-file storage;
+- completion/next-date advancement after a successful local download;
+- deferred central delivery after validated Internet access becomes available.
+
+The visible `/Downloads/ares_usage/prepare_due_usage_upload.php` file observed during testing is legacy residue from the older browser/Downloads workflow. The current Android collection client stores the live pending CSV under the app-private `files/pending/` directory and does not use `/Downloads/ares_usage` for the central-upload path.
+
+## Production reset after controlled acceptance testing
+
+The controlled September 10 due-date override exists only on the frozen acceptance snapshot and must not be deployed to production. The production schedule remains:
+
+- `2026-Q3-MID`: 2026-10-15
+- `2026-Q3-END`: 2026-11-25
+
+Any school server used for the controlled test must have its approved production schedule restored before real use. Any phone used for the controlled test must be uninstalled/data-cleared and freshly enrolled with the production APK before it is used for the real October collection, because the acceptance test marked `2026-Q3-MID` complete in that phone's local state.
+
+## Known follow-up items not to hide during productization
 
 - The collection schedule currently exists in both the Android app and school server. A single source of truth still needs to be designed.
 - The new HTTPS incoming directory is validated, but final central reporting/processing still needs to be reconciled with the older rclone-based processor.

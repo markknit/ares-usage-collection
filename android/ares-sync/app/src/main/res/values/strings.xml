@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ARES Sync</string>
-    <string name="mvp_description">ARES Sync collects school usage data automatically and sends it securely when Internet access is available.</string>
-    <string name="status_starting">Checking status...</string>
-    <string name="enrollment_title">Set up this phone</string>
+    <string name="mvp_description">Automatically collects scheduled ARES usage data and sends it securely when Internet access is available.</string>
+    <string name="status_starting">Starting...</string>
+    <string name="enrollment_title">First-time setup</string>
     <string name="enrollment_intro">Assign this phone to its school once. Internet access is required for setup.</string>
     <string name="school_search_hint">Type part of the school name</string>
     <string name="school_search_button">Find school</string>
     <string name="enrollment_code_hint">Enrollment code (XXXX-XXXX)</string>
     <string name="enroll_button">Enroll this phone</string>
-    <string name="open_wifi_button">Open Wi-Fi settings</string>
+    <string name="school_section_label">School</string>
+    <string name="schedule_section_label">Collection schedule</string>
+    <string name="status_section_label">Status</string>
+    <string name="connect_wifi_button">Connect to school Wi-Fi</string>
+    <string name="appearance_section_label">Appearance</string>
+    <string name="background_intro">Choose the app background that is easiest for you to read. This setting is saved on this phone.</string>
+    <string name="background_light">Light</string>
+    <string name="background_warm">Warm</string>
+    <string name="background_blue">Blue</string>
+    <string name="background_dark">Dark</string>
 </resources>

@@ -1,100 +1,78 @@
 # Deployment Status
 
-## tsavo3 pilot school server
+Updated 2026-09-11 after Android UI field acceptance and installation-portal productization.
 
-Pilot validation updated 2026-08-23.
+## Current architecture
 
-### Role
+ARES usage collection now uses:
 
-`tsavo3` is the pilot school-side ARES server and usage-data source. It is not yet the production central processor or public setup portal host.
+1. ARES Sync Android app on the teacher/test phone.
+2. School-local collection from `http://ares.local` using the scheduled PHP endpoint.
+3. App-private pending-file storage on Android.
+4. Deferred direct HTTPS upload to the central ARES service after validated internet returns.
+5. Protected central incoming storage.
+6. `central-monitoring/process_incoming.py` for local incoming validation, SHA-256 dedupe, quarantine, archive, and optional report execution.
 
-### Installed components
+Round Sync, Automate, MacroDroid, phone-side rclone, Google Drive remotes, and Downloads-folder workflows are superseded and are not part of the target production architecture.
 
-- `/usr/local/sbin/ares_prepare_usage_upload.sh`
-- `/etc/ares/usage-upload.conf`
-- `/mnt/sda3/var/www/tracker/prepare_usage_upload.php`
-- `/mnt/sda3/var/www/tracker/prepare_due_usage_upload.php`
-- `/mnt/sda3/var/www/tracker/collection_schedule.json`
-- `/mnt/sda3/var/www/tracker/uploads/`
-- `/etc/sudoers.d/ares-usage-export`
+## Android status
 
-The runtime configuration and sudoers file are server-local and are not stored in this repository.
+Field-validated candidate:
 
-### Current pilot identifier
+- version: `0.8.0-rc6`
+- source commit: `02eca4133e2df560fce1f2c10ae382c0fb9a7544`
+- CI run: `#58`
+- UI/accessibility field acceptance: passed on the dedicated test phone.
 
-- Host: `tsavo3`
-- School/export code: `TSAVO3`
-- Report source: `/mnt/sda3/var/www/tracker/reports/combined_usage.csv`
-- Local export endpoint: `http://ares.local/tracker/prepare_usage_upload.php?collection=AUTO`
-- Scheduled collection endpoint: `http://ares.local/tracker/prepare_due_usage_upload.php`
-- Collection schedule: `http://ares.local/tracker/collection_schedule.json`
-- Cloud incoming folder: `ARES Usage Uploads/Incoming`
-- Phone pending folder: `Download/ARES_Usage`
-- Phone sent folder: `Download/ARES_Usage_Sent`
-- Phone automation and upload app: Automate by LlamaLab
-- Current upload architecture: Automate native Google Drive upload block
+Validated behavior includes:
 
-### Validation completed
+- fresh enrollment to a canonical school;
+- historical schedule baselining;
+- silent local collection path;
+- app-private pending storage;
+- deferred HTTPS upload after internet returns;
+- readable light/dark appearance behavior;
+- themed school selection;
+- keyboard resize/scroll during enrollment entry;
+- ARES logo rendering;
+- teacher-facing no-action-required normal state.
 
-- Repository portal validation passed for two configured schools.
-- Static portal tests passed.
-- Export shell script passed `bash -n` syntax validation.
-- PHP endpoint passed `php -l` syntax validation.
-- Existing report builder completed successfully.
-- Timestamped CSV export was generated in the tracker uploads directory.
-- Exported CSV contained the expected header and usage records.
-- SHA-256 metadata was generated.
-- Nginx/PHP request returned HTTP 200.
-- Response content type was CSV.
-- Response supplied a timestamped `ARES_USAGE_TSAVO3_AUTO_*.csv` filename.
-- Downloaded CSV size matched the generated report.
-- Android phone successfully downloaded the expected timestamped CSV from `ares.local` while connected to the ARES network.
-- MacroDroid was rejected for the pilot because unattended free use requires recurring advertisement-based renewal or a paid upgrade.
-- Automate by LlamaLab was installed successfully and opened without requiring an upgrade or recurring advertisement renewal.
-- The Automate network block was tested with internet unavailable. The flow waited at the network check and, without a second manual start, resumed automatically when internet connectivity was restored.
-- Automate's native Google Drive upload block successfully uploaded a pilot CSV from `Download/ARES_Usage` to the central Google Drive incoming folder.
-- The direct Automate upload test confirmed that Round Sync is not required for the target phone architecture.
-- The complete direct upload path was validated using these Automate blocks in sequence:
-  1. `Flow beginning`
-  2. `Data network default` with `Proceed: Immediately`
-  3. `Data network default` with `Proceed: When changed`
-  4. `File exists`
-  5. `Google Drive upload`
-  6. `File move`
-  7. `Toast show`
-- With internet already available, the immediate `Data network default` path proceeded without waiting for a connectivity transition.
-- With internet initially unavailable, the second `Data network default` block waited and then resumed automatically after connectivity returned.
-- `File exists` prevented an upload attempt when the configured pending CSV was absent.
-- `Google Drive upload` completed successfully to `ARES Usage Uploads/Incoming`.
-- `File move` ran only from the successful output of `Google Drive upload` and moved the uploaded CSV from `Download/ARES_Usage` to `Download/ARES_Usage_Sent`.
-- The success `Toast show` block executed after the file move completed.
-- On 2026-08-23, the scheduled download flow was tested on the real `ARES2` network with direct access to `tsavo3`.
-- The initial `HTTP request` test failed with Android `EISDIR (is a directory)` because `Download/ARES_Usage` had been entered in `Request content path`.
-- Clearing `Request content path`, leaving it blank for the GET request, and placing `Download/ARES_Usage` in `Response path` corrected the configuration.
-- After that correction, the modified Flow B completed successfully against the real ARES2/server path.
-- Required `HTTP request` configuration for the scheduled GET is therefore: request method `GET`, blank `Request content path`, `Save response` to file, and `Response path` set to `Download/ARES_Usage`.
+The CI APK is debug-signed and remains a test artifact. Production distribution still requires an approved release-signing process.
 
-### Superseded pilot path
+## School-server status
 
-Round Sync was installed and validated during the initial pilot. The following tests remain useful historical evidence but are no longer part of the target deployment architecture:
+The automated installer and local collection endpoints have passed school-side acceptance testing. The production schedule remains aligned to the approved 2026 term collection dates.
 
-- Round Sync connected directly to Google Drive through the `ARESGoogleDrive` remote.
-- A pinned Round Sync home-screen shortcut successfully launched the upload task.
-- Automate successfully launched a Round Sync task through an App start block.
-- The Automate-triggered Round Sync task copied a pending CSV to Google Drive.
-- Notification-based Round Sync success and failure detection was explored but is no longer required.
+The St Jude server and phone are dedicated test fixtures and may remain in their controlled acceptance state for regression testing.
 
-Do not continue building new deployment logic around Round Sync unless the native Automate Google Drive implementation fails later acceptance testing.
+## Central service status
 
-### Next milestone
+The enrolled-device HTTPS upload path has passed end-to-end testing. Duplicate upload retry is idempotent, and protected data files are not publicly readable.
 
-Complete the scheduled collection workflow:
+The replacement local incoming processor is implemented and locally validated. Live cron/systemd wiring against the production central directories remains a separate deployment step.
 
-1. Confirm the exact downloaded file path is passed from Flow B into the validated upload flow.
-2. Confirm the downloaded file reaches `ARES Usage Uploads/Incoming` and is moved locally to `Download/ARES_Usage_Sent`.
-3. Add persistent `last_completed` handling so a completed collection is not downloaded again at the next scheduled attempt.
-4. Validate Flow A scheduling at the configured daily times and confirm it starts Flow B automatically.
-5. Test fallback from `ARES2` to `ARES`.
-6. Test offline failure, delayed retry, phone restart, duplicate handling, and battery restrictions.
-7. Update the setup portal and deployment documentation to remove Round Sync requirements.
-8. Export and validate the school-specific Automate flow.
+Known controlled September acceptance uploads using the real `2026-Q3-MID` collection ID must be explicitly excluded or removed before production reporting ingestion. Do not delete them silently.
+
+## Public setup portal status
+
+The repository portal has been updated for the native ARES Sync workflow:
+
+- stable APK link: `assets/downloads/ares-sync.apk`;
+- direct teacher installation flow;
+- Android install-from-source warning guidance;
+- one-time school enrollment;
+- notification permission;
+- mostly automatic collection and upload behavior;
+- no Round Sync/Automate/MacroDroid setup requirement.
+
+The portal still needs to be deployed to the final HTTPS path and field-tested by downloading the exact approved release APK from that live page.
+
+## Remaining production milestones
+
+1. Define and protect the production Android signing key and build a release-signed APK.
+2. Record release version, versionCode, source commit, and SHA-256.
+3. Publish the exact approved APK to the stable setup-portal path.
+4. Deploy and field-test the public phone-setup portal on Android.
+5. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
+6. Run the full release checklist and preserve rollback artifacts.
+7. Independently validate autonomous AlarmManager timing if required beyond the already validated overdue/silent collection path.

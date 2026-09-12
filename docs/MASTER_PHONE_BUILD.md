@@ -1,82 +1,44 @@
-# Master phone build
+# ARES Sync Phone Build
 
-## Current Round Sync limitation
+The production phone architecture is the native ARES Sync Android app. Round Sync, Automate, MacroDroid, phone-side rclone, Google Drive remotes, and public Downloads-folder workflows are superseded and are not required for deployment.
 
-The released Round Sync task interface supports **Copy** and **Sync**, but not **Move**. For the ARES workflow, use a **Copy** task and move successfully uploaded files into a local `Download/ARES_Usage_Sent` folder with Automate after upload confirmation. Do not delete the local file until the Google Drive copy has been verified.
+## Current validated candidate
 
-## Pilot build sequence
+The current field-validated candidate is ARES Sync `0.8.0-rc6` from commit `02eca4133e2df560fce1f2c10ae382c0fb9a7544`.
 
-1. Install the approved Round Sync APK.
-2. Create these local folders on the phone:
-   - `Download/ARES_Usage`
-   - `Download/ARES_Usage_Sent`
-3. Configure the Google Drive remote named `ARESGoogleDrive`.
-4. Create one Round Sync **Copy** task:
-   - Source: `Download/ARES_Usage`
-   - Destination: `ARESGoogleDrive:ARES Usage Uploads/Incoming`
-   - Keep only ARES usage and setup-test files in the source folder so no task filter is required.
-5. Chrome currently downloads the CSV into the general `Download` folder. During manual testing, move the CSV into `Download/ARES_Usage`, restart Round Sync if the new file is not visible, and then run the task.
-6. Confirm the file appears in Google Drive.
-7. Manually move the successfully uploaded pilot file to `Download/ARES_Usage_Sent`.
-8. Test failed connectivity and confirm the source file remains available for a later retry.
-9. Copy the tested Round Sync task ID from the task's three-dot menu.
-10. Export the complete Round Sync configuration as `ARES-RoundSync-Config.zip`.
-11. Install Automate by LlamaLab.
-12. Create and validate a minimal Automate flow that launches the tested Round Sync task.
-13. Add internet detection, download-folder handling, success/failure notification handling, and sent-folder archiving only after the minimal launch flow is stable.
-14. Export one Automate flow per school after full validation.
+This candidate validated the teacher-facing UI, enrollment flow, silent local collection path, app-private pending storage, deferred HTTPS upload, and the final WebP logo rendering on the dedicated test phone.
 
-## Validated Automate launch configuration
+The CI-produced APK is debug-signed and is for testing only. Production distribution must use a release-signed APK built from the approved release commit.
 
-The working Automate flow uses an **App start** block, not **Service start** and not **App start shortcut**.
+## Production build requirements
 
-Connect:
+1. Build from the approved production release commit.
+2. Use the ARES production signing key.
+3. Keep keystore files, passwords, credentials, and signing secrets outside this repository.
+4. Record:
+   - versionName;
+   - versionCode;
+   - source commit SHA;
+   - APK SHA-256;
+   - build date.
+5. Test the exact signed APK on a clean Android phone.
+6. Verify enrollment, appearance, school search, keyboard behavior, notification permission, collection status, and background upload.
+7. Publish the approved APK as `public/assets/downloads/ares-sync.apk` only after it passes the release checklist.
 
-```text
-Flow beginning -> App start
-```
+## Teacher phone behavior
 
-Configure the App start block with these values in expression (`fx`) mode:
+After enrollment, the normal screen should show the school, next collection date, and a no-action-required state.
 
-```text
-Package:
-"de.felixnuesse.extract"
+When a collection is due, ARES Sync first attempts local collection silently. If the phone cannot reach the school server, the app asks the teacher to connect to ARES2 or ARES. After local collection, pending usage data is stored in the app-private pending directory and is sent automatically when normal validated internet access later becomes available.
 
-Activity class:
-"ca.pkay.rcloneexplorer.Activities.ShortcutServiceActivity"
+## Installation behavior
 
-Action:
-"START_TASK"
+Direct APK distribution can trigger Android's unknown-source/install-from-source warning and, on some devices, a Play Protect warning. The public setup page and teacher guide explain the expected steps.
 
-Extras:
-{
-  "task" as Long: TASK_IDn
-}
-```
+Do not instruct teachers to disable Play Protect globally. A teacher should proceed only with an APK obtained from the official ARES Education setup page or an ARES technician.
 
-Replace `TASK_ID` with the numeric Round Sync task ID. For example, task ID `12` becomes:
+## Upgrade and rollback
 
-```text
-{
-  "task" as Long: 12n
-}
-```
+Keep versionCode monotonically increasing so an approved release can upgrade an existing installation normally.
 
-The trailing `n` is required so Automate passes the task ID as a Long, matching the Round Sync shortcut activity. The package name must be exactly `de.felixnuesse.extract`; the truncated value `de.felixnuesse.extra` causes `ActivityNotFoundException`.
-
-This flow was validated on the pilot phone: Automate launched the pinned-equivalent Round Sync task and the pending CSV was copied to Google Drive successfully.
-
-## Remaining automation work
-
-Build the remaining flow in small validated stages:
-
-1. Detect restored internet connectivity and launch the validated App start block.
-2. Monitor Round Sync success and failure notifications using stable unique text fragments.
-3. Move downloaded `ARES_USAGE_*.csv` files from the general `Download` folder into `Download/ARES_Usage`.
-4. After confirmed success only, move the uploaded file into `Download/ARES_Usage_Sent`.
-5. Test offline failure, delayed retry, duplicate handling, phone restart, and battery restrictions.
-6. Export the tested Automate flow and Round Sync configuration for deployment.
-
-The exact Round Sync task ID must be copied from the tested task. Round Sync configuration exports include application settings, tasks, triggers, and remotes; use the app's export feature rather than hand-editing its internal files.
-
-The success-notification text must be confirmed on the actual pilot phone before Automate is configured to archive files. Match notifications from Round Sync specifically, and test both successful and failed uploads before enabling automatic file movement.
+Retain the previous approved APK privately. If a release fails field validation, stop deployment and restore the previous approved APK and corresponding documentation/package rather than silently changing the live file.

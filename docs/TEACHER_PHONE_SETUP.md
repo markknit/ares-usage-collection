@@ -4,40 +4,61 @@ This guide is for a teacher or school user setting up ARES Sync on an Android ph
 
 ## First-time setup
 
-1. While the phone has normal internet access, open the ARES phone setup page on the ARES Education website.
+1. While the phone has normal internet access, open the official ARES Education phone-setup page.
 2. Tap **Download ARES Sync**.
-3. If Android asks whether the browser may install apps, allow it for this installation, then install ARES Sync.
-4. Open **ARES Sync**.
-5. Search for your school and select the exact school name.
-6. Enter the one-time enrollment code supplied by ARES staff.
-7. Complete enrollment.
-8. If Android asks for permission to show notifications, choose **Allow**.
+3. Open the downloaded APK.
+4. If Android says the browser or Files app is not allowed to install apps:
+   - tap **Settings** or **Allow from this source**;
+   - allow installation for the app you used to open the ARES APK;
+   - go back to the installer and tap **Install**.
+5. If Android or Play Protect shows a second warning with a hidden **More details** or similar option, expand it and choose **Install anyway** only if the APK came from the official ARES Education setup page or directly from an ARES technician. Wording varies by phone.
+6. Do not disable Play Protect globally. After ARES Sync is installed, you may turn off **Allow from this source** again.
+7. Open **ARES Sync**.
+8. Search for your school and select the exact school name.
+9. Enter the one-time enrollment code supplied by ARES staff.
+10. Tap **Enroll this phone**.
+11. If Android asks for permission to show notifications, choose **Allow**.
 
 The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device.
 
-## Regular collection process
+## Normal use
 
-When ARES Sync tells you a collection is due:
+Most of the time, no action is required. ARES Sync should show:
+
+- the school name;
+- the next scheduled collection date;
+- **Everything is ready. No action required.**
+
+ARES Sync does not need to remain open.
+
+## When a collection is due
+
+ARES Sync first tries to reach the school ARES server silently.
+
+If the phone is already connected to the school ARES network and the server is reachable, the usage collection can complete without teacher action.
+
+If ARES Sync asks for help connecting to the school network:
 
 1. Open ARES Sync.
-2. Tap **Connect to ARES or ARES2 wifi network**.
-3. Android opens the Wi-Fi screen. Select **ARES2** or **ARES** for your school.
+2. Tap **Connect to school Wi-Fi**.
+3. In Android's Wi-Fi screen, select **ARES2** or **ARES** for the school.
 4. Return to ARES Sync.
-5. Wait for the app to confirm that the usage report was downloaded and the collection is complete.
-6. You may now leave ARES Sync. The report remains safely stored on the phone until it reaches ARES Education.
-7. When normal internet access is available, reconnect the phone to the internet. You do **not** need to reopen ARES Sync or keep it on screen; pending reports are submitted automatically in the background.
+5. The app checks the school server and collects the due usage report automatically.
+6. After collection, the report remains safely stored in ARES Sync until normal internet access becomes available.
 
-## Confirming delivery
+## Automatic delivery
 
-The next time you open ARES Sync after the phone has had internet access, look at the central upload status:
+When normal internet access later becomes available, ARES Sync sends pending usage data automatically in the background. You do not need to keep the app open.
 
-- **Central upload: no pending files** means there is nothing waiting to be sent.
-- A last upload state of **sent** confirms that the previous report was acknowledged by the central server.
-- **pending** or **waiting** means the file remains safely on the phone and still needs internet delivery.
-- **blocked** or another error should be reported to ARES support.
+In the app:
+
+- **Usage data: up to date** means nothing is waiting to be sent.
+- **waiting to send when Internet is available** means a collection is safely stored on the phone and will upload later.
+- **upload needs attention** means the phone should be connected to normal internet and ARES Sync reopened. Contact ARES support if the message remains.
 
 ## Important notes
 
 - Do not uninstall ARES Sync after enrollment unless ARES staff instructs you to. Uninstalling removes that phone's enrollment and requires a new one-time enrollment code.
 - Do not share enrollment codes between schools.
-- ARES Sync does not require Round Sync, MacroDroid, rclone, Google Drive setup, or manual file handling.
+- Install ARES Sync only from the official ARES Education setup page or from an ARES technician.
+- ARES Sync does not require Round Sync, Automate, MacroDroid, rclone, Google Drive setup, or manual file handling.

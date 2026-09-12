@@ -161,17 +161,37 @@ This completes the functional end-to-end acceptance path for the current design:
 
 The visible `/Downloads/ares_usage/prepare_due_usage_upload.php` file observed during testing is legacy residue from the older browser/Downloads workflow. The current Android collection client stores the live pending CSV under the app-private `files/pending/` directory and does not use `/Downloads/ares_usage` for the central-upload path.
 
-## Production reset after controlled acceptance testing
+## Validated Android productization checkpoint
+
+On 2026-09-11, ARES Sync `0.8.0-rc6` was field-tested on the dedicated Android test phone after the UI/accessibility productization work. GitHub Actions run `#58` built the APK successfully from commit `02eca4133e2df560fce1f2c10ae382c0fb9a7544`.
+
+The field check confirmed the current teacher-facing UI is acceptable, including:
+
+- Warm as the initial app appearance when Android is in light mode and Dark when Android is in system dark mode, unless the user has already selected and saved another appearance;
+- visually distinct school, schedule, status, and appearance cards;
+- improved title treatment and italic app description;
+- ARES Education logo visible in the header on the tested device;
+- readable school-selection text in dark mode;
+- keyboard resize and scroll behavior that keeps school-search and enrollment-code fields visible while typing;
+- saved Light, Warm, Blue, and Dark appearance choices.
+
+The final logo fix uses a WebP Android drawable after APK-level verification showed the earlier packaged image formats were not rendering correctly. The user confirmed that the logo displays correctly and that the resulting interface looks good overall.
+
+## Production deployment after controlled acceptance testing
 
 The controlled September 10 due-date override exists only on the frozen acceptance snapshot and must not be deployed to production. The production schedule remains:
 
 - `2026-Q3-MID`: 2026-10-15
 - `2026-Q3-END`: 2026-11-25
 
-Any school server used for the controlled test must have its approved production schedule restored before real use. Any phone used for the controlled test must be uninstalled/data-cleared and freshly enrolled with the production APK before it is used for the real October collection, because the acceptance test marked `2026-Q3-MID` complete in that phone's local state.
+The St Jude server and phone used for this work are dedicated test-only fixtures. They may remain in their controlled test state for future regression testing and do not need to be reset now.
+
+If either test fixture is ever repurposed for real production use, restore the approved production schedule on the server and uninstall/data-clear and freshly enroll the phone with the production APK first. The controlled test marked `2026-Q3-MID` complete in the phone's local state.
 
 ## Known follow-up items not to hide during productization
 
 - The collection schedule currently exists in both the Android app and school server. A single source of truth still needs to be designed.
-- The new HTTPS incoming directory is validated, but final central reporting/processing still needs to be reconciled with the older rclone-based processor.
-- The ARES Sync user interface needs simplification after the functional acceptance test.
+- The public phone-setup portal still needs final deployment and field validation with the exact approved release APK.
+- Android sideload installation can show a security warning or require the user to allow installation from the browser/files source. The teacher installation instructions must explicitly explain what to expect and what to tap unless distribution is moved to a managed/app-store channel that removes this step.
+- Production APK signing, stable download placement, release/version documentation, and rollback instructions still need to be finalized.
+- Exact autonomous timing of Android's inexact scheduled alarm has not been independently field-validated; the overdue/silent collection path itself is validated.

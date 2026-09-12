@@ -9,6 +9,13 @@ credentials/
 private/
 central-monitoring/web-upload/config.php
 
+# Android release-signing secrets and local release outputs
+*.jks
+*.keystore
+keystore.properties
+android/ares-sync/release-output/
+public/assets/downloads/ares-sync.apk
+
 # Uploaded monitoring data must never enter Git
 central-monitoring/web-upload/incoming/*
 !central-monitoring/web-upload/incoming/.htaccess

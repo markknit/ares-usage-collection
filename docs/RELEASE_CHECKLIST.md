@@ -1,14 +1,19 @@
 # Release checklist
 
+Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release building, certificate verification, and the website-to-phone acceptance test.
+
 ## Android release package
 
 - [ ] Production APK is a release-signed build, not a CI debug build.
+- [ ] One long-lived ARES production signing key has been created and backed up securely in at least two controlled locations.
 - [ ] Signing keystore and passwords are stored outside the repository.
 - [ ] Version name and versionCode are recorded.
 - [ ] Source commit SHA is recorded.
 - [ ] APK SHA-256 is recorded.
+- [ ] Signing-certificate SHA-256 fingerprint is recorded.
 - [ ] Exact signed APK installs on a clean Android phone.
-- [ ] Existing enrolled test phone can upgrade when expected.
+- [ ] First production-signed installation is documented; a debug-signed test APK may require uninstall/re-enrollment because its certificate differs.
+- [ ] A later APK signed with the same production key upgrades the production-signed app in place without clearing app data.
 - [ ] ARES logo and all four appearance modes render correctly.
 - [ ] School search and school selector are readable in light and dark system modes.
 - [ ] Keyboard does not cover school-search or enrollment-code fields.
@@ -21,8 +26,10 @@
 - [ ] `public/assets/downloads/ares-sync.apk` exists on the deployed site.
 - [ ] Published APK SHA-256 matches the approved release hash.
 - [ ] Download button works from an Android phone.
+- [ ] Full installation test starts from the deployed website on a clean phone.
 - [ ] Sideload instructions match the tested Android install flow.
 - [ ] Teacher can recover from the "Allow from this source" prompt.
+- [ ] Any Play Protect warning flow is documented accurately without instructing users to disable Play Protect globally.
 - [ ] Teacher guide does not require Round Sync, Automate, MacroDroid, rclone, or Google Drive setup.
 
 ## Enrollment and phone behavior
@@ -64,5 +71,5 @@
 - [ ] Production deployment instructions are current.
 - [ ] Teacher installation instructions are current.
 - [ ] Technician installation instructions are current.
-- [ ] Release/version/hash record is saved outside the public download directory.
+- [ ] Release/version/hash/certificate record is saved outside the public download directory.
 - [ ] Autonomous Android alarm timing limitation is documented until independently field-validated.

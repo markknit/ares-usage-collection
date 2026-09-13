@@ -32,15 +32,23 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Any Play Protect warning flow is documented accurately without instructing users to disable Play Protect globally.
 - [ ] Teacher guide does not require Round Sync, Automate, MacroDroid, rclone, or Google Drive setup.
 
-## Enrollment and phone behavior
+## Enrollment, Wi-Fi, and phone behavior
 
 - [ ] School search returns the expected canonical school.
 - [ ] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
 - [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
-- [ ] Normal enrolled screen shows school, next collection, and no-action-required state.
+- [ ] Android asks to save both open school networks, `ARES2` and `ARES`, immediately after fresh enrollment.
+- [ ] Approving the save request leaves both networks in Android's normal saved-network list.
+- [ ] ARES Sync records successful automatic Wi-Fi setup and no longer shows the setup button.
+- [ ] Skipping/rejecting Wi-Fi setup leaves a visible **Set up automatic ARES Wi-Fi** retry path.
+- [ ] Phone reconnects automatically to saved `ARES` or `ARES2` when the school network is available.
+- [ ] On the mesh network, Android can roam between mesh access points under the saved `ARES` SSID without ARES Sync managing BSSIDs.
+- [ ] Normal enrolled screen shows school, next collection, and no-action-required state after Wi-Fi setup is complete.
 - [ ] Due collection first attempts silent local collection.
-- [ ] Teacher is prompted only when school Wi-Fi assistance is required.
+- [ ] A due collection that cannot reach `ares.local` remains retryable rather than ending permanently.
+- [ ] A later retry succeeds after the phone returns to school and Android reconnects to `ARES` or `ARES2`.
+- [ ] Manual **Connect to school Wi-Fi** remains available as the fallback when automatic connection does not occur.
 - [ ] Pending file survives app/process interruption and phone restart as designed.
 - [ ] Upload succeeds after later cellular or Wi-Fi internet access.
 - [ ] Pending count returns to zero after central acknowledgement.

@@ -33,7 +33,7 @@ public final class CollectionAttemptWorker extends Worker {
             Network wifiNetwork = connector.getCurrentWifiNetwork();
             if (wifiNetwork == null) {
                 CollectionNotification.show(context, collection);
-                return Result.success();
+                return Result.retry();
             }
 
             AresServerClient.Result download;
@@ -41,12 +41,12 @@ public final class CollectionAttemptWorker extends Worker {
                 download = AresServerClient.downloadBlocking(context, wifiNetwork, collection.id);
             } catch (Exception ex) {
                 CollectionNotification.show(context, collection);
-                return Result.success();
+                return Result.retry();
             }
 
             if (download.statusCode != 200 || download.fileName == null) {
                 CollectionNotification.show(context, collection);
-                return Result.success();
+                return Result.retry();
             }
 
             CollectionSchedule.markCompleted(context, collection.id);

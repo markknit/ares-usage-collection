@@ -68,6 +68,18 @@
   <section class="card step">
     <div class="stepno">4</div>
     <div>
+      <h3>Save the school Wi-Fi networks</h3>
+      <p>After enrollment, Android will ask permission to save the open Wi-Fi networks <strong>ARES2</strong> and <strong>ARES</strong>. Approve both networks.</p>
+      <div class="notice">
+        <strong>Why this matters:</strong> once saved, Android can reconnect to the school ARES network automatically when it is available. This allows scheduled usage collection to happen with little or no teacher involvement.
+      </div>
+      <p class="small">The ARES networks are open, so no Wi-Fi password is stored by ARES Sync. If this step is skipped, the app will show a button to complete it later.</p>
+    </div>
+  </section>
+
+  <section class="card step">
+    <div class="stepno">5</div>
+    <div>
       <h3>Allow notifications</h3>
       <p>If Android asks whether ARES Sync may send notifications, choose <strong>Allow</strong>. Notifications are used only when the app needs attention for a scheduled collection.</p>
     </div>
@@ -78,8 +90,9 @@
     <div class="notice">
       <strong>Normal state:</strong> ARES Sync should show your school, the next collection date, and <strong>Everything is ready. No action required.</strong>
     </div>
-    <p>You do not need to open ARES Sync every day. When a collection becomes due, the app first tries to collect silently if the phone can already reach the school ARES server.</p>
-    <p>If the school network is not available, ARES Sync will ask you to connect the phone to <strong>ARES2</strong> or <strong>ARES</strong>. Return to ARES Sync after choosing the school Wi-Fi. The app then collects the usage report automatically.</p>
+    <p>You do not need to open ARES Sync every day. When a collection becomes due, the app first tries to collect silently if the phone can reach the school ARES server.</p>
+    <p>If the first attempt happens while the phone is away from school, ARES Sync keeps retrying. When the phone later reaches the school and Android connects to saved <strong>ARES</strong> or <strong>ARES2</strong>, a later retry can complete the collection automatically.</p>
+    <p>If Android does not connect automatically, ARES Sync still provides the manual <strong>Connect to school Wi-Fi</strong> fallback.</p>
     <p>When normal internet access later returns, ARES Sync sends any pending usage report automatically in the background.</p>
   </section>
 

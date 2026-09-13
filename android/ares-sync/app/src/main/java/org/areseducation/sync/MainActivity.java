@@ -33,6 +33,7 @@ public final class MainActivity extends Activity {
     public static final String ACTION_COLLECTION_DUE = "org.areseducation.sync.COLLECTION_DUE";
     public static final String EXTRA_COLLECTION_ID = "collection_id";
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
+    private static final int WIFI_SAVE_NETWORKS_REQUEST = 1003;
     private static final String UI_PREFS = "org.areseducation.sync.ui";
     private static final String KEY_APPEARANCE = "appearance";
     private static final DateTimeFormatter DISPLAY_DATE =
@@ -110,7 +111,7 @@ public final class MainActivity extends Activity {
 
         schoolSearchButton.setOnClickListener(view -> searchForSchool());
         enrollButton.setOnClickListener(view -> enrollSelectedSchool());
-        chooseWifiButton.setOnClickListener(view -> openWifiPanel());
+        chooseWifiButton.setOnClickListener(view -> handleWifiButton());
         schoolSearchInput.setOnFocusChangeListener((view, focused) -> {
             if (focused) {
                 scrollFieldAboveKeyboard(view);
@@ -192,6 +193,27 @@ public final class MainActivity extends Activity {
             statusText.removeCallbacks(uploadStatusRefresh);
         }
         super.onPause();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != WIFI_SAVE_NETWORKS_REQUEST) {
+            return;
+        }
+
+        boolean saved = AresWifiProvisioner.wasSaveSuccessful(resultCode, data);
+        AresWifiProvisioner.setComplete(this, saved);
+        refreshScheduleStatus();
+
+        if (saved) {
+            setStatus("Automatic school Wi-Fi setup is complete. Android can now connect to ARES or ARES2 when available.");
+            CollectionReminderScheduler.scheduleAll(this);
+        } else {
+            setStatus("Automatic school Wi-Fi setup was not completed. You can try again with the button below, or connect to ARES or ARES2 manually when a collection is due.");
+        }
+
+        requestNotificationPermissionIfNeeded();
     }
 
     private void showEnrollmentUi() {
@@ -309,13 +331,17 @@ public final class MainActivity extends Activity {
         CentralUploadScheduler.enqueuePending(this);
         refreshScheduleStatus();
 
-        if (justEnrolled) {
-            setStatus("Setup complete. Everything is ready. No action is required now.");
+        if (justEnrolled && AresWifiProvisioner.isSupported()) {
+            setStatus("Enrollment complete. One final setup step will let Android connect to the school ARES Wi-Fi automatically.");
+            chooseWifiButton.postDelayed(this::startAutomaticWifiSetup, 250L);
         } else {
-            handleIntent(getIntent());
+            if (justEnrolled) {
+                setStatus("Setup complete. This Android version requires manual ARES Wi-Fi selection when a collection is due.");
+            } else {
+                handleIntent(getIntent());
+            }
+            requestNotificationPermissionIfNeeded();
         }
-
-        requestNotificationPermissionIfNeeded();
     }
 
     private void handleIntent(Intent intent) {
@@ -323,11 +349,54 @@ public final class MainActivity extends Activity {
             String collectionId = intent.getStringExtra(EXTRA_COLLECTION_ID);
             CollectionSchedule.Collection collection = CollectionSchedule.find(collectionId);
             if (collection != null && !CollectionSchedule.isCompleted(this, collection.id)) {
-                setStatus("ARES Sync needs the school Wi-Fi for this collection. Connect this phone to ARES or ARES2. Collection will start automatically when the school server is available.");
+                if (AresWifiProvisioner.isComplete(this)) {
+                    setStatus("ARES Sync is waiting for the school Wi-Fi. Android should connect to saved ARES or ARES2 automatically when available. If it does not, use the Wi-Fi button below.");
+                } else if (AresWifiProvisioner.isSupported()) {
+                    setStatus("ARES Sync needs the school Wi-Fi for this collection. Complete the one-time automatic ARES Wi-Fi setup below, or connect manually.");
+                } else {
+                    setStatus("ARES Sync needs the school Wi-Fi for this collection. Connect this phone to ARES or ARES2. Collection will start automatically when the school server is available.");
+                }
                 return;
             }
         }
         setStatus("Everything is ready. No action is required now.");
+    }
+
+    private void handleWifiButton() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            showEnrollmentUi();
+            return;
+        }
+
+        if (AresWifiProvisioner.isSupported() && !AresWifiProvisioner.isComplete(this)) {
+            startAutomaticWifiSetup();
+            return;
+        }
+
+        openWifiPanel();
+    }
+
+    private void startAutomaticWifiSetup() {
+        if (!EnrollmentStore.isEnrolled(this)) {
+            showEnrollmentUi();
+            return;
+        }
+
+        if (!AresWifiProvisioner.isSupported()) {
+            setStatus("Automatic saved-network setup requires Android 11 or newer. Use the Wi-Fi button when a collection is due to connect to ARES or ARES2 manually.");
+            requestNotificationPermissionIfNeeded();
+            return;
+        }
+
+        setStatus("Android will ask you to save ARES2 and ARES. Approve both networks so this phone can connect to the school Wi-Fi automatically.");
+        try {
+            startActivityForResult(
+                    AresWifiProvisioner.createSaveNetworksIntent(),
+                    WIFI_SAVE_NETWORKS_REQUEST);
+        } catch (RuntimeException ex) {
+            setStatus("Android could not open automatic Wi-Fi setup. You can still connect to ARES or ARES2 manually when a collection is due.\n\nTechnical details: " + ex.getMessage());
+            requestNotificationPermissionIfNeeded();
+        }
     }
 
     private void openWifiPanel() {
@@ -406,27 +475,49 @@ public final class MainActivity extends Activity {
             return;
         }
 
+        boolean wifiSetupAvailable = AresWifiProvisioner.isSupported();
+        boolean wifiSetupComplete = AresWifiProvisioner.isComplete(this);
         String uploadLine = pendingUploadLine();
         CollectionSchedule.Collection due = CollectionSchedule.getPendingDueCollection(this);
+
         if (due != null) {
             chooseWifiButton.setVisibility(View.VISIBLE);
-            scheduleText.setText("Usage collection is due\n"
-                    + due.label + " - " + formatDate(due.dueDate)
-                    + "\n\nConnect this phone to the school ARES Wi-Fi. ARES Sync will collect automatically."
-                    + uploadLine);
+            if (wifiSetupAvailable && !wifiSetupComplete) {
+                chooseWifiButton.setText("Set up automatic ARES Wi-Fi");
+                scheduleText.setText("Usage collection is due\n"
+                        + due.label + " - " + formatDate(due.dueDate)
+                        + "\n\nOne-time Wi-Fi setup is not complete. Save ARES2 and ARES so Android can connect automatically, or connect manually if needed."
+                        + uploadLine);
+            } else {
+                chooseWifiButton.setText("Connect to school Wi-Fi");
+                scheduleText.setText("Usage collection is due\n"
+                        + due.label + " - " + formatDate(due.dueDate)
+                        + "\n\nARES Sync will collect automatically when the school ARES Wi-Fi is available. Use the button below only if Android does not connect on its own."
+                        + uploadLine);
+            }
             applyScheduleHighlight(true);
             return;
         }
 
-        chooseWifiButton.setVisibility(View.GONE);
         applyScheduleHighlight(false);
         CollectionSchedule.Collection next = CollectionSchedule.getNextIncompleteCollection(this);
         if (next != null) {
-            scheduleText.setText("Next collection\n"
-                    + formatDate(next.dueDate)
-                    + "\n\nEverything is ready. No action required."
-                    + uploadLine);
+            if (wifiSetupAvailable && !wifiSetupComplete) {
+                chooseWifiButton.setVisibility(View.VISIBLE);
+                chooseWifiButton.setText("Set up automatic ARES Wi-Fi");
+                scheduleText.setText("Next collection\n"
+                        + formatDate(next.dueDate)
+                        + "\n\nOne setup step remains: save ARES2 and ARES so Android can connect to the school network automatically."
+                        + uploadLine);
+            } else {
+                chooseWifiButton.setVisibility(View.GONE);
+                scheduleText.setText("Next collection\n"
+                        + formatDate(next.dueDate)
+                        + "\n\nEverything is ready. No action required."
+                        + uploadLine);
+            }
         } else {
+            chooseWifiButton.setVisibility(View.GONE);
             scheduleText.setText("2026 collections complete\n\nNo further collection is scheduled on this phone."
                     + uploadLine);
         }

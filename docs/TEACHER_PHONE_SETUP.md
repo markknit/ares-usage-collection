@@ -17,9 +17,12 @@ This guide is for a teacher or school user setting up ARES Sync on an Android ph
 8. Search for your school and select the exact school name.
 9. Enter the one-time enrollment code supplied by ARES staff.
 10. Tap **Enroll this phone**.
-11. If Android asks for permission to show notifications, choose **Allow**.
+11. Android will then ask to save the open Wi-Fi networks **ARES2** and **ARES**. Approve both. This lets Android reconnect to the school network automatically when it is available.
+12. If Android asks for permission to show notifications, choose **Allow**.
 
-The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device.
+The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device. The ARES Wi-Fi networks are stored in Android's normal saved-network list; ARES Sync does not store a Wi-Fi password because these school networks are open.
+
+If Wi-Fi setup was skipped, ARES Sync shows **Set up automatic ARES Wi-Fi** so the one-time save step can be completed later.
 
 ## Normal use
 
@@ -31,13 +34,17 @@ Most of the time, no action is required. ARES Sync should show:
 
 ARES Sync does not need to remain open.
 
+When the phone is at school, Android can automatically reconnect to saved **ARES** or **ARES2**. This gives ARES Sync the opportunity to collect scheduled usage data without teacher action.
+
 ## When a collection is due
 
 ARES Sync first tries to reach the school ARES server silently.
 
 If the phone is already connected to the school ARES network and the server is reachable, the usage collection can complete without teacher action.
 
-If ARES Sync asks for help connecting to the school network:
+If the first scheduled attempt occurs while the phone is away from school or cannot reach `ares.local`, ARES Sync keeps the collection retryable. When the phone later reaches the school network, a later retry can complete the collection automatically.
+
+If Android does not connect automatically and ARES Sync asks for help:
 
 1. Open ARES Sync.
 2. Tap **Connect to school Wi-Fi**.

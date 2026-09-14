@@ -15,6 +15,7 @@ public final class AresWifiProvisioner {
     static final String SSID_ARES = "ARES";
     private static final String PREFS = "org.areseducation.sync.wifi_setup";
     private static final String KEY_SUGGESTIONS_APPROVED = "suggested_ares_networks_v1";
+    private static final String KEY_LOCAL_NETWORK_READY = "local_ares_network_request_v1";
     private static final String APP_PACKAGE = "org.areseducation.sync";
     private static final String WIFI_SETUP_ACTIVITY = APP_PACKAGE + ".WifiSetupActivity";
 
@@ -26,13 +27,22 @@ public final class AresWifiProvisioner {
     }
 
     public static boolean isComplete(Context context) {
+        return areSuggestionsApproved(context) && isLocalNetworkReady(context);
+    }
+
+    static boolean areSuggestionsApproved(Context context) {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_SUGGESTIONS_APPROVED, false);
     }
 
+    static boolean isLocalNetworkReady(Context context) {
+        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getBoolean(KEY_LOCAL_NETWORK_READY, false);
+    }
+
     public static Intent createSaveNetworksIntent() {
         if (!isSupported()) {
-            throw new IllegalStateException("Automatic Wi-Fi suggestions require Android 11 or newer.");
+            throw new IllegalStateException("Automatic Wi-Fi setup requires Android 11 or newer.");
         }
         return new Intent().setClassName(APP_PACKAGE, WIFI_SETUP_ACTIVITY);
     }
@@ -68,14 +78,27 @@ public final class AresWifiProvisioner {
                 || status == WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_ADD_DUPLICATE;
     }
 
+    static void setSuggestionsApproved(Context context, boolean approved) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_SUGGESTIONS_APPROVED, approved)
+                .apply();
+    }
+
+    static void setLocalNetworkReady(Context context, boolean ready) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_LOCAL_NETWORK_READY, ready)
+                .apply();
+    }
+
     public static boolean wasSaveSuccessful(int resultCode, Intent data) {
         return resultCode == Activity.RESULT_OK;
     }
 
     public static void setComplete(Context context, boolean complete) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean(KEY_SUGGESTIONS_APPROVED, complete)
-                .apply();
+        // MainActivity calls this after WifiSetupActivity returns. The suggestion approval
+        // is tracked separately so a failed local-network authorization does not erase it.
+        setLocalNetworkReady(context, complete);
     }
 }

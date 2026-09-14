@@ -1,7 +1,10 @@
 package org.areseducation.sync;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.net.Network;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,14 +17,21 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public final class WifiSetupActivity extends Activity {
+    private static final int LOCAL_WIFI_PERMISSION_REQUEST = 2002;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private WifiManager wifiManager;
     private WifiManager.SuggestionUserApprovalStatusListener approvalListener;
     private TextView bodyText;
     private Button retryButton;
     private boolean suggestionSubmitted;
     private boolean sawSystemDialogFocusLoss;
+    private boolean localRequestRunning;
     private boolean finished;
 
     @Override
@@ -36,8 +46,13 @@ public final class WifiSetupActivity extends Activity {
             return;
         }
 
-        bodyText.setText("Android will ask once whether ARES Sync may suggest Wi-Fi networks. Choose Allow. After that, ARES Sync can register ARES and ARES2 for automatic connection without the separate network-save sheet.");
-        handler.postDelayed(this::beginSuggestionSetup, 350L);
+        if (AresWifiProvisioner.areSuggestionsApproved(this)) {
+            bodyText.setText("ARES and ARES2 suggestions are already approved. ARES Sync will now prepare a direct local connection for scheduled collections even when another Wi-Fi network has internet access.");
+            handler.postDelayed(this::beginLocalNetworkSetup, 300L);
+        } else {
+            bodyText.setText("Android will ask once whether ARES Sync may suggest Wi-Fi networks. Choose Allow. After that, ARES Sync will prepare direct access to the school network for scheduled collections.");
+            handler.postDelayed(this::beginSuggestionSetup, 350L);
+        }
     }
 
     @Override
@@ -49,6 +64,7 @@ public final class WifiSetupActivity extends Activity {
             }
         }
         handler.removeCallbacksAndMessages(null);
+        executor.shutdownNow();
         super.onDestroy();
     }
 
@@ -66,6 +82,20 @@ public final class WifiSetupActivity extends Activity {
 
         if (sawSystemDialogFocusLoss) {
             handler.postDelayed(this::verifyAndroid11Approval, 250L);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != LOCAL_WIFI_PERMISSION_REQUEST) {
+            return;
+        }
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startLocalNetworkAuthorization();
+        } else {
+            AresWifiProvisioner.setLocalNetworkReady(this, false);
+            showFailure("ARES Sync needs Nearby Wi-Fi access to request the school network directly when another Wi-Fi network has internet. Allow the permission to finish automatic setup, or use manual Wi-Fi when a collection is due.");
         }
     }
 
@@ -87,6 +117,7 @@ public final class WifiSetupActivity extends Activity {
         }
 
         if (status == WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_APP_DISALLOWED) {
+            AresWifiProvisioner.setSuggestionsApproved(this, false);
             showFailure("Automatic Wi-Fi access is turned off for ARES Sync. You can connect to ARES or ARES2 manually, or enable ARES Sync later under Android's special Wi-Fi control settings.");
             return;
         }
@@ -101,8 +132,6 @@ public final class WifiSetupActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             registerApprovalListener();
         } else {
-            // Android 11 has the foreground approval dialog but not the approval-status listener.
-            // If no dialog appears because approval already exists, verify after the activity has settled.
             handler.postDelayed(() -> {
                 if (!finished && hasWindowFocus() && !sawSystemDialogFocusLoss) {
                     verifyAndroid11Approval();
@@ -122,8 +151,11 @@ public final class WifiSetupActivity extends Activity {
             }
             if (status == WifiManager.STATUS_SUGGESTION_APPROVAL_APPROVED_BY_USER
                     || status == WifiManager.STATUS_SUGGESTION_APPROVAL_APPROVED_BY_CARRIER_PRIVILEGE) {
-                finishSuccessful();
+                AresWifiProvisioner.setSuggestionsApproved(this, true);
+                beginLocalNetworkSetup();
             } else if (status == WifiManager.STATUS_SUGGESTION_APPROVAL_REJECTED_BY_USER) {
+                AresWifiProvisioner.setSuggestionsApproved(this, false);
+                AresWifiProvisioner.setLocalNetworkReady(this, false);
                 showFailure("Android did not allow ARES Sync to suggest Wi-Fi networks. You can connect to ARES or ARES2 manually, or enable ARES Sync later under Android's special Wi-Fi control settings.");
             }
         };
@@ -151,12 +183,99 @@ public final class WifiSetupActivity extends Activity {
         }
 
         if (status == WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_APP_DISALLOWED) {
+            AresWifiProvisioner.setSuggestionsApproved(this, false);
             showFailure("Android did not allow ARES Sync to suggest Wi-Fi networks. You can connect manually or enable ARES Sync later under Android's special Wi-Fi control settings.");
         } else if (AresWifiProvisioner.submissionAccepted(status)) {
-            finishSuccessful();
+            AresWifiProvisioner.setSuggestionsApproved(this, true);
+            beginLocalNetworkSetup();
         } else {
             showFailure("Android could not confirm automatic ARES Wi-Fi setup (status " + status + "). You can connect manually.");
         }
+    }
+
+    private void beginLocalNetworkSetup() {
+        if (finished) {
+            return;
+        }
+        if (AresWifiProvisioner.isLocalNetworkReady(this)) {
+            finishSuccessful();
+            return;
+        }
+
+        retryButton.setVisibility(View.GONE);
+        String permission = localWifiPermission();
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                bodyText.setText("One more one-time permission is needed. Allow Nearby Wi-Fi devices so ARES Sync can reach ARES or ARES2 for a scheduled collection without taking over your normal internet connection.");
+            } else {
+                bodyText.setText("One more one-time Android permission is needed for direct school Wi-Fi access. On this Android version the system labels that Wi-Fi permission as Location.");
+            }
+            requestPermissions(new String[]{permission}, LOCAL_WIFI_PERMISSION_REQUEST);
+            return;
+        }
+
+        startLocalNetworkAuthorization();
+    }
+
+    private String localWifiPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return Manifest.permission.NEARBY_WIFI_DEVICES;
+        }
+        return Manifest.permission.ACCESS_FINE_LOCATION;
+    }
+
+    private void startLocalNetworkAuthorization() {
+        if (finished || localRequestRunning) {
+            return;
+        }
+
+        localRequestRunning = true;
+        retryButton.setVisibility(View.GONE);
+        bodyText.setText("Preparing direct access to the school server. Android may ask you to approve a connection to ARES2 or ARES. Keep your normal internet Wi-Fi saved; this request is only for ARES Sync's local collection traffic.");
+
+        executor.execute(() -> {
+            AresWifiConnector connector = new AresWifiConnector(WifiSetupActivity.this);
+            try {
+                Network network = connector.requestPreferredAresNetworkBlocking(60_000L);
+                if (network == null) {
+                    runOnUiThread(() -> {
+                        localRequestRunning = false;
+                        AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, false);
+                        showFailure("ARES Sync could not obtain a direct ARES Wi-Fi connection. Make sure ARES2 or ARES is in range, then try again. Your normal internet Wi-Fi can remain saved and connected.");
+                    });
+                    return;
+                }
+
+                AresServerClient.probeBlocking(network);
+                runOnUiThread(() -> {
+                    localRequestRunning = false;
+                    AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, true);
+                    bodyText.setText("ARES local access is ready. ARES Sync reached the school server through its direct local connection.");
+                    handler.postDelayed(this::finishSuccessful, 500L);
+                });
+            } catch (SecurityException error) {
+                runOnUiThread(() -> {
+                    localRequestRunning = false;
+                    AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, false);
+                    showFailure("Android blocked the direct ARES Wi-Fi request. Allow Nearby Wi-Fi access and try again.");
+                });
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                runOnUiThread(() -> {
+                    localRequestRunning = false;
+                    AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, false);
+                    showFailure("The direct ARES Wi-Fi request was interrupted. Try again while ARES2 or ARES is in range.");
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> {
+                    localRequestRunning = false;
+                    AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, false);
+                    showFailure("ARES Sync connected to the requested school Wi-Fi but could not reach ares.local. Make sure the school server is running and try again.\n\nTechnical details: " + error.getMessage());
+                });
+            } finally {
+                connector.close();
+            }
+        });
     }
 
     private void finishSuccessful() {
@@ -174,6 +293,14 @@ public final class WifiSetupActivity extends Activity {
         }
         bodyText.setText(message);
         retryButton.setVisibility(View.VISIBLE);
+    }
+
+    private void retrySetup() {
+        if (AresWifiProvisioner.areSuggestionsApproved(this)) {
+            beginLocalNetworkSetup();
+        } else {
+            beginSuggestionSetup();
+        }
     }
 
     private LinearLayout createSetupView() {
@@ -212,7 +339,7 @@ public final class WifiSetupActivity extends Activity {
         retryButton.setText("Try automatic Wi-Fi setup again");
         retryButton.setMinHeight(Math.round(56f * density));
         retryButton.setVisibility(View.GONE);
-        retryButton.setOnClickListener(view -> beginSuggestionSetup());
+        retryButton.setOnClickListener(view -> retrySetup());
         LinearLayout.LayoutParams retryParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);

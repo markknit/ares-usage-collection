@@ -30,33 +30,59 @@ public final class CollectionAttemptWorker extends Worker {
 
         AresWifiConnector connector = new AresWifiConnector(context);
         try {
-            Network wifiNetwork = connector.getCurrentWifiNetwork();
-            if (wifiNetwork == null) {
+            Network currentWifi = connector.getCurrentWifiNetwork();
+            if (currentWifi != null && tryDownload(context, currentWifi, collection)) {
+                return Result.success();
+            }
+
+            if (!AresWifiProvisioner.isComplete(context)) {
                 CollectionNotification.show(context, collection);
                 return Result.retry();
             }
 
-            AresServerClient.Result download;
+            Network aresNetwork;
             try {
-                download = AresServerClient.downloadBlocking(context, wifiNetwork, collection.id);
-            } catch (Exception ex) {
+                aresNetwork = connector.requestPreferredAresNetworkBlocking(30_000L);
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                CollectionNotification.show(context, collection);
+                return Result.retry();
+            } catch (RuntimeException error) {
                 CollectionNotification.show(context, collection);
                 return Result.retry();
             }
 
-            if (download.statusCode != 200 || download.fileName == null) {
+            if (aresNetwork == null || !tryDownload(context, aresNetwork, collection)) {
                 CollectionNotification.show(context, collection);
                 return Result.retry();
             }
 
-            CollectionSchedule.markCompleted(context, collection.id);
-            CollectionReminderScheduler.cancel(context, collection.id);
-            CollectionNotification.cancel(context, collection.id);
-            CentralUploadScheduler.enqueuePending(context);
-            CollectionReminderScheduler.scheduleAll(context);
             return Result.success();
         } finally {
             connector.close();
         }
+    }
+
+    private boolean tryDownload(
+            Context context,
+            Network network,
+            CollectionSchedule.Collection collection) {
+        AresServerClient.Result download;
+        try {
+            download = AresServerClient.downloadBlocking(context, network, collection.id);
+        } catch (Exception ex) {
+            return false;
+        }
+
+        if (download.statusCode != 200 || download.fileName == null) {
+            return false;
+        }
+
+        CollectionSchedule.markCompleted(context, collection.id);
+        CollectionReminderScheduler.cancel(context, collection.id);
+        CollectionNotification.cancel(context, collection.id);
+        CentralUploadScheduler.enqueuePending(context);
+        CollectionReminderScheduler.scheduleAll(context);
+        return true;
     }
 }

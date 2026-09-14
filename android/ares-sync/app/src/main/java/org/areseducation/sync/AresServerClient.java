@@ -16,6 +16,8 @@ import java.util.concurrent.Executors;
 public final class AresServerClient {
     private static final String ENDPOINT =
             "http://ares.local/tracker/prepare_due_usage_upload.php";
+    private static final String PROBE_ENDPOINT =
+            "http://ares.local/tracker/collection_schedule.json";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     public interface Callback {
@@ -58,6 +60,36 @@ public final class AresServerClient {
                 callback.onError(ex.getClass().getSimpleName() + ": " + ex.getMessage());
             }
         });
+    }
+
+    public static void probeBlocking(Network network) throws IOException {
+        if (network == null) {
+            throw new IOException("No ARES local network is available.");
+        }
+
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) network.openConnection(new URL(PROBE_ENDPOINT));
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(8000);
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestProperty("Accept", "application/json");
+
+            int status = connection.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK) {
+                throw new IOException("ARES server probe returned HTTP " + status + ".");
+            }
+            try (InputStream input = connection.getInputStream()) {
+                if (input.read() < 0) {
+                    throw new IOException("ARES server probe returned an empty response.");
+                }
+            }
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
     public static Result downloadBlocking(

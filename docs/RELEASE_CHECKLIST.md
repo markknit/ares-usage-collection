@@ -38,9 +38,9 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
 - [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
-- [ ] Immediately after fresh enrollment, ARES Sync requests Android's one-time app-level approval to suggest Wi-Fi networks; it does not open the `ACTION_WIFI_ADD_NETWORKS` saved-network sheet.
-- [ ] Android's Wi-Fi suggestion approval prompt is usable on the first attempt and does not overlap the system gesture/navigation area.
-- [ ] Approving the prompt registers both open networks, `ARES2` and `ARES`, as ARES Sync suggestions.
+- [x] Immediately after fresh enrollment, ARES Sync requests Android's one-time app-level approval to suggest Wi-Fi networks; it does not open the `ACTION_WIFI_ADD_NETWORKS` saved-network sheet.
+- [x] Android's Wi-Fi suggestion approval prompt is usable on the first attempt and does not overlap the system gesture/navigation area.
+- [x] Approving the prompt registers both open networks, `ARES2` and `ARES`, as ARES Sync suggestions.
 - [ ] On Android 12+, ARES Sync receives the suggestion-approval callback and records setup complete.
 - [ ] Declining suggestion approval leaves manual **Connect to school Wi-Fi** available and documents the **Special app access > Wi-Fi control** recovery path.
 - [ ] After approval, Android auto-connects to `ARES` or `ARES2` when available even though the school network normally has no internet access.
@@ -53,6 +53,13 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Pending file survives app/process interruption and phone restart as designed.
 - [ ] Upload succeeds after later cellular or Wi-Fi internet access.
 - [ ] Pending count returns to zero after central acknowledgement.
+
+### rc10 Wi-Fi suggestion field result - 2026-09-13
+
+- PASS: the app-level Wi-Fi suggestion approval completed successfully without the unusable saved-network bottom sheet.
+- PASS: with competing internet-capable saved Wi-Fi networks removed, Android immediately selected the ARES suggestions and connected to `ARES`/`ARES2` even though they do not provide internet access.
+- LIMITATION: while other saved internet-capable Wi-Fi networks were available, Android preferred those networks and did not switch to `ARES`/`ARES2`.
+- RELEASE IMPACT: the Suggestion API is validated for onboarding and automatic association when ARES is the preferred available Wi-Fi, but it is not yet proven sufficient as the sole scheduled-collection connection mechanism in environments with competing internet-capable Wi-Fi.
 
 ## School server
 

@@ -1,6 +1,6 @@
 # Deployment Status
 
-Updated 2026-09-11 after Android UI field acceptance and installation-portal productization.
+Updated 2026-09-13 after rc10 Wi-Fi suggestion field validation.
 
 ## Current architecture
 
@@ -17,12 +17,12 @@ Round Sync, Automate, MacroDroid, phone-side rclone, Google Drive remotes, and D
 
 ## Android status
 
-Field-validated candidate:
+Current field-test candidate:
 
-- version: `0.8.0-rc6`
-- source commit: `02eca4133e2df560fce1f2c10ae382c0fb9a7544`
-- CI run: `#58`
-- UI/accessibility field acceptance: passed on the dedicated test phone.
+- version: `0.8.0-rc10`
+- source commit: `95bcfb37174eeb5ede658d7cd7abf7b14a1d4fc5`
+- CI run: `#63`
+- Wi-Fi onboarding field test: suggestion approval completed successfully.
 
 Validated behavior includes:
 
@@ -35,9 +35,13 @@ Validated behavior includes:
 - themed school selection;
 - keyboard resize/scroll during enrollment entry;
 - ARES logo rendering;
-- teacher-facing no-action-required normal state.
+- teacher-facing no-action-required normal state;
+- app-level Android approval for ARES Wi-Fi suggestions without the unusable saved-network confirmation sheet;
+- automatic association to suggested `ARES`/`ARES2` when competing internet-capable saved Wi-Fi networks are not present.
 
-The CI APK is debug-signed and remains a test artifact. Production distribution still requires an approved release-signing process.
+Important rc10 limitation: when other saved internet-capable Wi-Fi networks are available, Android prefers those networks and does not automatically switch to the offline ARES network. The Wi-Fi Suggestion API therefore solves onboarding and can auto-associate to ARES when it is the preferred available Wi-Fi, but it is not yet proven sufficient as the only scheduled-collection connection mechanism in mixed-network environments.
+
+The CI APK is debug-signed and remains a test artifact. Production distribution still requires the approved release-signing process.
 
 ## School-server status
 
@@ -61,6 +65,7 @@ The repository portal has been updated for the native ARES Sync workflow:
 - direct teacher installation flow;
 - Android install-from-source warning guidance;
 - one-time school enrollment;
+- app-level Wi-Fi suggestion approval;
 - notification permission;
 - mostly automatic collection and upload behavior;
 - no Round Sync/Automate/MacroDroid setup requirement.
@@ -69,10 +74,10 @@ The portal still needs to be deployed to the final HTTPS path and field-tested b
 
 ## Remaining production milestones
 
-1. Define and protect the production Android signing key and build a release-signed APK.
-2. Record release version, versionCode, source commit, and SHA-256.
-3. Publish the exact approved APK to the stable setup-portal path.
-4. Deploy and field-test the public phone-setup portal on Android.
+1. Decide and field-validate the final Android connection strategy for due collections when competing internet-capable Wi-Fi networks are present.
+2. Build the first production-signed acceptance APK with the protected ARES signing key.
+3. Record release version, versionCode, source commit, APK SHA-256, and signing-certificate fingerprint.
+4. Publish the exact approved APK to the stable setup-portal path and run the clean-phone website-origin acceptance test.
 5. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
 6. Run the full release checklist and preserve rollback artifacts.
 7. Independently validate autonomous AlarmManager timing if required beyond the already validated overdue/silent collection path.

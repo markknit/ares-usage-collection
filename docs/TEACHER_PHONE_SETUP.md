@@ -17,7 +17,7 @@ This guide is for a teacher or school user setting up ARES Sync on an Android ph
 8. Search for your school and select the exact school name.
 9. Enter the one-time enrollment code supplied by ARES staff.
 10. Tap **Enroll this phone**.
-11. Android will then ask to save the open Wi-Fi networks **ARES2** and **ARES**. Approve both. This lets Android reconnect to the school network automatically when it is available.
+11. Android will ask to save the open Wi-Fi network **ARES2**, then it will ask to save **ARES**. Tap **Save** on each screen. Saving the networks one at a time keeps Android's confirmation screen short and lets Android reconnect automatically when either school network is available.
 12. If Android asks for permission to show notifications, choose **Allow**.
 
 The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device. The ARES Wi-Fi networks are stored in Android's normal saved-network list; ARES Sync does not store a Wi-Fi password because these school networks are open.

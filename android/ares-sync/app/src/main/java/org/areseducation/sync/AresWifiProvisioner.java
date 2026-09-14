@@ -10,8 +10,12 @@ import android.provider.Settings;
 import java.util.ArrayList;
 
 public final class AresWifiProvisioner {
+    static final String SSID_ARES2 = "ARES2";
+    static final String SSID_ARES = "ARES";
     private static final String PREFS = "org.areseducation.sync.wifi_setup";
     private static final String KEY_SAVED_NETWORKS = "saved_ares_networks";
+    private static final String APP_PACKAGE = "org.areseducation.sync";
+    private static final String WIFI_SETUP_ACTIVITY = APP_PACKAGE + ".WifiSetupActivity";
 
     private AresWifiProvisioner() {
     }
@@ -30,13 +34,20 @@ public final class AresWifiProvisioner {
             throw new IllegalStateException("Saved-network setup requires Android 11 or newer.");
         }
 
+        return new Intent().setClassName(APP_PACKAGE, WIFI_SETUP_ACTIVITY);
+    }
+
+    static Intent createSingleNetworkSaveIntent(String ssid) {
+        if (!isSupported()) {
+            throw new IllegalStateException("Saved-network setup requires Android 11 or newer.");
+        }
+        if (!SSID_ARES2.equals(ssid) && !SSID_ARES.equals(ssid)) {
+            throw new IllegalArgumentException("Unsupported ARES Wi-Fi network.");
+        }
+
         ArrayList<WifiNetworkSuggestion> networks = new ArrayList<>();
         networks.add(new WifiNetworkSuggestion.Builder()
-                .setSsid("ARES2")
-                .setIsInitialAutojoinEnabled(true)
-                .build());
-        networks.add(new WifiNetworkSuggestion.Builder()
-                .setSsid("ARES")
+                .setSsid(ssid)
                 .setIsInitialAutojoinEnabled(true)
                 .build());
 

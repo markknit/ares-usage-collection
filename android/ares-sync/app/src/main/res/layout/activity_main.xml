@@ -207,15 +207,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <Button
-                android:id="@+id/chooseWifiButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:minHeight="54dp"
-                android:text="@string/connect_wifi_button"
-                android:visibility="gone" />
-
             <LinearLayout
                 android:id="@+id/statusCard"
                 android:layout_width="match_parent"
@@ -243,6 +234,15 @@
                     android:textIsSelectable="true"
                     android:textSize="17sp" />
             </LinearLayout>
+
+            <Button
+                android:id="@+id/chooseWifiButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="54dp"
+                android:text="@string/connect_wifi_button"
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout

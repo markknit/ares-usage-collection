@@ -21,6 +21,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".WifiSetupActivity"
+            android:excludeFromRecents="true"
+            android:exported="false" />
+
         <receiver
             android:name=".CollectionReminderReceiver"
             android:enabled="true"

@@ -29,6 +29,7 @@ public final class WifiSetupActivity extends Activity {
     private WifiManager.SuggestionUserApprovalStatusListener approvalListener;
     private TextView bodyText;
     private Button retryButton;
+    private Button laterButton;
     private boolean suggestionSubmitted;
     private boolean sawSystemDialogFocusLoss;
     private boolean localRequestRunning;
@@ -47,7 +48,7 @@ public final class WifiSetupActivity extends Activity {
         }
 
         if (AresWifiProvisioner.areSuggestionsApproved(this)) {
-            bodyText.setText("ARES and ARES2 suggestions are already approved. ARES Sync will now prepare a direct local connection for scheduled collections even when another Wi-Fi network has internet access.");
+            bodyText.setText("ARES and ARES2 suggestions are already approved. ARES Sync will now prepare direct local access for scheduled collections, even when another Wi-Fi network has internet access.");
             handler.postDelayed(this::beginLocalNetworkSetup, 300L);
         } else {
             bodyText.setText("Android will ask once whether ARES Sync may suggest Wi-Fi networks. Choose Allow. After that, ARES Sync will prepare direct access to the school network for scheduled collections.");
@@ -104,7 +105,7 @@ public final class WifiSetupActivity extends Activity {
             return;
         }
 
-        retryButton.setVisibility(View.GONE);
+        hideActionButtons();
         int status;
         try {
             status = AresWifiProvisioner.addNetworkSuggestions(this);
@@ -127,7 +128,7 @@ public final class WifiSetupActivity extends Activity {
         }
 
         suggestionSubmitted = true;
-        bodyText.setText("ARES and ARES2 have been submitted to Android. If Android asks whether ARES Sync may suggest Wi-Fi networks, choose Allow.");
+        bodyText.setText("ARES and ARES2 have been submitted to Android. If Android asks whether ARES Sync may suggest Wi-Fi networks, choose Allow. Setup will continue automatically afterward.");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             registerApprovalListener();
@@ -198,11 +199,11 @@ public final class WifiSetupActivity extends Activity {
             return;
         }
         if (AresWifiProvisioner.isLocalNetworkReady(this)) {
-            finishSuccessful();
+            finishSuccessful("Automatic ARES Wi-Fi setup is already complete.");
             return;
         }
 
-        retryButton.setVisibility(View.GONE);
+        hideActionButtons();
         String permission = localWifiPermission();
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -230,13 +231,24 @@ public final class WifiSetupActivity extends Activity {
         }
 
         localRequestRunning = true;
-        retryButton.setVisibility(View.GONE);
-        bodyText.setText("Preparing direct access to the school server. Android may ask you to approve a connection to ARES2 or ARES. Keep your normal internet Wi-Fi saved; this request is only for ARES Sync's local collection traffic.");
+        hideActionButtons();
+        bodyText.setText("Preparing direct school access. Android may briefly move between ARES and ARES2 while setup continues. Please wait; no action is needed unless Android asks you to approve a network.");
 
         executor.execute(() -> {
             AresWifiConnector connector = new AresWifiConnector(WifiSetupActivity.this);
             try {
-                Network network = connector.requestPreferredAresNetworkBlocking(60_000L);
+                Network network = connector.requestPreferredAresNetworkBlocking(
+                        60_000L,
+                        (ssid, fallback) -> runOnUiThread(() -> {
+                            if (finished) {
+                                return;
+                            }
+                            if (fallback) {
+                                bodyText.setText("ARES2 was not available for the direct request. Continuing automatically with ARES. Please wait; no action is needed unless Android asks for approval.");
+                            } else {
+                                bodyText.setText("Requesting direct access through ARES2. Android may show a one-time network approval. Setup will continue automatically after the connection succeeds.");
+                            }
+                        }));
                 if (network == null) {
                     runOnUiThread(() -> {
                         localRequestRunning = false;
@@ -246,12 +258,11 @@ public final class WifiSetupActivity extends Activity {
                     return;
                 }
 
+                runOnUiThread(() -> bodyText.setText("ARES Wi-Fi connection succeeded. Verifying the school server now; setup will finish automatically."));
                 AresServerClient.probeBlocking(network);
                 runOnUiThread(() -> {
                     localRequestRunning = false;
-                    AresWifiProvisioner.setLocalNetworkReady(WifiSetupActivity.this, true);
-                    bodyText.setText("ARES local access is ready. ARES Sync reached the school server through its direct local connection.");
-                    handler.postDelayed(this::finishSuccessful, 500L);
+                    finishSuccessful("Automatic ARES Wi-Fi setup succeeded. ARES Sync reached the school server and is ready for scheduled collections.");
                 });
             } catch (SecurityException error) {
                 runOnUiThread(() -> {
@@ -278,13 +289,16 @@ public final class WifiSetupActivity extends Activity {
         });
     }
 
-    private void finishSuccessful() {
+    private void finishSuccessful(String message) {
         if (finished) {
             return;
         }
         finished = true;
+        AresWifiProvisioner.setLocalNetworkReady(this, true);
         setResult(Activity.RESULT_OK);
-        finish();
+        bodyText.setText(message + "\n\nReturning to ARES Sync...");
+        hideActionButtons();
+        handler.postDelayed(this::finish, 1200L);
     }
 
     private void showFailure(String message) {
@@ -293,6 +307,12 @@ public final class WifiSetupActivity extends Activity {
         }
         bodyText.setText(message);
         retryButton.setVisibility(View.VISIBLE);
+        laterButton.setVisibility(View.VISIBLE);
+    }
+
+    private void hideActionButtons() {
+        retryButton.setVisibility(View.GONE);
+        laterButton.setVisibility(View.GONE);
     }
 
     private void retrySetup() {
@@ -346,8 +366,9 @@ public final class WifiSetupActivity extends Activity {
         retryParams.topMargin = spacing;
         root.addView(retryButton, retryParams);
 
-        Button laterButton = new Button(this);
+        laterButton = new Button(this);
         laterButton.setText("Use manual Wi-Fi instead");
+        laterButton.setVisibility(View.GONE);
         laterButton.setOnClickListener(view -> finish());
         LinearLayout.LayoutParams laterParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

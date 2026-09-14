@@ -1,6 +1,6 @@
 # Deployment Status
 
-Updated 2026-09-14 for the rc11 mixed-network local-request candidate.
+Updated 2026-09-14 after the first rc11 mixed-network field test.
 
 ## Current architecture
 
@@ -17,7 +17,7 @@ Round Sync, Automate, MacroDroid, phone-side rclone, Google Drive remotes, and D
 
 ## Android status
 
-Last field-validated candidate:
+Last cleanly accepted onboarding baseline:
 
 - version: `0.8.0-rc10`
 - source commit: `95bcfb37174eeb5ede658d7cd7abf7b14a1d4fc5`
@@ -25,37 +25,34 @@ Last field-validated candidate:
 - Wi-Fi suggestion approval: passed.
 - automatic association to `ARES`/`ARES2`: passed when no competing internet-capable saved Wi-Fi was preferred.
 
-The launcher-icon milestone was then completed in commit `dd7277614b38da43d3250612003d2a6ea1ba915e`; CI run `#64` passed and the manifest now uses the ARES logo for the launcher icon.
+The launcher-icon milestone was completed in commit `dd7277614b38da43d3250612003d2a6ea1ba915e`; CI run `#64` passed and the manifest uses the ARES logo for the launcher icon. The icon also passed field inspection on rc11.
 
-Current implementation candidate for field testing:
+The rc11 mixed-network candidate added an app-specific `WifiNetworkSpecifier` local-only request for `ARES2`/`ARES` while preserving rc10 Wi-Fi suggestions. It first tries the currently available Wi-Fi; if the school server is not reachable there, the due path can request a local-only ARES network and send school-server traffic over the returned Android `Network` rather than binding the whole app process.
 
-- planned version: `0.8.0-rc11`
-- planned versionCode: `19`
-- purpose: preserve rc10 Wi-Fi suggestions for onboarding, while adding an app-specific `WifiNetworkSpecifier` local-only request for `ARES2`/`ARES` when another Wi-Fi network is preferred.
+### rc11 field result - 2026-09-14
 
-The rc11 design first tries the currently available Wi-Fi. If it cannot reach the school server, ARES Sync requests a local-only ARES network and sends the school-server request over the returned Android `Network` rather than binding the entire app process. Setup requires the appropriate Android Wi-Fi runtime permission and verifies the direct path by reaching `http://ares.local/tracker/collection_schedule.json`.
+The phone began the test already connected to an internet-capable Wi-Fi network. During post-enrollment setup, Android successfully connected through the ARES local-network flow and subsequently showed a successful ARES2 connection as the sequence continued. This is strong evidence that Android can authorize/use the school-local networks even with a competing internet Wi-Fi configured.
 
-This rc11 mechanism is not field-accepted yet. It must be tested while an internet-capable Wi-Fi network remains saved and preferred. Android approval persistence is associated with the particular access point selected by the user, so repeated access on the same AP and behavior on a second mesh BSSID must both be verified. Hardware support for simultaneous internet Wi-Fi plus a local-only Wi-Fi connection can also vary by phone; field behavior is authoritative.
+However, the helper flow itself failed acceptance: after the successful connection sequence it remained on the setup screen with automatic/manual choices instead of returning to the ARES Sync main screen. Pressing Android Back returned to the main screen but produced a false Wi-Fi setup failure state. The several-second transition between network steps also lacked a clear "setup is continuing" message.
 
-Validated behavior from earlier candidates still includes:
+ARES and ARES2 are not expected to appear as ordinary Android saved networks in this architecture. Wi-Fi suggestions and `WifiNetworkSpecifier` requests are app-managed network mechanisms, not entries in the normal saved-network list.
 
-- fresh enrollment to a canonical school;
-- historical schedule baselining;
-- silent local collection path when the school network is already available;
-- app-private pending storage;
-- deferred HTTPS upload after internet returns;
-- readable light/dark appearance behavior;
-- themed school selection;
-- keyboard resize/scroll during enrollment entry;
-- ARES logo rendering;
-- teacher-facing no-action-required normal state;
-- app-level Android approval for ARES Wi-Fi suggestions without the unusable saved-network confirmation sheet.
+The current corrective implementation changes the helper so that action buttons are hidden while setup is active, SSID/fallback progress is explicitly shown, successful server verification records success before returning, and the helper automatically returns to the main screen. That revised flow must be field-tested before rc11/rc12 connection behavior is considered accepted.
 
-The CI APKs remain debug-signed test artifacts. Production distribution still requires the approved release-signing process after the rc11 connection strategy is field-accepted.
+Still unverified:
+
+- whether repeating the local-network request on the same access point proceeds without another Android approval prompt;
+- whether a different mesh BSSID requires another approval;
+- unattended due-collection behavior after setup approval;
+- exact autonomous AlarmManager timing.
+
+Validated behavior from earlier candidates still includes fresh canonical-school enrollment, historical schedule baselining, silent local collection when the school network is already available, app-private pending storage, deferred HTTPS upload after internet returns, appearance themes, themed school selection, keyboard-safe enrollment, ARES logo rendering, and the teacher-facing no-action-required normal state.
+
+The CI APKs remain debug-signed test artifacts. Production distribution still requires the approved release-signing process after the mixed-network connection strategy is field-accepted.
 
 ## School-server status
 
-The automated installer and local collection endpoints have passed school-side acceptance testing. The installer places `collection_schedule.json` under the tracker web directory, which rc11 uses as a harmless reachability probe during local-network setup. The production schedule remains aligned to the approved 2026 term collection dates.
+The automated installer and local collection endpoints have passed school-side acceptance testing. The installer places `collection_schedule.json` under the tracker web directory, which the Android app uses as a harmless reachability probe during local-network setup. The production schedule remains aligned to the approved 2026 term collection dates.
 
 The St Jude server and phone are dedicated test fixtures and may remain in their controlled acceptance state for regression testing.
 
@@ -71,16 +68,16 @@ Known controlled September acceptance uploads using the real `2026-Q3-MID` colle
 
 The repository portal has been updated for the native ARES Sync workflow and still needs final HTTPS deployment plus a clean-phone website-origin acceptance test with the exact approved production-signed APK.
 
-Teacher documentation for rc11 now describes Wi-Fi suggestions plus a possible one-time direct local-network approval. Portal wording should be reviewed again after rc11 field validation before final publication.
+Teacher documentation describes Wi-Fi suggestions plus a possible one-time direct local-network approval. Portal wording should be reviewed again after mixed-network field validation before final publication.
 
 ## Remaining production milestones
 
-1. Build and field-test rc11 with at least one competing internet-capable Wi-Fi network left saved and preferred.
-2. Verify same-AP repeat behavior and a second mesh AP/BSSID; document any user approval still required.
-3. Decide whether the rc11 direct local-network mechanism is acceptable for unattended due collections. Do not assume background approval behavior until tested.
-4. Build the first production-signed acceptance APK with the protected ARES signing key.
-5. Record release version, versionCode, source commit, APK SHA-256, and signing-certificate fingerprint.
-6. Publish the exact approved APK to the stable setup-portal path and run the clean-phone website-origin acceptance test.
-7. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
-8. Run the full release checklist and preserve rollback artifacts.
-9. Independently validate autonomous AlarmManager timing if required beyond the already validated overdue/silent collection path.
+1. Field-test the corrected automatic-return/progress flow with at least one competing internet-capable Wi-Fi network left saved and preferred.
+2. Repeat a local-network request on the same AP and then on a second mesh AP/BSSID; document whether Android asks for approval again.
+3. Validate a real due-collection retry through the app-specific ARES network while another internet Wi-Fi remains configured.
+4. Decide whether the direct local-network mechanism is acceptable for unattended scheduled collections.
+5. Build the first production-signed acceptance APK with the protected ARES signing key.
+6. Record release version, versionCode, source commit, APK SHA-256, and signing-certificate fingerprint.
+7. Publish the exact approved APK to the stable setup-portal path and run the clean-phone website-origin acceptance test.
+8. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
+9. Run the full release checklist and preserve rollback artifacts.

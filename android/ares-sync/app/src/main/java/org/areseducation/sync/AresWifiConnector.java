@@ -13,6 +13,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class AresWifiConnector {
+    public interface RequestProgress {
+        void onTrying(String ssid, boolean fallback);
+    }
+
     private final Context context;
     private final ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback activeCallback;
@@ -36,17 +40,29 @@ public final class AresWifiConnector {
     }
 
     public Network requestPreferredAresNetworkBlocking(long timeoutMillis) throws InterruptedException {
+        return requestPreferredAresNetworkBlocking(timeoutMillis, null);
+    }
+
+    public Network requestPreferredAresNetworkBlocking(
+            long timeoutMillis,
+            RequestProgress progress) throws InterruptedException {
         if (connectivityManager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             return null;
         }
 
         long perNetworkTimeout = Math.max(8_000L, timeoutMillis / 2L);
+        if (progress != null) {
+            progress.onTrying(AresWifiProvisioner.SSID_ARES2, false);
+        }
         Network network = requestSpecificSsidBlocking(AresWifiProvisioner.SSID_ARES2, perNetworkTimeout);
         if (network != null) {
             return network;
         }
 
         close();
+        if (progress != null) {
+            progress.onTrying(AresWifiProvisioner.SSID_ARES, true);
+        }
         return requestSpecificSsidBlocking(AresWifiProvisioner.SSID_ARES, perNetworkTimeout);
     }
 

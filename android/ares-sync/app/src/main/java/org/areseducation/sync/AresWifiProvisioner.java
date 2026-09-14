@@ -3,17 +3,18 @@ package org.areseducation.sync;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSuggestion;
 import android.os.Build;
-import android.provider.Settings;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public final class AresWifiProvisioner {
     static final String SSID_ARES2 = "ARES2";
     static final String SSID_ARES = "ARES";
     private static final String PREFS = "org.areseducation.sync.wifi_setup";
-    private static final String KEY_SAVED_NETWORKS = "saved_ares_networks";
+    private static final String KEY_SUGGESTIONS_APPROVED = "suggested_ares_networks_v1";
     private static final String APP_PACKAGE = "org.areseducation.sync";
     private static final String WIFI_SETUP_ACTIVITY = APP_PACKAGE + ".WifiSetupActivity";
 
@@ -26,65 +27,55 @@ public final class AresWifiProvisioner {
 
     public static boolean isComplete(Context context) {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .getBoolean(KEY_SAVED_NETWORKS, false);
+                .getBoolean(KEY_SUGGESTIONS_APPROVED, false);
     }
 
     public static Intent createSaveNetworksIntent() {
         if (!isSupported()) {
-            throw new IllegalStateException("Saved-network setup requires Android 11 or newer.");
+            throw new IllegalStateException("Automatic Wi-Fi suggestions require Android 11 or newer.");
         }
-
         return new Intent().setClassName(APP_PACKAGE, WIFI_SETUP_ACTIVITY);
     }
 
-    static Intent createSystemSaveNetworksIntent() {
+    static int addNetworkSuggestions(Context context) {
         if (!isSupported()) {
-            throw new IllegalStateException("Saved-network setup requires Android 11 or newer.");
+            throw new IllegalStateException("Automatic Wi-Fi suggestions require Android 11 or newer.");
         }
 
-        ArrayList<WifiNetworkSuggestion> networks = new ArrayList<>();
-        networks.add(new WifiNetworkSuggestion.Builder()
+        WifiManager wifiManager = context.getSystemService(WifiManager.class);
+        if (wifiManager == null) {
+            return WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_INTERNAL;
+        }
+
+        return wifiManager.addNetworkSuggestions(buildSuggestions());
+    }
+
+    private static List<WifiNetworkSuggestion> buildSuggestions() {
+        ArrayList<WifiNetworkSuggestion> suggestions = new ArrayList<>();
+        suggestions.add(new WifiNetworkSuggestion.Builder()
                 .setSsid(SSID_ARES2)
                 .setIsInitialAutojoinEnabled(true)
                 .build());
-        networks.add(new WifiNetworkSuggestion.Builder()
+        suggestions.add(new WifiNetworkSuggestion.Builder()
                 .setSsid(SSID_ARES)
                 .setIsInitialAutojoinEnabled(true)
                 .build());
+        return suggestions;
+    }
 
-        Intent intent = new Intent(Settings.ACTION_WIFI_ADD_NETWORKS);
-        intent.putParcelableArrayListExtra(Settings.EXTRA_WIFI_NETWORK_LIST, networks);
-        return intent;
+    static boolean submissionAccepted(int status) {
+        return status == WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS
+                || status == WifiManager.STATUS_NETWORK_SUGGESTIONS_ERROR_ADD_DUPLICATE;
     }
 
     public static boolean wasSaveSuccessful(int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK) {
-            return false;
-        }
-
-        if (data == null) {
-            return true;
-        }
-
-        ArrayList<Integer> results = data.getIntegerArrayListExtra(
-                Settings.EXTRA_WIFI_NETWORK_RESULT_LIST);
-        if (results == null || results.isEmpty()) {
-            return true;
-        }
-
-        for (int result : results) {
-            if (result != Settings.ADD_WIFI_RESULT_SUCCESS
-                    && result != Settings.ADD_WIFI_RESULT_ALREADY_EXISTS) {
-                return false;
-            }
-        }
-        return true;
+        return resultCode == Activity.RESULT_OK;
     }
 
     public static void setComplete(Context context, boolean complete) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit()
-                .putBoolean(KEY_SAVED_NETWORKS, complete)
+                .putBoolean(KEY_SUGGESTIONS_APPROVED, complete)
                 .apply();
     }
 }

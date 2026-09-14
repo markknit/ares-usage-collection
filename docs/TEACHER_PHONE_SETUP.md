@@ -17,14 +17,14 @@ This guide is for a teacher or school user setting up ARES Sync on an Android ph
 8. Search for your school and select the exact school name.
 9. Enter the one-time enrollment code supplied by ARES staff.
 10. Tap **Enroll this phone**.
-11. ARES Sync shows a short **Finish ARES Wi-Fi setup** screen. Tap **Save ARES Wi-Fi networks**. Android will then ask permission to save the open Wi-Fi networks **ARES2** and **ARES**. Tap Android's **Save** button.
+11. ARES Sync opens **Enable automatic ARES Wi-Fi**. Android will ask whether ARES Sync may suggest Wi-Fi networks. Choose **Allow**. This is a one-time app-level approval; there is no separate **Save network** sheet for ARES2 or ARES.
 12. If Android asks for permission to show notifications, choose **Allow**.
 
-The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device. The ARES Wi-Fi networks are stored in Android's normal saved-network list; ARES Sync does not store a Wi-Fi password because these school networks are open.
+The phone is now ready. ARES Sync stores the school assignment and phone credential privately on the device. It registers the open **ARES2** and **ARES** networks with Android as Wi-Fi suggestions; ARES Sync does not store a Wi-Fi password because these school networks are open.
 
-The extra ARES setup screen intentionally requires a user tap before Android opens its Wi-Fi confirmation. This avoids opening the Android save sheet automatically while the enrollment screen is still changing state.
+Android ultimately decides whether and when to auto-connect to a suggested network. ARES Sync keeps the normal manual **Connect to school Wi-Fi** path available as a fallback.
 
-If Wi-Fi setup is skipped, ARES Sync shows **Set up automatic ARES Wi-Fi** so the one-time save step can be completed later.
+If automatic Wi-Fi approval is declined, Android may require ARES Sync to be re-enabled under **Special app access > Wi-Fi control** before suggestions can be used again.
 
 ## Normal use
 
@@ -36,7 +36,7 @@ Most of the time, no action is required. ARES Sync should show:
 
 ARES Sync does not need to remain open.
 
-When the phone is at school, Android can automatically reconnect to saved **ARES** or **ARES2**. This gives ARES Sync the opportunity to collect scheduled usage data without teacher action.
+When the phone is at school, Android can use the approved **ARES** or **ARES2** Wi-Fi suggestions to auto-connect when it considers the network appropriate. This gives ARES Sync the opportunity to collect scheduled usage data without teacher action. The suggestion approach is being field-tested specifically because the ARES networks normally do not provide internet access.
 
 ## When a collection is due
 

@@ -38,14 +38,13 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
 - [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
-- [ ] Immediately after fresh enrollment, ARES Sync shows a **Finish ARES Wi-Fi setup** screen instead of launching Android's saved-network confirmation automatically.
-- [ ] The teacher taps **Save ARES Wi-Fi networks** before Android opens the system confirmation sheet.
-- [ ] Android's system confirmation presents a usable **Save** control without requiring the sheet to be dragged upward.
-- [ ] Approving the save request leaves both `ARES2` and `ARES` in Android's normal saved-network list.
-- [ ] ARES Sync records successful automatic Wi-Fi setup and no longer shows the setup button.
-- [ ] Skipping/rejecting Wi-Fi setup leaves a visible **Set up automatic ARES Wi-Fi** retry path below the status message.
-- [ ] Phone reconnects automatically to saved `ARES` or `ARES2` when the school network is available.
-- [ ] On the mesh network, Android can roam between mesh access points under the saved `ARES` SSID without ARES Sync managing BSSIDs.
+- [ ] Immediately after fresh enrollment, ARES Sync requests Android's one-time app-level approval to suggest Wi-Fi networks; it does not open the `ACTION_WIFI_ADD_NETWORKS` saved-network sheet.
+- [ ] Android's Wi-Fi suggestion approval prompt is usable on the first attempt and does not overlap the system gesture/navigation area.
+- [ ] Approving the prompt registers both open networks, `ARES2` and `ARES`, as ARES Sync suggestions.
+- [ ] On Android 12+, ARES Sync receives the suggestion-approval callback and records setup complete.
+- [ ] Declining suggestion approval leaves manual **Connect to school Wi-Fi** available and documents the **Special app access > Wi-Fi control** recovery path.
+- [ ] After approval, Android auto-connects to `ARES` or `ARES2` when available even though the school network normally has no internet access.
+- [ ] On the mesh network, Android can roam between access points under the suggested `ARES` SSID without ARES Sync managing BSSIDs.
 - [ ] Normal enrolled screen shows school, next collection, and no-action-required state after Wi-Fi setup is complete.
 - [ ] Due collection first attempts silent local collection.
 - [ ] A due collection that cannot reach `ares.local` remains retryable rather than ending permanently.

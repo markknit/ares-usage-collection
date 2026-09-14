@@ -14,6 +14,7 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Exact signed APK installs on a clean Android phone.
 - [ ] First production-signed installation is documented; a debug-signed test APK may require uninstall/re-enrollment because its certificate differs.
 - [ ] A later APK signed with the same production key upgrades the production-signed app in place without clearing app data.
+- [ ] Launcher/home-screen icon shows the ARES logo rather than the generic Android icon.
 - [ ] ARES logo and all four appearance modes render correctly.
 - [ ] School search and school selector are readable in light and dark system modes.
 - [ ] Keyboard does not cover school-search or enrollment-code fields.

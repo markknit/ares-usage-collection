@@ -37,17 +37,18 @@ public final class AresWifiProvisioner {
         return new Intent().setClassName(APP_PACKAGE, WIFI_SETUP_ACTIVITY);
     }
 
-    static Intent createSingleNetworkSaveIntent(String ssid) {
+    static Intent createSystemSaveNetworksIntent() {
         if (!isSupported()) {
             throw new IllegalStateException("Saved-network setup requires Android 11 or newer.");
-        }
-        if (!SSID_ARES2.equals(ssid) && !SSID_ARES.equals(ssid)) {
-            throw new IllegalArgumentException("Unsupported ARES Wi-Fi network.");
         }
 
         ArrayList<WifiNetworkSuggestion> networks = new ArrayList<>();
         networks.add(new WifiNetworkSuggestion.Builder()
-                .setSsid(ssid)
+                .setSsid(SSID_ARES2)
+                .setIsInitialAutojoinEnabled(true)
+                .build());
+        networks.add(new WifiNetworkSuggestion.Builder()
+                .setSsid(SSID_ARES)
                 .setIsInitialAutojoinEnabled(true)
                 .build());
 

@@ -38,9 +38,10 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
 - [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
-- [ ] Immediately after fresh enrollment, Android asks to save `ARES2` and then `ARES` in two separate one-network confirmation screens.
-- [ ] Each one-network confirmation screen presents a usable **Save** control without requiring the Android sheet to be dragged upward.
-- [ ] Approving both save requests leaves both networks in Android's normal saved-network list.
+- [ ] Immediately after fresh enrollment, ARES Sync shows a **Finish ARES Wi-Fi setup** screen instead of launching Android's saved-network confirmation automatically.
+- [ ] The teacher taps **Save ARES Wi-Fi networks** before Android opens the system confirmation sheet.
+- [ ] Android's system confirmation presents a usable **Save** control without requiring the sheet to be dragged upward.
+- [ ] Approving the save request leaves both `ARES2` and `ARES` in Android's normal saved-network list.
 - [ ] ARES Sync records successful automatic Wi-Fi setup and no longer shows the setup button.
 - [ ] Skipping/rejecting Wi-Fi setup leaves a visible **Set up automatic ARES Wi-Fi** retry path below the status message.
 - [ ] Phone reconnects automatically to saved `ARES` or `ARES2` when the school network is available.

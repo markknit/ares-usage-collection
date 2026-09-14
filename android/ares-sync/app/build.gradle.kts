@@ -24,8 +24,8 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 16
-        versionName = "0.8.0-rc8"
+        versionCode = 17
+        versionName = "0.8.0-rc9"
     }
 
     signingConfigs {

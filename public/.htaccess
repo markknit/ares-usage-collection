@@ -1,0 +1,18 @@
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Do not rewrite the ARES Sync APK download.
+RewriteRule ^assets/downloads/ares-sync\.apk$ - [END]
+</IfModule>
+
+<IfModule mod_mime.c>
+AddType application/vnd.android.package-archive .apk
+</IfModule>
+
+<IfModule mod_headers.c>
+<Files "ares-sync.apk">
+Header set Content-Disposition "attachment"
+</Files>
+</IfModule>

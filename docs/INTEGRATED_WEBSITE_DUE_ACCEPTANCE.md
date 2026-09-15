@@ -132,6 +132,24 @@ The integrated test passes only if all of these are true:
 
 Record any Android system prompt text that differs from the guide, but do not change the app or website during the clean test unless the test is stopped and restarted from the beginning.
 
+## Field result - 2026-09-15
+
+PASS: the controlled integrated website-to-central acceptance test completed successfully.
+
+Validated in the field:
+
+- the phone-setup website loaded correctly over HTTPS;
+- the initial APK download failure was traced to a parent Apache rewrite that redirected `.apk` to `.html`; adding the dedicated `public/.htaccess` exception made the APK return HTTP `200` as `application/vnd.android.package-archive` with the expected byte count;
+- the acceptance APK downloaded from the live website and installed successfully;
+- fresh school enrollment succeeded using a valid one-time enrollment code;
+- ARES Sync validated both `ARES` and `ARES2` during setup;
+- the controlled due worker located the school server, collected the due `2026-Q3-MID` usage data, and uploaded it to the protected central `/monitor_upload/incoming` path;
+- after completion, the app advanced the next collection to `25 November 2026`.
+
+The user reported a few minor installation-flow simplifications to review later, but none blocked the end-to-end acceptance path.
+
+This result validates the complete controlled path from website download through install, enrollment, school-network validation, due collection, central upload, and schedule advancement. It does not by itself validate exact autonomous AlarmManager timing, same-AP reapproval persistence, or different mesh-BSSID behavior.
+
 ## After the test
 
 1. Restore the dedicated server fixture's normal schedule.

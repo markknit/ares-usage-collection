@@ -43,9 +43,10 @@ jobs:
         run: |
           set -euo pipefail
           package_dir="build/phone-setup-acceptance"
-          mkdir -p "$package_dir"
-          cp -R public/. "$package_dir/"
-          mkdir -p "$package_dir/assets/downloads"
+          mkdir -p "$package_dir/assets/css" "$package_dir/assets/downloads"
+          cp public/index.html "$package_dir/index.html"
+          cp public/setup.html "$package_dir/setup.html"
+          cp public/assets/css/site.css "$package_dir/assets/css/site.css"
           cp android/ares-sync/app/build/outputs/apk/acceptance/app-acceptance.apk \
             "$package_dir/assets/downloads/ares-sync.apk"
           apk_sha="$(sha256sum "$package_dir/assets/downloads/ares-sync.apk" | awk '{print $1}')"
@@ -58,6 +59,11 @@ jobs:
           Test behavior: 2026-Q3-MID is forced due in the acceptance APK only.
           Production release builds keep the approved production schedule unchanged.
           EOF
+          test ! -e "$package_dir/admin.html"
+          test ! -e "$package_dir/schools"
+          test "$(find "$package_dir" -type f | wc -l)" -eq 5
+          grep -q 'Allow automatic school Wi-Fi access' "$package_dir/setup.html"
+          grep -q 'ARES Sync' "$package_dir/index.html"
       - name: Upload integrated website acceptance package
         uses: actions/upload-artifact@v4
         with:

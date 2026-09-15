@@ -116,7 +116,7 @@
                 android:spinnerMode="dropdown"
                 android:visibility="gone" />
 
-            <EditText
+            <org.areseducation.sync.EnrollmentCodeEditText
                 android:id="@+id/enrollmentCodeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

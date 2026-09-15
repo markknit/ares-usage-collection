@@ -50,20 +50,48 @@ public final class AresWifiConnector {
             return null;
         }
 
+        String preferred = AresWifiProvisioner.getPreferredLocalSsid(context);
+        if (!AresWifiProvisioner.SSID_ARES.equals(preferred)
+                && !AresWifiProvisioner.SSID_ARES2.equals(preferred)) {
+            preferred = AresWifiProvisioner.SSID_ARES2;
+        }
+        String alternate = AresWifiProvisioner.SSID_ARES.equals(preferred)
+                ? AresWifiProvisioner.SSID_ARES2
+                : AresWifiProvisioner.SSID_ARES;
+
         long perNetworkTimeout = Math.max(8_000L, timeoutMillis / 2L);
         if (progress != null) {
-            progress.onTrying(AresWifiProvisioner.SSID_ARES2, false);
+            progress.onTrying(preferred, false);
         }
-        Network network = requestSpecificSsidBlocking(AresWifiProvisioner.SSID_ARES2, perNetworkTimeout);
+
+        Network network = null;
+        try {
+            network = requestSpecificAresNetworkBlocking(preferred, perNetworkTimeout);
+        } catch (SecurityException error) {
+            throw error;
+        } catch (RuntimeException ignored) {
+        }
         if (network != null) {
             return network;
         }
 
         close();
         if (progress != null) {
-            progress.onTrying(AresWifiProvisioner.SSID_ARES, true);
+            progress.onTrying(alternate, true);
         }
-        return requestSpecificSsidBlocking(AresWifiProvisioner.SSID_ARES, perNetworkTimeout);
+        return requestSpecificAresNetworkBlocking(alternate, perNetworkTimeout);
+    }
+
+    public Network requestSpecificAresNetworkBlocking(String ssid, long timeoutMillis)
+            throws InterruptedException {
+        if (connectivityManager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return null;
+        }
+        if (!AresWifiProvisioner.SSID_ARES.equals(ssid)
+                && !AresWifiProvisioner.SSID_ARES2.equals(ssid)) {
+            throw new IllegalArgumentException("Unsupported ARES SSID: " + ssid);
+        }
+        return requestSpecificSsidBlocking(ssid, timeoutMillis);
     }
 
     private Network requestSpecificSsidBlocking(String ssid, long timeoutMillis) throws InterruptedException {

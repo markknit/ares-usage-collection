@@ -16,6 +16,7 @@ public final class AresWifiProvisioner {
     private static final String PREFS = "org.areseducation.sync.wifi_setup";
     private static final String KEY_SUGGESTIONS_APPROVED = "suggested_ares_networks_v1";
     private static final String KEY_LOCAL_NETWORK_READY = "local_ares_network_request_v1";
+    private static final String KEY_PREFERRED_LOCAL_SSID = "preferred_local_ares_ssid_v1";
     private static final String APP_PACKAGE = "org.areseducation.sync";
     private static final String WIFI_SETUP_ACTIVITY = APP_PACKAGE + ".WifiSetupActivity";
 
@@ -38,6 +39,21 @@ public final class AresWifiProvisioner {
     static boolean isLocalNetworkReady(Context context) {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_LOCAL_NETWORK_READY, false);
+    }
+
+    static String getPreferredLocalSsid(Context context) {
+        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_PREFERRED_LOCAL_SSID, null);
+    }
+
+    static void setPreferredLocalSsid(Context context, String ssid) {
+        if (!SSID_ARES.equals(ssid) && !SSID_ARES2.equals(ssid)) {
+            return;
+        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_PREFERRED_LOCAL_SSID, ssid)
+                .apply();
     }
 
     public static Intent createSaveNetworksIntent() {
@@ -97,8 +113,6 @@ public final class AresWifiProvisioner {
     }
 
     public static void setComplete(Context context, boolean complete) {
-        // MainActivity calls this after WifiSetupActivity returns. The suggestion approval
-        // is tracked separately so a failed local-network authorization does not erase it.
         setLocalNetworkReady(context, complete);
     }
 }

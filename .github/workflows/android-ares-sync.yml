@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'android/ares-sync/**'
+      - 'public/**'
       - '.github/workflows/android-ares-sync.yml'
   pull_request:
     paths:
       - 'android/ares-sync/**'
+      - 'public/**'
       - '.github/workflows/android-ares-sync.yml'
 
 jobs:
@@ -24,8 +26,40 @@ jobs:
           gradle-version: '8.13'
       - name: Build debug APK
         run: gradle -p android/ares-sync :app:assembleDebug
+      - name: Build controlled acceptance APK
+        run: gradle -p android/ares-sync :app:assembleAcceptance
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: ares-sync-debug-apk
           path: android/ares-sync/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload controlled acceptance APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ares-sync-acceptance-apk
+          path: android/ares-sync/app/build/outputs/apk/acceptance/app-acceptance.apk
+      - name: Prepare integrated website acceptance package
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_dir="build/phone-setup-acceptance"
+          mkdir -p "$package_dir"
+          cp -R public/. "$package_dir/"
+          mkdir -p "$package_dir/assets/downloads"
+          cp android/ares-sync/app/build/outputs/apk/acceptance/app-acceptance.apk \
+            "$package_dir/assets/downloads/ares-sync.apk"
+          apk_sha="$(sha256sum "$package_dir/assets/downloads/ares-sync.apk" | awk '{print $1}')"
+          cat > "$package_dir/ACCEPTANCE_BUILD.txt" <<EOF
+          ARES Sync controlled integrated acceptance package
+          Source commit: ${GITHUB_SHA}
+          APK variant: acceptance
+          APK version: 0.8.0-rc15-acceptance
+          APK SHA-256: ${apk_sha}
+          Test behavior: 2026-Q3-MID is forced due in the acceptance APK only.
+          Production release builds keep the approved production schedule unchanged.
+          EOF
+      - name: Upload integrated website acceptance package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ares-phone-setup-acceptance
+          path: build/phone-setup-acceptance/

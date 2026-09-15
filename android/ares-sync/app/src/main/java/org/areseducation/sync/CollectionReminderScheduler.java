@@ -36,6 +36,12 @@ public final class CollectionReminderScheduler {
                 continue;
             }
 
+            if (CollectionSchedule.isAcceptanceTarget(collection)) {
+                alarmManager.cancel(pendingIntent);
+                overdue = collection;
+                continue;
+            }
+
             long triggerAt = ZonedDateTime.of(
                     collection.dueDate,
                     java.time.LocalTime.of(8, 0),

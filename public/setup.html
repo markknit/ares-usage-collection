@@ -19,7 +19,7 @@
 <main class="wrap">
   <section class="hero">
     <h2>Before you begin</h2>
-    <p>You need an Android phone with normal internet access and the one-time enrollment code supplied by ARES Education for your school.</p>
+    <p>You need an Android phone with normal internet access, the one-time enrollment code supplied by ARES Education for your school, and at least one school Wi-Fi network named <strong>ARES</strong> or <strong>ARES2</strong> in range.</p>
   </section>
 
   <section class="card step">
@@ -41,7 +41,7 @@
         <strong>If Android says this source is not allowed:</strong>
         <ol>
           <li>Tap <strong>Settings</strong> or <strong>Allow from this source</strong>.</li>
-          <li>Allow installation for the browser or Files app you used to open this ARES APK.</li>
+          <li>Allow installation for the browser or Files app you used to open the ARES APK.</li>
           <li>Go back to the ARES Sync installer and tap <strong>Install</strong>.</li>
         </ol>
       </div>
@@ -58,7 +58,7 @@
       <ol>
         <li>Search for your school.</li>
         <li>Select the exact school name.</li>
-        <li>Enter the one-time enrollment code supplied by ARES staff.</li>
+        <li>Enter the eight-character one-time enrollment code supplied by ARES staff. ARES Sync adds the hyphen automatically.</li>
         <li>Tap <strong>Enroll this phone</strong>.</li>
       </ol>
       <p class="small">The enrollment code is school-specific and is used once. Do not share it with another school.</p>
@@ -68,12 +68,18 @@
   <section class="card step">
     <div class="stepno">4</div>
     <div>
-      <h3>Save the school Wi-Fi networks</h3>
-      <p>After enrollment, ARES Sync shows a short <strong>Finish ARES Wi-Fi setup</strong> screen. Tap <strong>Save ARES Wi-Fi networks</strong>. Android will then ask permission to save the open Wi-Fi networks <strong>ARES2</strong> and <strong>ARES</strong>. Tap Android's <strong>Save</strong> button.</p>
+      <h3>Allow automatic school Wi-Fi access</h3>
+      <p>After enrollment, ARES Sync opens its automatic Wi-Fi setup. Android may ask for more than one permission during this one-time process.</p>
+      <ol>
+        <li>If Android asks whether <strong>ARES Sync may suggest Wi-Fi networks</strong>, choose <strong>Allow</strong>.</li>
+        <li>If Android asks for <strong>Nearby Wi-Fi devices</strong>, choose <strong>Allow</strong>. On older Android versions the equivalent permission may be labelled <strong>Location</strong>.</li>
+        <li>If Android asks you to approve a connection to <strong>ARES</strong> or <strong>ARES2</strong>, approve the network shown.</li>
+        <li>ARES Sync verifies the school server and returns to the main screen automatically when setup succeeds.</li>
+      </ol>
       <div class="notice">
-        <strong>Why this matters:</strong> once saved, Android can reconnect to the school ARES network automatically when it is available. This allows scheduled usage collection to happen with little or no teacher involvement.
+        <strong>Why this matters:</strong> ARES Sync can use a temporary app-specific connection to the school network for its local usage collection without requiring you to forget your normal internet Wi-Fi networks.
       </div>
-      <p class="small">The extra ARES setup screen intentionally requires a user tap before Android opens its Wi-Fi confirmation. The ARES networks are open, so no Wi-Fi password is stored by ARES Sync. If this step is skipped, the app will show a button to complete it later.</p>
+      <p class="small">ARES and ARES2 may not appear in Android's ordinary Saved networks list. That is expected. The ARES school networks are open, so ARES Sync does not store a Wi-Fi password.</p>
     </div>
   </section>
 
@@ -81,7 +87,7 @@
     <div class="stepno">5</div>
     <div>
       <h3>Allow notifications</h3>
-      <p>If Android asks whether ARES Sync may send notifications, choose <strong>Allow</strong>. Notifications are used only when the app needs attention for a scheduled collection.</p>
+      <p>If Android asks whether ARES Sync may send notifications, choose <strong>Allow</strong>. Notifications are used when the app needs attention for a scheduled collection.</p>
     </div>
   </section>
 
@@ -90,10 +96,9 @@
     <div class="notice">
       <strong>Normal state:</strong> ARES Sync should show your school, the next collection date, and <strong>Everything is ready. No action required.</strong>
     </div>
-    <p>You do not need to open ARES Sync every day. When a collection becomes due, the app first tries to collect silently if the phone can reach the school ARES server.</p>
-    <p>If the first attempt happens while the phone is away from school, ARES Sync keeps retrying. When the phone later reaches the school and Android connects to saved <strong>ARES</strong> or <strong>ARES2</strong>, a later retry can complete the collection automatically.</p>
-    <p>If Android does not connect automatically, ARES Sync still provides the manual <strong>Connect to school Wi-Fi</strong> fallback.</p>
-    <p>When normal internet access later returns, ARES Sync sends any pending usage report automatically in the background.</p>
+    <p>You do not need to open ARES Sync every day. When a collection is due, ARES Sync first tries any suitable network already available. If that cannot reach the school server, ARES Sync can request a temporary local connection to <strong>ARES</strong> or <strong>ARES2</strong>.</p>
+    <p>Your normal internet Wi-Fi networks can remain saved. The ARES local connection is used for the school-server request, and pending usage data is sent to ARES Education later when validated internet access is available.</p>
+    <p>If Android requires help connecting, ARES Sync provides a manual <strong>Connect to school Wi-Fi</strong> fallback.</p>
   </section>
 
   <section class="card">
@@ -111,7 +116,7 @@
     <ul>
       <li>Do not uninstall ARES Sync after enrollment unless ARES staff asks you to. Uninstalling removes the phone's enrollment.</li>
       <li>Do not share enrollment codes between schools.</li>
-      <li>ARES Sync does not require Round Sync, Automate, MacroDroid, Google Drive setup, or manual file handling.</li>
+      <li>ARES Sync does not require Round Sync, Automate, MacroDroid, rclone, Google Drive setup, or manual file handling.</li>
     </ul>
   </section>
 </main>

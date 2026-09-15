@@ -10,6 +10,7 @@ import java.util.List;
 
 public final class CollectionSchedule {
     public static final ZoneId SCHOOL_ZONE = ZoneId.of("Africa/Nairobi");
+    public static final String ACCEPTANCE_COLLECTION_ID = "2026-Q3-MID";
     private static final String PREFS = "collection_state";
     private static final String COMPLETE_PREFIX = "completed_";
 
@@ -30,7 +31,12 @@ public final class CollectionSchedule {
             new Collection("2026-Q1-END", "Term 1 end-term", "2026-03-25"),
             new Collection("2026-Q2-MID", "Term 2 mid-term", "2026-06-15"),
             new Collection("2026-Q2-END", "Term 2 end-term", "2026-07-24"),
-            new Collection("2026-Q3-MID", "Term 3 mid-term", "2026-10-15"),
+            new Collection(
+                    ACCEPTANCE_COLLECTION_ID,
+                    "Term 3 mid-term",
+                    BuildConfig.ACCEPTANCE_TEST_MODE
+                            ? LocalDate.now(SCHOOL_ZONE).toString()
+                            : "2026-10-15"),
             new Collection("2026-Q3-END", "Term 3 end-term", "2026-11-25")
     );
 
@@ -43,6 +49,12 @@ public final class CollectionSchedule {
 
     public static LocalDate todayAtSchool() {
         return LocalDate.now(SCHOOL_ZONE);
+    }
+
+    public static boolean isAcceptanceTarget(Collection collection) {
+        return BuildConfig.ACCEPTANCE_TEST_MODE
+                && collection != null
+                && ACCEPTANCE_COLLECTION_ID.equals(collection.id);
     }
 
     public static Collection getPendingDueCollection(Context context) {
@@ -82,7 +94,9 @@ public final class CollectionSchedule {
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit();
         for (Collection collection : COLLECTIONS) {
-            if (collection.dueDate.isBefore(today)) {
+            if (isAcceptanceTarget(collection)) {
+                editor.putBoolean(COMPLETE_PREFIX + collection.id, false);
+            } else if (collection.dueDate.isBefore(today)) {
                 editor.putBoolean(COMPLETE_PREFIX + collection.id, true);
             }
         }

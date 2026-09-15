@@ -24,8 +24,13 @@ android {
         applicationId = "org.areseducation.sync"
         minSdk = 29
         targetSdk = 36
-        versionCode = 22
-        versionName = "0.8.0-rc14"
+        versionCode = 23
+        versionName = "0.8.0-rc15"
+        buildConfigField("boolean", "ACCEPTANCE_TEST_MODE", "false")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     signingConfigs {
@@ -40,6 +45,12 @@ android {
     }
 
     buildTypes {
+        create("acceptance") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            versionNameSuffix = "-acceptance"
+            buildConfigField("boolean", "ACCEPTANCE_TEST_MODE", "true")
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")

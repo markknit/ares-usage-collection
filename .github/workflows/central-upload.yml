@@ -6,6 +6,7 @@ on:
       - 'central-monitoring/web-upload/**'
       - 'tests/test_web_upload.php'
       - 'tests/test_enrollment.php'
+      - 'tests/test_staff_enrollment.php'
       - '.github/workflows/central-upload.yml'
       - '.gitignore'
   pull_request:
@@ -13,6 +14,7 @@ on:
       - 'central-monitoring/web-upload/**'
       - 'tests/test_web_upload.php'
       - 'tests/test_enrollment.php'
+      - 'tests/test_staff_enrollment.php'
       - '.github/workflows/central-upload.yml'
       - '.gitignore'
 
@@ -34,14 +36,18 @@ jobs:
           php -l central-monitoring/web-upload/schools.php
           php -l central-monitoring/web-upload/enroll.php
           php -l central-monitoring/web-upload/admin_enrollment_code.php
+          php -l central-monitoring/web-upload/staff_enrollment.php
           php -l central-monitoring/web-upload/generate_enrollment_codes.php
           php -l central-monitoring/web-upload/config.example.php
           php -l tests/test_web_upload.php
           php -l tests/test_enrollment.php
+          php -l tests/test_staff_enrollment.php
       - name: Run upload validation tests
         run: php tests/test_web_upload.php
       - name: Run enrollment validation tests
         run: php tests/test_enrollment.php
+      - name: Run staff enrollment page tests
+        run: php tests/test_staff_enrollment.php
       - name: Verify secrets, private school data, and live uploads are absent
         run: |
           test ! -f central-monitoring/web-upload/config.php

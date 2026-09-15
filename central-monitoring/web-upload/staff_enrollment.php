@@ -12,20 +12,18 @@ function ares_staff_escape(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function ares_staff_admin_key_configured(string $key): bool
+function ares_staff_password_configured(string $password): bool
 {
-    $key = trim($key);
-    return strlen($key) >= 32 && !str_starts_with($key, 'REPLACE_');
+    return strlen($password) >= 6 && !str_starts_with($password, 'REPLACE_');
 }
 
-function ares_staff_admin_key_matches(string $configured, string $provided): bool
+function ares_staff_password_matches(string $configured, string $provided): bool
 {
-    if (!ares_staff_admin_key_configured($configured)) {
+    if (!ares_staff_password_configured($configured) || $provided === '') {
         return false;
     }
 
-    $provided = trim($provided);
-    return $provided !== '' && hash_equals(trim($configured), $provided);
+    return hash_equals($configured, $provided);
 }
 
 function ares_staff_session_expired(?int $lastActivity, int $now, int $timeout = ARES_STAFF_SESSION_TIMEOUT_SECONDS): bool
@@ -112,7 +110,7 @@ function ares_staff_render_page(array $view): void
     header p { margin: 4px 0 0; opacity: .9; }
     main { max-width: 920px; margin: 24px auto; padding: 0 16px 40px; }
     .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
-    .card h2, .card h3 { margin-top: 0; }
+    .card h2 { margin-top: 0; }
     label { display: block; font-weight: 700; margin-bottom: 7px; }
     input[type="text"], input[type="password"] { width: 100%; padding: 12px 13px; border: 1px solid #aab7c4; border-radius: 8px; font-size: 1rem; }
     button { border: 0; border-radius: 8px; padding: 11px 16px; font-size: .98rem; font-weight: 700; cursor: pointer; background: #1769aa; color: white; }
@@ -132,7 +130,6 @@ function ares_staff_render_page(array $view): void
     .code { font-family: Consolas, Monaco, monospace; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 800; letter-spacing: .08em; margin: 10px 0 14px; }
     .small { color: #52606d; font-size: .9rem; }
     .top-actions form { margin: 0; }
-    .inline { display: inline; }
     @media (max-width: 600px) { header .wrap { align-items: flex-start; flex-direction: column; } .top-actions { width: 100%; } }
   </style>
 </head>
@@ -158,16 +155,15 @@ function ares_staff_render_page(array $view): void
   <?php if (!$authorized): ?>
     <section class="card">
       <h2>Staff sign in</h2>
-      <p>Enter the ARES enrollment administration key. The key is checked over HTTPS and is not stored in the browser by this page.</p>
+      <p>Enter the shared ARES staff password.</p>
       <?php if ($notice !== ''): ?><div class="message info"><?= ares_staff_escape($notice) ?></div><?php endif; ?>
       <?php if ($loginError !== ''): ?><div class="message error"><?= ares_staff_escape($loginError) ?></div><?php endif; ?>
       <form method="post" autocomplete="on">
         <input type="hidden" name="action" value="login">
-        <label for="admin_key">Administration key</label>
-        <input id="admin_key" name="admin_key" type="password" autocomplete="current-password" required autofocus>
+        <label for="staff_password">Shared password</label>
+        <input id="staff_password" name="staff_password" type="password" autocomplete="current-password" required autofocus>
         <div class="actions"><button type="submit">Continue</button></div>
       </form>
-      <p class="small">For routine use, keep the administration key in the ARES password manager rather than in notes, email, or chat.</p>
     </section>
   <?php else: ?>
     <?php if ($notice !== ''): ?><div class="message info"><?= ares_staff_escape($notice) ?></div><?php endif; ?>
@@ -182,9 +178,7 @@ function ares_staff_render_page(array $view): void
           <div id="generated-code" class="code"><?= ares_staff_escape((string)$generated['enrollment_code']) ?></div>
           <button id="copy-code" type="button">Copy code</button>
         </div>
-        <div class="message warn after-code">
-          Give this code to the teacher now. It can be used once and the plaintext code is not stored by ARES, so it cannot be displayed again later.
-        </div>
+        <div class="message warn after-code">Give this code to the teacher now. It works once and cannot be displayed again later.</div>
       </section>
     <?php endif; ?>
 
@@ -237,7 +231,7 @@ function ares_staff_render_page(array $view): void
       </section>
     <?php endif; ?>
 
-    <p class="small">For security, staff sessions expire after 15 minutes of inactivity. Sign out when finished.</p>
+    <p class="small">Staff sessions expire after 15 minutes of inactivity.</p>
   <?php endif; ?>
 </main>
 <?php if ($generated !== null): ?>
@@ -294,10 +288,10 @@ function ares_staff_enrollment_main(): void
         return;
     }
 
-    $adminKey = trim((string)($config['enrollment_admin_key'] ?? ''));
-    if (!ares_staff_admin_key_configured($adminKey)) {
+    $staffPassword = (string)($config['staff_enrollment_password'] ?? '');
+    if (!ares_staff_password_configured($staffPassword)) {
         http_response_code(503);
-        ares_staff_render_page(['nonce' => $nonce, 'authorized' => false, 'login_error' => 'The enrollment administration key is not configured.']);
+        ares_staff_render_page(['nonce' => $nonce, 'authorized' => false, 'login_error' => 'The shared staff password is not configured.']);
         return;
     }
 
@@ -305,7 +299,7 @@ function ares_staff_enrollment_main(): void
     $cookiePath = ares_staff_cookie_path($scriptName);
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
-    session_name('ARES_ENROLLMENT_ADMIN');
+    session_name('ARES_STAFF_ENROLLMENT');
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => $cookiePath,
@@ -320,7 +314,7 @@ function ares_staff_enrollment_main(): void
     $notice = '';
     if ($authorized && ares_staff_session_expired(isset($_SESSION['last_activity']) ? (int)$_SESSION['last_activity'] : null, $now)) {
         ares_staff_clear_session($cookiePath);
-        session_name('ARES_ENROLLMENT_ADMIN');
+        session_name('ARES_STAFF_ENROLLMENT');
         session_set_cookie_params([
             'lifetime' => 0,
             'path' => $cookiePath,
@@ -342,8 +336,8 @@ function ares_staff_enrollment_main(): void
     $action = $method === 'POST' ? trim((string)($_POST['action'] ?? '')) : '';
 
     if ($method === 'POST' && $action === 'login') {
-        $provided = (string)($_POST['admin_key'] ?? '');
-        if (ares_staff_admin_key_matches($adminKey, $provided)) {
+        $provided = (string)($_POST['staff_password'] ?? '');
+        if (ares_staff_password_matches($staffPassword, $provided)) {
             session_regenerate_id(true);
             $_SESSION['authorized'] = true;
             $_SESSION['csrf'] = bin2hex(random_bytes(32));
@@ -352,8 +346,8 @@ function ares_staff_enrollment_main(): void
             return;
         }
 
-        usleep(350000);
-        $loginError = 'Administration key not accepted.';
+        usleep(250000);
+        $loginError = 'Password not accepted.';
     }
 
     $authorized = ($_SESSION['authorized'] ?? false) === true;

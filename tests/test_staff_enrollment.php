@@ -12,13 +12,13 @@ function staff_expect(bool $condition, string $message): void
     }
 }
 
-$validKey = str_repeat('a', 64);
-staff_expect(ares_staff_admin_key_configured($validKey), '64-character admin key should be accepted');
-staff_expect(!ares_staff_admin_key_configured('short'), 'short admin key should be rejected');
-staff_expect(!ares_staff_admin_key_configured('REPLACE_' . str_repeat('a', 64)), 'placeholder admin key should be rejected');
-staff_expect(ares_staff_admin_key_matches($validKey, $validKey), 'matching admin key should pass');
-staff_expect(!ares_staff_admin_key_matches($validKey, str_repeat('b', 64)), 'wrong admin key should fail');
-staff_expect(!ares_staff_admin_key_matches('short', 'short'), 'invalid configured key should never authenticate');
+$validPassword = 'ares-staff-test';
+staff_expect(ares_staff_password_configured($validPassword), 'configured shared password should be accepted');
+staff_expect(!ares_staff_password_configured('short'), 'password shorter than six characters should be rejected');
+staff_expect(!ares_staff_password_configured('REPLACE_WITH_SHARED_STAFF_PASSWORD'), 'placeholder staff password should be rejected');
+staff_expect(ares_staff_password_matches($validPassword, $validPassword), 'matching shared password should pass');
+staff_expect(!ares_staff_password_matches($validPassword, 'wrong-password'), 'wrong shared password should fail');
+staff_expect(!ares_staff_password_matches('short', 'short'), 'invalid configured password should never authenticate');
 
 $now = 2_000_000;
 staff_expect(!ares_staff_session_expired(null, $now), 'new session should not be expired');

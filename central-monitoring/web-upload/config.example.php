@@ -9,9 +9,13 @@ return [
     // Generate this independently from upload_key.
     'enrollment_secret' => 'REPLACE_WITH_DIFFERENT_RANDOM_64_CHARACTER_SECRET',
 
-    // Separate administrator key used only to authorize enrollment-code generation.
-    // Generate this independently from both upload_key and enrollment_secret.
+    // Administrator API key for admin_enrollment_code.php automation/diagnostics.
+    // Keep this separate from the staff portal password.
     'enrollment_admin_key' => 'REPLACE_WITH_THIRD_RANDOM_64_CHARACTER_SECRET',
+
+    // Shared password for the staff enrollment web page.
+    // Keep the live value only in config.php on the server.
+    'staff_enrollment_password' => 'REPLACE_WITH_SHARED_STAFF_PASSWORD',
 
     // For the pilot these protected directories can live beside index.php.
     // If the host allows it, absolute paths outside the public web root are even better.

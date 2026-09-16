@@ -47,6 +47,7 @@ jobs:
           cp public/index.html "$package_dir/index.html"
           cp public/setup.html "$package_dir/setup.html"
           cp public/assets/css/site.css "$package_dir/assets/css/site.css"
+          cp public/.htaccess "$package_dir/.htaccess"
           cp android/ares-sync/app/build/outputs/apk/acceptance/app-acceptance.apk \
             "$package_dir/assets/downloads/ares-sync.apk"
           apk_sha="$(sha256sum "$package_dir/assets/downloads/ares-sync.apk" | awk '{print $1}')"
@@ -61,11 +62,14 @@ jobs:
           EOF
           test ! -e "$package_dir/admin.html"
           test ! -e "$package_dir/schools"
-          test "$(find "$package_dir" -type f | wc -l)" -eq 5
+          test -f "$package_dir/.htaccess"
+          test "$(find "$package_dir" -type f | wc -l)" -eq 6
           grep -q 'Allow automatic school Wi-Fi access' "$package_dir/setup.html"
           grep -q 'ARES Sync' "$package_dir/index.html"
+          grep -q 'ares-sync\\.apk' "$package_dir/.htaccess"
       - name: Upload integrated website acceptance package
         uses: actions/upload-artifact@v4
         with:
           name: ares-phone-setup-acceptance
           path: build/phone-setup-acceptance/
+          include-hidden-files: true

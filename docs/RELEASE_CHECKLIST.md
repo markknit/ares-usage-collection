@@ -2,15 +2,35 @@
 
 Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release building, certificate verification, and the website-to-phone acceptance test.
 
+## Production-signed release candidate - 2026-09-15
+
+PASS: the first production-key-signed ARES Sync release candidate was built and its signing identity was independently verified with `apksigner`.
+
+Release record:
+
+- versionName: `0.8.0-rc15`
+- versionCode: `23`
+- source commit: `9b592732ef1bf3c8a6fc8917f41d4d0c1998aebf`
+- APK path on the trusted release workstation: `android\ares-sync\release-output\ares-sync.apk`
+- APK size: `6300531` bytes
+- APK SHA-256: `16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8`
+- signer DN: `CN=ARES Education, OU=Technology, O=ARES Education, L=Nanyuki, ST=Laikipia, C=KE`
+- signing-certificate SHA-256: `F3:FE:05:DF:48:DB:0A:02:F4:50:15:80:B3:B8:B8:BA:93:36:AA:AA:86:C7:5A:F2:F4:32:08:99:71:75:49:47`
+- build toolchain: Gradle `8.13`, matching the validated CI baseline
+
+The release build completed successfully after direct `keytool` verification confirmed the existing long-lived `ares-sync` keystore and the correct signing password was used. No signing password, private key, keystore, device credential, enrollment code, or private school data is recorded here.
+
+This candidate is not rollout-ready until the exact signed APK is published at the stable setup-portal path, its deployed hash is re-verified, and the website-origin clean-phone installation test passes.
+
 ## Android release package
 
-- [ ] Production APK is a release-signed build, not a CI debug build.
+- [x] Production APK is a release-signed build, not a CI debug build.
 - [ ] One long-lived ARES production signing key has been created and backed up securely in at least two controlled locations.
-- [ ] Signing keystore and passwords are stored outside the repository.
-- [ ] Version name and versionCode are recorded.
-- [ ] Source commit SHA is recorded.
-- [ ] APK SHA-256 is recorded.
-- [ ] Signing-certificate SHA-256 fingerprint is recorded.
+- [x] Signing keystore and passwords are stored outside the repository.
+- [x] Version name and versionCode are recorded.
+- [x] Source commit SHA is recorded.
+- [x] APK SHA-256 is recorded.
+- [x] Signing-certificate SHA-256 fingerprint is recorded.
 - [ ] Exact signed APK installs on a clean Android phone.
 - [ ] First production-signed installation is documented; a debug-signed test APK may require uninstall/re-enrollment because its certificate differs.
 - [ ] A later APK signed with the same production key upgrades the production-signed app in place without clearing app data.
@@ -100,7 +120,7 @@ Follow `docs/ANDROID_RELEASE_SIGNING.md` for production key creation, release bu
 - [ ] Invalid files are quarantined.
 - [ ] Exact-content duplicates are suppressed.
 - [ ] Existing reporting command runs after newly accepted uploads.
-- [ ] Known acceptance-test uploads are excluded or removed intentionally before production reporting.
+- [x] Known acceptance-test uploads are excluded or removed intentionally before production reporting.
 
 ## Operations and rollback
 

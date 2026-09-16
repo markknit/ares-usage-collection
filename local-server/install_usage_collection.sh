@@ -8,6 +8,7 @@ SOURCE_CSV=
 WEB_USER=www-data
 SCHOOL_CODE=
 RETENTION_DAYS=60
+MAX_UPLOAD_BYTES=2097152
 SCHEDULE_FILE="$SCRIPT_DIR/collection_schedule.json"
 INSTALL_ROOT=
 SKIP_SMOKE_TEST=0
@@ -73,7 +74,16 @@ if [[ -n "$INSTALL_ROOT" ]]; then
   INSTALL_ROOT=$(cd -- "$INSTALL_ROOT" && pwd)
 fi
 
-for cmd in bash install php python3; do
+rooted() {
+  local logical=$1
+  if [[ -n "$INSTALL_ROOT" ]]; then
+    printf '%s%s' "$INSTALL_ROOT" "$logical"
+  else
+    printf '%s' "$logical"
+  fi
+}
+
+for cmd in bash find flock install php python3 sha256sum stat; do
   command -v "$cmd" >/dev/null 2>&1 || die "Required command not found: $cmd"
 done
 if [[ -z "$INSTALL_ROOT" ]]; then
@@ -94,24 +104,74 @@ bash -n "$SCRIPT_DIR/ares_prepare_usage_upload.sh"
 php -l "$SCRIPT_DIR/prepare_usage_upload.php" >/dev/null
 php -l "$SCRIPT_DIR/prepare_due_usage_upload.php" >/dev/null
 python3 - "$SCHEDULE_FILE" <<'PY'
-import json, sys
+import datetime
+import json
+import re
+import sys
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+def ensure(condition, message):
+    if not condition:
+        raise SystemExit(f'schedule validation failed: {message}')
+
 p = sys.argv[1]
 with open(p, encoding='utf-8') as f:
     data = json.load(f)
-assert isinstance(data.get('collections'), list) and data['collections'], 'schedule has no collections'
+
+ensure(isinstance(data, dict), 'schedule root must be an object')
+school_year = str(data.get('school_year', ''))
+ensure(re.fullmatch(r'\d{4}', school_year), 'schedule has an invalid school_year')
+timezone = data.get('timezone')
+ensure(isinstance(timezone, str) and timezone, 'schedule has no timezone')
+try:
+    ZoneInfo(timezone)
+except ZoneInfoNotFoundError as exc:
+    raise SystemExit(f'schedule validation failed: invalid timezone {timezone!r}') from exc
+
+collections = data.get('collections')
+ensure(isinstance(collections, list) and collections, 'schedule has no collections')
+ids = set()
+dates = []
 for row in data['collections']:
-    assert row.get('id') and row.get('due_date'), 'schedule collection missing id/due_date'
+    ensure(isinstance(row, dict), 'schedule collection must be an object')
+    collection_id = row.get('id')
+    label = row.get('label')
+    due_date = row.get('due_date')
+    ensure(
+        isinstance(collection_id, str) and re.fullmatch(
+            rf'{re.escape(school_year)}-Q[1-3]-(MID|END)', collection_id
+        ),
+        f'invalid production collection id: {collection_id!r}',
+    )
+    ensure(collection_id not in ids, f'duplicate collection id: {collection_id}')
+    ensure(isinstance(label, str) and label.strip(), f'{collection_id} has no label')
+    try:
+        parsed_date = datetime.date.fromisoformat(due_date)
+    except (TypeError, ValueError) as exc:
+        raise SystemExit(
+            f'schedule validation failed: {collection_id} has an invalid due_date'
+        ) from exc
+    ensure(parsed_date.year == int(school_year), f'{collection_id} due_date is outside school_year')
+    ids.add(collection_id)
+    dates.append(parsed_date)
+
+ensure(dates == sorted(dates), 'schedule collections are not in chronological order')
+ensure(len(dates) == len(set(dates)), 'schedule contains duplicate due dates')
 print('schedule JSON validated')
 PY
 
-rooted() {
-  local logical=$1
-  if [[ -n "$INSTALL_ROOT" ]]; then
-    printf '%s%s' "$INSTALL_ROOT" "$logical"
-  else
-    printf '%s' "$logical"
-  fi
-}
+REPORT_BUILD_ACTUAL=$(rooted "$REPORT_BUILD_COMMAND")
+SOURCE_CSV_ACTUAL=$(rooted "$SOURCE_CSV")
+
+# Fail before backing up or replacing any component when the live export path
+# cannot possibly complete. Sandbox installs can exercise the same preflight by
+# placing a fake builder and source CSV below --install-root.
+if ((SKIP_SMOKE_TEST == 0)); then
+  [[ -x "$REPORT_BUILD_ACTUAL" ]] || die "Report builder is not executable: $REPORT_BUILD_COMMAND"
+  [[ -s "$SOURCE_CSV_ACTUAL" ]] || die "Source CSV is missing or empty: $SOURCE_CSV"
+  SOURCE_BYTES=$(stat -c %s "$SOURCE_CSV_ACTUAL")
+  ((SOURCE_BYTES <= MAX_UPLOAD_BYTES)) || die "Source CSV is $SOURCE_BYTES bytes; central upload limit is $MAX_UPLOAD_BYTES bytes"
+fi
 
 STAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_LOGICAL="/var/backups/ares-usage-collection/$STAMP"
@@ -135,6 +195,7 @@ UPLOAD_ENDPOINT_LOGICAL="$TRACKER_DIR/prepare_usage_upload.php"
 DUE_ENDPOINT_LOGICAL="$TRACKER_DIR/prepare_due_usage_upload.php"
 SCHEDULE_LOGICAL="$TRACKER_DIR/collection_schedule.json"
 EXPORT_LOGICAL="$TRACKER_DIR/uploads"
+LOCK_LOGICAL=/run/lock/ares-usage-upload.lock
 
 for logical in "$WRAPPER_LOGICAL" "$CONF_LOGICAL" "$SUDOERS_LOGICAL" \
   "$UPLOAD_ENDPOINT_LOGICAL" "$DUE_ENDPOINT_LOGICAL"; do
@@ -146,7 +207,8 @@ fi
 
 info "Installing ARES usage-collection components for $SCHOOL_CODE"
 install -d -m 0755 "$(rooted /usr/local/sbin)" "$(rooted /etc/ares)" \
-  "$(rooted /etc/sudoers.d)" "$(rooted "$TRACKER_DIR")" "$(rooted "$EXPORT_LOGICAL")"
+  "$(rooted /etc/sudoers.d)" "$(rooted /run/lock)" \
+  "$(rooted "$TRACKER_DIR")" "$(rooted "$EXPORT_LOGICAL")"
 install -m 0755 "$SCRIPT_DIR/ares_prepare_usage_upload.sh" "$(rooted "$WRAPPER_LOGICAL")"
 install -m 0644 "$SCRIPT_DIR/prepare_usage_upload.php" "$(rooted "$UPLOAD_ENDPOINT_LOGICAL")"
 install -m 0644 "$SCRIPT_DIR/prepare_due_usage_upload.php" "$(rooted "$DUE_ENDPOINT_LOGICAL")"
@@ -161,9 +223,10 @@ fi
 quote_sh() { printf '%q' "$1"; }
 {
   printf 'SCHOOL_CODE=%s\n' "$(quote_sh "$SCHOOL_CODE")"
-  printf 'REPORT_BUILD_COMMAND=%s\n' "$(quote_sh "$REPORT_BUILD_COMMAND")"
-  printf 'SOURCE_CSV=%s\n' "$(quote_sh "$SOURCE_CSV")"
-  printf 'EXPORT_DIR=%s\n' "$(quote_sh "$EXPORT_LOGICAL")"
+  printf 'REPORT_BUILD_COMMAND=%s\n' "$(quote_sh "$REPORT_BUILD_ACTUAL")"
+  printf 'SOURCE_CSV=%s\n' "$(quote_sh "$SOURCE_CSV_ACTUAL")"
+  printf 'EXPORT_DIR=%s\n' "$(quote_sh "$(rooted "$EXPORT_LOGICAL")")"
+  printf 'LOCK_FILE=%s\n' "$(quote_sh "$(rooted "$LOCK_LOGICAL")")"
   printf 'RETENTION_DAYS=%s\n' "$RETENTION_DAYS"
 } > "$(rooted "$CONF_LOGICAL")"
 chmod 0644 "$(rooted "$CONF_LOGICAL")"
@@ -182,18 +245,22 @@ fi
 
 if ((SKIP_SMOKE_TEST == 0)); then
   info "Running AUTO export smoke test"
-  [[ -x "$REPORT_BUILD_COMMAND" ]] || die "Report builder is not executable: $REPORT_BUILD_COMMAND"
   SMOKE_OUTPUT=$(ARES_UPLOAD_CONF="$(rooted "$CONF_LOGICAL")" "$(rooted "$WRAPPER_LOGICAL")" AUTO)
   LAST_LINE=$(printf '%s\n' "$SMOKE_OUTPUT" | tail -n 1)
-  python3 - "$LAST_LINE" <<'PY'
+  SMOKE_BYTES=$(python3 - "$LAST_LINE" "$MAX_UPLOAD_BYTES" <<'PY'
 import json, os, sys
 obj = json.loads(sys.argv[1])
+max_bytes = int(sys.argv[2])
 assert obj.get('collection') == 'AUTO', obj
 path = obj.get('path')
 assert path and os.path.isfile(path), path
 assert os.path.getsize(path) > 0, path
-print('AUTO export smoke test passed:', obj['filename'])
+assert obj.get('bytes') == os.path.getsize(path), obj
+assert obj['bytes'] <= max_bytes, f"export is {obj['bytes']} bytes; upload limit is {max_bytes} bytes"
+print(obj['bytes'])
 PY
+  )
+  info "AUTO export smoke test passed: $SMOKE_BYTES bytes"
 else
   info "Smoke test skipped by request"
 fi
@@ -204,6 +271,7 @@ ARES usage-collection server installation complete.
 School code: $SCHOOL_CODE
 Tracker directory: $TRACKER_DIR
 Backup directory: $BACKUP_LOGICAL
+Measured usage CSV: ${SMOKE_BYTES:-not measured (smoke test skipped)}
 
 Next checks:
   1. Confirm the due endpoint returns 204 when called with the phone's latest completed collection and no later collection is due.

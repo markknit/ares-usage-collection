@@ -18,7 +18,7 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 ## Main components
 
 - `android/ares-sync/` - ARES Sync Android application.
-- `local-server/` - school-server installer, local export wrapper, due-collection endpoint, and schedule.
+- `local-server/` - one-command school-server updater, installer, local export wrapper, due-collection endpoint, and schedule.
 - `central-monitoring/web-upload/` - HTTPS upload, school search, enrollment, and device-authentication service.
 - `central-monitoring/process_incoming.py` - local incoming-file processor for the central server.
 - `public/` - teacher-facing setup portal assets.
@@ -29,6 +29,7 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 
 - [Technician installation and teacher handoff](docs/TECHNICIAN_PHONE_INSTALL.md) ([printable PDF](output/pdf/ARES_Sync_Technician_Guide.pdf))
 - [Teacher installation and use guide](docs/TEACHER_PHONE_GUIDE.md) ([printable PDF](output/pdf/ARES_Sync_Teacher_Guide.pdf))
+- [Technician school-server installation and update guide](docs/TECHNICIAN_SERVER_INSTALL.md)
 
 Rebuild both PDFs after editing either Markdown source:
 
@@ -74,6 +75,7 @@ Run the focused local tests with:
 
 ```bash
 python3 -m unittest -v tests/test_process_incoming.py
+python3 -m unittest -v tests/test_server_installer.py
 python3 tools/validate_portal.py
 python3 tests/test_portal.py
 php tests/test_web_upload.php

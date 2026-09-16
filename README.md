@@ -25,6 +25,17 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 - `docs/` - technician, acceptance, deployment, and workflow documentation.
 - `tests/` - portal, upload/enrollment, and central processor tests.
 
+## Phone rollout guides
+
+- [Technician installation and teacher handoff](docs/TECHNICIAN_PHONE_INSTALL.md) ([printable PDF](output/pdf/ARES_Sync_Technician_Guide.pdf))
+- [Teacher installation and use guide](docs/TEACHER_PHONE_GUIDE.md) ([printable PDF](output/pdf/ARES_Sync_Teacher_Guide.pdf))
+
+Rebuild both PDFs after editing either Markdown source:
+
+```bash
+python3 tools/build_rollout_guides.py
+```
+
 ## Central incoming processor
 
 The HTTPS upload service writes accepted CSVs to a protected local `incoming` directory. Process them with:

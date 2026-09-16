@@ -78,6 +78,17 @@ Do not remove or change the existing `enrollment_admin_key`; the API endpoint st
 
 The existing site-wide rewrite exclusion for `/monitor_upload/` must remain in place so PHP endpoint paths are not redirected to `.html`.
 
+## Live validation status - 2026-09-15
+
+PASS for the routine staff workflow tested on the live site:
+
+- the HTTPS staff page loads successfully;
+- the shared-password login works;
+- school search works against the live canonical school registry;
+- one-time enrollment code generation works from the staff page.
+
+Not yet explicitly re-tested in this pass: wrong-password rejection, existing-unused-code handling, code rotation, sign-out, or enrollment/reuse rejection using a code generated from this page. Those behaviors remain covered by the implementation/tests and can be checked later if needed.
+
 ## Live validation checklist
 
 After upload and config update:

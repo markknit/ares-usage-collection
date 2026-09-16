@@ -6,14 +6,14 @@ This test validates the complete teacher-facing path in one controlled run:
 2. install it on a clean Android phone;
 3. enroll the phone with a fresh one-time code;
 4. complete the current ARES/ARES2 Wi-Fi authorization flow while a normal internet-capable Wi-Fi remains saved;
-5. make `2026-Q3-MID` immediately due on the dedicated test fixture;
+5. make `2026-Q3-MID` immediately due on the controlled test server;
 6. collect the school usage CSV through the app-specific ARES local-network path;
 7. retain the file privately on the phone;
 8. upload it automatically to the central HTTPS service after normal internet is available.
 
 ## Safety boundaries
 
-Use the dedicated St Jude acceptance fixture only. Do not deploy the acceptance APK or acceptance schedule to production schools.
+The original acceptance plan designated St Jude as the dedicated fixture. The completed 2026-09-15 integrated run instead used Misuuni (`ARES-S0016`) under a temporary controlled acceptance schedule. Do not deploy the acceptance APK or acceptance schedule to normal production use.
 
 The controlled APK uses the real production-style collection ID `2026-Q3-MID`, not `TEST-DUE`, so the complete central path is exercised. Any resulting central acceptance upload must be explicitly excluded or removed before production reporting ingestion.
 
@@ -47,9 +47,9 @@ The repository file:
 local-server/collection_schedule.acceptance.json
 ```
 
-is for the dedicated test fixture only. It moves only `2026-Q3-MID` to `2026-09-15`; the production schedule file remains unchanged.
+is for controlled acceptance use only. It moves only `2026-Q3-MID` to `2026-09-15`; the production schedule file remains unchanged.
 
-Before the integrated test, preserve the fixture's current schedule and install the acceptance schedule:
+Before the integrated test, preserve the test server's current schedule and install the acceptance schedule:
 
 ```bash
 sudo cp /mnt/sda3/var/www/tracker/collection_schedule.json \
@@ -69,7 +69,7 @@ curl -sS -D - -o /dev/null \
 
 Expected result: HTTP `200` with `X-ARES-Collection: 2026-Q3-MID`.
 
-After the test, restore the fixture's prior/production schedule before any production use.
+After the test, restore the authoritative production schedule before any production use. Do not blindly restore an old backup if its dates differ from the repository production schedule.
 
 ## Website deployment
 
@@ -100,7 +100,7 @@ Before testing on the phone:
 4. Open the ARES phone-setup website on the phone.
 5. Download and install ARES Sync from the website.
 6. Confirm the launcher uses the ARES logo.
-7. Search for the dedicated test school and select the canonical school name.
+7. Search for the controlled test school and select the canonical school name.
 8. Enter a fresh one-time enrollment code without manually typing the hyphen; confirm the app formats it as `XXXX-XXXX`.
 9. Enroll the phone.
 10. Approve Wi-Fi suggestion access if Android asks.
@@ -134,7 +134,7 @@ Record any Android system prompt text that differs from the guide, but do not ch
 
 ## Field result - 2026-09-15
 
-PASS: the controlled integrated website-to-central acceptance test completed successfully.
+PASS: the controlled integrated website-to-central acceptance test completed successfully on Misuuni (`ARES-S0016`).
 
 Validated in the field:
 
@@ -150,10 +150,19 @@ The user reported a few minor installation-flow simplifications to review later,
 
 This result validates the complete controlled path from website download through install, enrollment, school-network validation, due collection, central upload, and schedule advancement. It does not by itself validate exact autonomous AlarmManager timing, same-AP reapproval persistence, or different mesh-BSSID behavior.
 
+## Cleanup result - 2026-09-15
+
+PASS: controlled acceptance state was removed from active production paths before proceeding to the production-signed APK stage.
+
+- Misuuni's live `collection_schedule.json` was restored to the repository-authoritative production dates: `2026-Q3-MID` = `2026-10-15` and `2026-Q3-END` = `2026-11-25`.
+- The saved pre-test backup was not restored because inspection showed it also contained acceptance/obsolete dates.
+- The September controlled upload records were moved out of top-level `/monitor_upload/incoming/` into `/monitor_upload/incoming/acceptance-test/`, preserving test evidence while keeping the processor's active input clean.
+- The moved files included the Misuuni `2026-Q3-MID` acceptance record, the earlier Misuuni `AUTO` upload validation record, and two St Jude `2026-Q3-MID` controlled test records.
+
 ## After the test
 
-1. Restore the dedicated server fixture's normal schedule.
-2. Explicitly identify and exclude/remove the controlled `2026-Q3-MID` acceptance upload before production reporting.
-3. Record the field result in `docs/RELEASE_CHECKLIST.md` and `docs/DEPLOYMENT_STATUS.md`.
-4. If the test passes, proceed to the first production-key-signed acceptance APK using the real production schedule.
-5. The final production-signed APK must be published and tested from the website again; this debug-signed controlled package is not the production release.
+1. Restore the controlled server to the authoritative production schedule. **Completed 2026-09-15.**
+2. Explicitly identify and exclude/remove controlled acceptance uploads before production reporting. **Completed 2026-09-15 by moving them to `incoming/acceptance-test/`.**
+3. Record the field result in project documentation. **Completed.**
+4. Proceed to the first production-key-signed APK using the real production schedule.
+5. Publish and test the final production-signed APK from the website; the debug-signed controlled package is not the production release.

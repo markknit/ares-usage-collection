@@ -1,6 +1,6 @@
 # Deployment Status
 
-Updated 2026-09-14 after the first rc11 mixed-network field test.
+Updated 2026-09-16 after production portal deployment and the clean-phone website-origin installation test.
 
 ## Current architecture
 
@@ -37,7 +37,7 @@ However, the helper flow itself failed acceptance: after the successful connecti
 
 ARES and ARES2 are not expected to appear as ordinary Android saved networks in this architecture. Wi-Fi suggestions and `WifiNetworkSpecifier` requests are app-managed network mechanisms, not entries in the normal saved-network list.
 
-The current corrective implementation changes the helper so that action buttons are hidden while setup is active, SSID/fallback progress is explicitly shown, successful server verification records success before returning, and the helper automatically returns to the main screen. That revised flow must be field-tested before rc11/rc12 connection behavior is considered accepted.
+The corrected helper flow has now passed field testing in the production-signed rc15 build. During clean-phone enrollment it found ARES2 and ARES, completed automatic Wi-Fi setup, and returned to the main screen with a successful setup state. The tester did not pause to record each intermediate permission/progress screen, so the final outcome is validated but this run does not add prompt-by-prompt evidence.
 
 Still unverified:
 
@@ -48,7 +48,7 @@ Still unverified:
 
 Validated behavior from earlier candidates still includes fresh canonical-school enrollment, historical schedule baselining, silent local collection when the school network is already available, app-private pending storage, deferred HTTPS upload after internet returns, appearance themes, themed school selection, keyboard-safe enrollment, ARES logo rendering, and the teacher-facing no-action-required normal state.
 
-The CI APKs remain debug-signed test artifacts. Production distribution still requires the approved release-signing process after the mixed-network connection strategy is field-accepted.
+The first production-key-signed build is version `0.8.0-rc15` (`versionCode 23`). Its release record, APK SHA-256, and signing-certificate fingerprint are recorded in `docs/RELEASE_CHECKLIST.md`. The production website-to-phone installation and fresh enrollment test passed on 2026-09-16. A later same-key in-place upgrade test remains outstanding.
 
 ## School-server status
 
@@ -66,18 +66,15 @@ Known controlled September acceptance uploads using the real `2026-Q3-MID` colle
 
 ## Public setup portal status
 
-The repository portal has been updated for the native ARES Sync workflow and still needs final HTTPS deployment plus a clean-phone website-origin acceptance test with the exact approved production-signed APK.
+The repository portal is deployed at `https://areseducation.org/phone-setup/`. The live HTML and stylesheet matched the repository copies, and the obsolete `ACCEPTANCE_BUILD.txt` marker was removed. The published APK was independently downloaded and matched the approved production SHA-256 exactly.
 
-Teacher documentation describes Wi-Fi suggestions plus a possible one-time direct local-network approval. Portal wording should be reviewed again after mixed-network field validation before final publication.
+The public download button, Android install flow, app scan, clean installation, fresh St Jude enrollment, automatic ARES/ARES2 setup, and return to the normal enrolled screen all passed from the public website on a Google Pixel 9 Pro Fold running Android 17 beta. The production screen showed the next collection on 15 October 2026 and no forced-due acceptance behavior. Manufacturer-specific and other Android-version installer flows are not established by this single clean-device test.
 
 ## Remaining production milestones
 
-1. Field-test the corrected automatic-return/progress flow with at least one competing internet-capable Wi-Fi network left saved and preferred.
-2. Repeat a local-network request on the same AP and then on a second mesh AP/BSSID; document whether Android asks for approval again.
-3. Validate a real due-collection retry through the app-specific ARES network while another internet Wi-Fi remains configured.
-4. Decide whether the direct local-network mechanism is acceptable for unattended scheduled collections.
-5. Build the first production-signed acceptance APK with the protected ARES signing key.
-6. Record release version, versionCode, source commit, APK SHA-256, and signing-certificate fingerprint.
-7. Publish the exact approved APK to the stable setup-portal path and run the clean-phone website-origin acceptance test.
-8. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
-9. Run the full release checklist and preserve rollback artifacts.
+1. Repeat a local-network request on the same AP and then on a second mesh AP/BSSID; document whether Android asks for approval again.
+2. Validate a real due-collection retry through the app-specific ARES network while another internet Wi-Fi remains configured.
+3. Decide whether the direct local-network mechanism is acceptable for unattended scheduled collections.
+4. Validate a later APK signed with the production key upgrades the installed production-signed app in place without clearing enrollment.
+5. Wire the central incoming processor into the live scheduled service after explicitly handling acceptance-test data.
+6. Complete or explicitly disposition the remaining release-checklist items and preserve rollback artifacts.

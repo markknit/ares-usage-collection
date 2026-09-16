@@ -20,7 +20,22 @@ Release record:
 
 The release build completed successfully after direct `keytool` verification confirmed the existing long-lived `ares-sync` keystore and the correct signing password was used. No signing password, private key, keystore, device credential, enrollment code, or private school data is recorded here.
 
-This candidate is not rollout-ready until the exact signed APK is published at the stable setup-portal path, its deployed hash is re-verified, and the website-origin clean-phone installation test passes.
+The exact signed APK was published at the stable setup-portal path on 2026-09-16. Its deployed hash was independently re-verified, and the website-origin clean-phone installation and enrollment test passed. Remaining unchecked items in this checklist still require completion or an explicit release decision before broad rollout.
+
+### Production website-to-phone result - 2026-09-16
+
+- Test device: Google Pixel 9 Pro Fold running Android 17 beta.
+- PASS: `https://areseducation.org/phone-setup/` and `setup.html` returned HTTP 200 over valid HTTPS.
+- PASS: the live `index.html`, `setup.html`, and `assets/css/site.css` matched the repository copies byte-for-byte.
+- PASS: the published APK returned HTTP 200 with the Android package content type and attachment disposition.
+- PASS: the downloaded website copy was `6300531` bytes and its SHA-256 matched the approved release hash, `16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8`.
+- PASS: the obsolete public `ACCEPTANCE_BUILD.txt` was removed and returned HTTP 404.
+- PASS: a clean Android phone downloaded `ares-sync.apk` from the public portal. Android's recommended app scan completed successfully, and the app installed and opened.
+- PASS: school search returned the canonical St Jude test school, a fresh one-time code enrolled the phone, and the code field inserted the hyphen automatically.
+- PASS: automatic setup found ARES2 and ARES, returned to the main screen, and reported Wi-Fi setup complete.
+- PASS: the enrolled screen showed St Jude girls, next collection `15 October 2026`, `Everything is ready. No action required.`, and `Usage data: up to date.` This confirms the production schedule rather than the acceptance build's forced-due behavior.
+- LIMITATION: the tester moved through the Android permission sequence too quickly to record each prompt again. The end state passed, but this run does not add prompt-by-prompt evidence beyond earlier field tests.
+- LIMITATION: this clean installation result applies directly to the tested Android 17 beta device. Other Android versions and manufacturer-specific installer flows remain dependent on the generic recovery guidance and prior tests.
 
 ## Android release package
 
@@ -31,8 +46,8 @@ This candidate is not rollout-ready until the exact signed APK is published at t
 - [x] Source commit SHA is recorded.
 - [x] APK SHA-256 is recorded.
 - [x] Signing-certificate SHA-256 fingerprint is recorded.
-- [ ] Exact signed APK installs on a clean Android phone.
-- [ ] First production-signed installation is documented; a debug-signed test APK may require uninstall/re-enrollment because its certificate differs.
+- [x] Exact signed APK installs on a clean Android phone.
+- [x] First production-signed installation is documented; a debug-signed test APK may require uninstall/re-enrollment because its certificate differs.
 - [ ] A later APK signed with the same production key upgrades the production-signed app in place without clearing app data.
 - [x] ARES launcher icon uses the ARES logo rather than the generic Android icon.
 - [ ] ARES logo and all four appearance modes render correctly.
@@ -42,21 +57,21 @@ This candidate is not rollout-ready until the exact signed APK is published at t
 
 ## Public setup portal
 
-- [ ] Portal validation passes.
-- [ ] HTTPS certificate is valid.
-- [ ] `public/assets/downloads/ares-sync.apk` exists on the deployed site.
-- [ ] Published APK SHA-256 matches the approved release hash.
-- [ ] Download button works from an Android phone.
-- [ ] Full installation test starts from the deployed website on a clean phone.
-- [ ] Sideload instructions match the tested Android install flow.
+- [x] Portal validation passes.
+- [x] HTTPS certificate is valid.
+- [x] `public/assets/downloads/ares-sync.apk` exists on the deployed site.
+- [x] Published APK SHA-256 matches the approved release hash.
+- [x] Download button works from an Android phone.
+- [x] Full installation test starts from the deployed website on a clean phone.
+- [x] Sideload instructions match the tested Android install flow.
 - [ ] Teacher can recover from the "Allow from this source" prompt.
-- [ ] Any Play Protect warning flow is documented accurately without instructing users to disable Play Protect globally.
-- [ ] Teacher guide does not require Round Sync, Automate, MacroDroid, rclone, or Google Drive setup.
+- [x] Any Play Protect warning flow is documented accurately without instructing users to disable Play Protect globally.
+- [x] Teacher guide does not require Round Sync, Automate, MacroDroid, rclone, or Google Drive setup.
 
 ## Enrollment, Wi-Fi, and phone behavior
 
-- [ ] School search returns the expected canonical school.
-- [ ] Fresh one-time enrollment code succeeds.
+- [x] School search returns the expected canonical school.
+- [x] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
 - [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
 - [x] Immediately after fresh enrollment, ARES Sync requests Android's one-time app-level approval to suggest Wi-Fi networks; it does not open the `ACTION_WIFI_ADD_NETWORKS` saved-network sheet.
@@ -66,7 +81,7 @@ This candidate is not rollout-ready until the exact signed APK is published at t
 - [ ] Declining suggestion approval leaves manual **Connect to school Wi-Fi** available and documents the **Special app access > Wi-Fi control** recovery path.
 - [x] Android 13+ setup requests **Nearby Wi-Fi devices** once, with `neverForLocation`; Android 12L and earlier use the legacy fine-location Wi-Fi permission only through API 32.
 - [x] rc11 successfully obtained direct ARES local-network connections while a normal internet-capable Wi-Fi network remained saved.
-- [ ] The setup helper automatically returns to the main ARES Sync screen after a verified local-network connection and displays success rather than a false failure state.
+- [x] The setup helper automatically returns to the main ARES Sync screen after a verified local-network connection and displays success rather than a false failure state.
 - [ ] While setup is moving between ARES/ARES2 or falling back from one SSID to the other, the helper displays a clear continuing/setup-in-progress message and does not expose action buttons until intervention is actually required.
 - [ ] After suggestion approval, setup makes a specific `WifiNetworkSpecifier` request for `ARES2` or `ARES` and verifies `http://ares.local/tracker/collection_schedule.json` over the returned `Network`.
 - [ ] ARES Sync does not bind the whole process to the ARES network; only the local collection request is sent over the returned ARES `Network`.
@@ -74,7 +89,7 @@ This candidate is not rollout-ready until the exact signed APK is published at t
 - [ ] A different mesh access point is tested to determine whether Android requires another approval for the new BSSID.
 - [ ] After approval, Android auto-connects to `ARES` or `ARES2` when available even though the school network normally has no internet access.
 - [ ] On the mesh network, Android can roam between access points under the suggested `ARES` SSID without ARES Sync managing BSSIDs.
-- [ ] Normal enrolled screen shows school, next collection, and no-action-required state after Wi-Fi setup is complete.
+- [x] Normal enrolled screen shows school, next collection, and no-action-required state after Wi-Fi setup is complete.
 - [ ] Due collection first attempts the currently available Wi-Fi network.
 - [ ] If the current Wi-Fi cannot reach `ares.local`, the due worker requests an app-specific local `ARES2`/`ARES` network and retries the download over that returned `Network`.
 - [ ] A due collection that cannot reach `ares.local` remains retryable rather than ending permanently.

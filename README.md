@@ -30,6 +30,7 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 - [Technician installation and teacher handoff](docs/TECHNICIAN_PHONE_INSTALL.md) ([printable PDF](output/pdf/ARES_Sync_Technician_Guide.pdf))
 - [Teacher installation and use guide](docs/TEACHER_PHONE_GUIDE.md) ([printable PDF](output/pdf/ARES_Sync_Teacher_Guide.pdf))
 - [Technician school-server installation and update guide](docs/TECHNICIAN_SERVER_INSTALL.md)
+- [Controlled rollout runbook](docs/ROLLOUT_RUNBOOK.md)
 
 Rebuild both PDFs after editing either Markdown source:
 

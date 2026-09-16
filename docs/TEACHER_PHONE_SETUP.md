@@ -1,5 +1,7 @@
 # ARES Sync - Teacher Phone Setup and Regular Use
 
+> **Current guide:** This detailed engineering-era setup note is retained for history. Teachers and rollout staff should use [ARES Sync - Teacher Installation and Use Guide](TEACHER_PHONE_GUIDE.md) or its [printable PDF](../output/pdf/ARES_Sync_Teacher_Guide.pdf). The current guide directs teachers to their ARES Advocate or ARES technical-support contact for the required one-time installation key.
+
 This guide is for a teacher or school user setting up ARES Sync on an Android phone.
 
 ## First-time setup

@@ -1,6 +1,6 @@
 # Deployment Status
 
-Updated 2026-09-16 after production portal deployment and the clean-phone website-origin installation test.
+Updated 2026-09-16 after production portal deployment, the clean-phone website-origin installation test, and rollout-package preparation.
 
 ## Current architecture
 
@@ -54,6 +54,8 @@ The first production-key-signed build is version `0.8.0-rc15` (`versionCode 23`)
 
 The automated installer and local collection endpoints have passed school-side acceptance testing. The installer places `collection_schedule.json` under the tracker web directory, which the Android app uses as a harmless reachability probe during local-network setup. The production schedule remains aligned to the approved 2026 term collection dates.
 
+`local-server/update_school_server.sh` is now the recommended rollout command. It validates the vetted release and existing report path before making changes, backs up replaced components, intentionally installs the release's approved production schedule, runs an `AUTO` export smoke test, reports the exact CSV size, and blocks a CSV above the central 2 MiB limit. The update path has six automated sandbox tests covering installation, backup/replacement, schedule preservation in base-install mode, preflight failure safety, oversize rejection, and invalid-schedule rejection.
+
 The St Jude server and phone are dedicated test fixtures and may remain in their controlled acceptance state for regression testing.
 
 ## Central service status
@@ -69,6 +71,12 @@ Known controlled September acceptance uploads using the real `2026-Q3-MID` colle
 The repository portal is deployed at `https://areseducation.org/phone-setup/`. The live HTML and stylesheet matched the repository copies, and the obsolete `ACCEPTANCE_BUILD.txt` marker was removed. The published APK was independently downloaded and matched the approved production SHA-256 exactly.
 
 The public download button, Android install flow, app scan, clean installation, fresh St Jude enrollment, automatic ARES/ARES2 setup, and return to the normal enrolled screen all passed from the public website on a Google Pixel 9 Pro Fold running Android 17 beta. The production screen showed the next collection on 15 October 2026 and no forced-due acceptance behavior. Manufacturer-specific and other Android-version installer flows are not established by this single clean-device test.
+
+## Rollout documentation status
+
+The technician phone-installation guide, teacher guide, printable PDFs, school-server update guide, and controlled-rollout runbook are current in the repository. The teacher guide directs teachers to their ARES Advocate or ARES technical-support contact for the one-time installation key.
+
+The release is ready for a **controlled rollout with named ARES support**. It is not yet documented as an unsupported mass rollout: live central-processor scheduling and the remaining unattended/upgrade evidence below must first be completed or explicitly accepted by the release owner.
 
 ## Remaining production milestones
 

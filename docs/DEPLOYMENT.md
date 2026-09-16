@@ -20,9 +20,9 @@ Do not publish credentials, enrollment codes, private school data, live rclone c
 
 ## 2. Production APK
 
-The current `0.8.0-rc6` APK is a validated CI debug build used for field testing. Do not make a debug-signed APK the permanent production package.
+The approved production package is ARES Sync `0.8.0-rc15` (`versionCode 23`). Its exact release record, signing-certificate fingerprint, size, and SHA-256 are in `docs/RELEASE_CHECKLIST.md`. The public website copy was hash-verified and passed a clean website-origin installation and enrollment test on 2026-09-16.
 
-For production distribution:
+For every production replacement:
 
 1. Build a release APK with the approved ARES signing key.
 2. Keep the keystore, passwords, and signing secrets outside the repository.
@@ -52,13 +52,13 @@ Never publish the enrollment admin key, enrollment secret, device credentials, o
 
 ## 5. Local ARES server
 
-Deploy the school-side usage collection package with:
+From a centrally approved release folder, update each school server with:
 
 ```bash
-sudo bash local-server/install_usage_collection.sh --school-code ARES-S00XX
+sudo bash local-server/update_school_server.sh --school-code ARES-S00XX
 ```
 
-The installer deploys the approved usage-export wrapper, PHP endpoints, collection schedule, configuration, upload directory, and scoped sudoers entry.
+The updater validates prerequisites before making changes, backs up every replaced component, deploys the approved usage-export wrapper, PHP endpoints, production schedule, configuration, upload directory, and scoped sudoers entry, then runs an export smoke test and reports the exact CSV size. The central service rejects a CSV above 2 MiB.
 
 After installation, validate the existing report builder and the state-aware scheduled endpoint as documented in `docs/TECHNICIAN_SERVER_INSTALL.md`.
 
@@ -95,3 +95,5 @@ Before production deployment:
 - confirm the production school schedule is installed;
 - confirm central processing does not ingest known controlled acceptance-test data unintentionally;
 - retain the previous approved APK and deployment package for rollback.
+
+Use `docs/ROLLOUT_RUNBOOK.md` for the controlled-wave gates, installation records, data allowance, monitoring, escalation, and rollback process. Use the technician and teacher guides linked from `README.md` for phone installation and handoff.

@@ -73,7 +73,7 @@ The exact signed APK was published at the stable setup-portal path on 2026-09-16
 - [x] School search returns the expected canonical school.
 - [x] Fresh one-time enrollment code succeeds.
 - [ ] Reused enrollment code is rejected.
-- [ ] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
+- [x] Fresh mid-year enrollment baselines earlier scheduled periods correctly.
 - [x] Immediately after fresh enrollment, ARES Sync requests Android's one-time app-level approval to suggest Wi-Fi networks; it does not open the `ACTION_WIFI_ADD_NETWORKS` saved-network sheet.
 - [x] Android's Wi-Fi suggestion approval prompt is usable on the first attempt and does not overlap the system gesture/navigation area.
 - [x] Approving the prompt registers both open networks, `ARES2` and `ARES`, as ARES Sync suggestions.
@@ -96,8 +96,8 @@ The exact signed APK was published at the stable setup-portal path on 2026-09-16
 - [ ] A later retry succeeds after the phone returns to school and ARES local access becomes available.
 - [ ] Manual **Connect to school Wi-Fi** remains available as the fallback when automatic connection does not occur.
 - [ ] Pending file survives app/process interruption and phone restart as designed.
-- [ ] Upload succeeds after later cellular or Wi-Fi internet access.
-- [ ] Pending count returns to zero after central acknowledgement.
+- [x] Upload succeeds after later cellular or Wi-Fi internet access.
+- [x] Pending count returns to zero after central acknowledgement.
 
 ### rc10 Wi-Fi suggestion field result - 2026-09-13
 
@@ -120,29 +120,37 @@ The exact signed APK was published at the stable setup-portal path on 2026-09-16
 
 ## School server
 
-- [ ] Installer runs successfully on a clean/representative school server.
-- [ ] Production collection schedule is installed and matches the Android release.
-- [ ] Existing report builder completes successfully.
+- [x] Installer runs successfully on a clean/representative school server.
+- [x] Production collection schedule is installed and matches the Android release.
+- [x] Existing report builder completes successfully.
 - [ ] State-aware no-due endpoint returns HTTP 204 when appropriate.
-- [ ] Due endpoint returns a populated CSV when a collection is due.
+- [x] Due endpoint returns a populated CSV when a collection is due.
 
 ## Central service and reporting
 
-- [ ] HTTPS upload service accepts the release app's enrolled-device upload.
-- [ ] Duplicate retry is idempotent.
-- [ ] Protected incoming/data files are not publicly readable.
-- [ ] Local incoming processor validates and archives accepted files once.
-- [ ] Invalid files are quarantined.
-- [ ] Exact-content duplicates are suppressed.
-- [ ] Existing reporting command runs after newly accepted uploads.
+- [ ] Exact production-signed rc15 upload is independently observed; the controlled acceptance build passed the enrolled-device path end to end.
+- [x] Duplicate retry is idempotent.
+- [x] Protected incoming/data files are not publicly readable.
+- [x] Local incoming processor validates and archives accepted files once in automated validation; live scheduling remains outstanding.
+- [x] Invalid files are quarantined in automated validation.
+- [x] Exact-content duplicates are suppressed in automated validation.
+- [x] Existing reporting command runs after newly accepted uploads in automated validation.
 - [x] Known acceptance-test uploads are excluded or removed intentionally before production reporting.
 
 ## Operations and rollback
 
 - [ ] Previous approved APK is retained privately for rollback.
 - [ ] Previous server/deployment package is retained.
-- [ ] Production deployment instructions are current.
-- [ ] Teacher installation instructions are current.
-- [ ] Technician installation instructions are current.
+- [x] Production deployment instructions are current.
+- [x] Teacher installation instructions are current in Markdown and printable PDF.
+- [x] Technician phone and school-server installation instructions are current; the phone guide is also available as a printable PDF.
 - [ ] Release/version/hash/certificate record is saved outside the public download directory.
-- [ ] Autonomous Android alarm timing limitation is documented until independently field-validated.
+- [x] Autonomous Android alarm timing limitation is documented until independently field-validated.
+
+## Controlled-rollout gates
+
+- [x] Controlled-rollout runbook records the release identity, school-server update, phone handoff, conservative data allowance, monitoring, escalation, and rollback process.
+- [x] School-server updater measures the CSV and blocks files above the 2 MiB central limit before changing installed components.
+- [ ] Central incoming processor is scheduled against the live protected directories and failure notification has a named owner.
+- [ ] Each rollout school has a canonical ID, assigned ARES Advocate/technician, measured CSV size, and successful server-update record.
+- [ ] First-wave schools have an agreed monitoring and incident-review window.

@@ -1,0 +1,28 @@
+name: School server package
+
+on:
+  push:
+    paths:
+      - 'local-server/**'
+      - 'tests/test_server_installer.py'
+      - '.github/workflows/school-server.yml'
+  pull_request:
+    paths:
+      - 'local-server/**'
+      - 'tests/test_server_installer.py'
+      - '.github/workflows/school-server.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scripts and PHP endpoints
+        run: |
+          bash -n local-server/install_usage_collection.sh
+          bash -n local-server/update_school_server.sh
+          bash -n local-server/ares_prepare_usage_upload.sh
+          php -l local-server/prepare_usage_upload.php
+          php -l local-server/prepare_due_usage_upload.php
+      - name: Test installer and updater
+        run: python3 -m unittest -v tests/test_server_installer.py

@@ -2,13 +2,13 @@
 
 The production phone architecture is the native ARES Sync Android app. Round Sync, Automate, MacroDroid, phone-side rclone, Google Drive remotes, and public Downloads-folder workflows are superseded and are not required for deployment.
 
-## Current validated candidate
+## Current approved production package
 
-The current field-validated candidate is ARES Sync `0.8.0-rc6` from commit `02eca4133e2df560fce1f2c10ae382c0fb9a7544`.
+The approved package is ARES Sync `0.8.0-rc15` (`versionCode 23`) built from source commit `9b592732ef1bf3c8a6fc8917f41d4d0c1998aebf` and signed with the ARES production key.
 
-This candidate validated the teacher-facing UI, enrollment flow, silent local collection path, app-private pending storage, deferred HTTPS upload, and the final WebP logo rendering on the dedicated test phone.
+The exact production APK was published at the official setup portal, downloaded to a clean Google Pixel 9 Pro Fold running Android 17 beta, scanned, installed, freshly enrolled, and returned successfully from automatic ARES/ARES2 setup to the normal production-schedule screen. The approved APK size, SHA-256, and signing-certificate fingerprint are recorded in `RELEASE_CHECKLIST.md`.
 
-The CI-produced APK is debug-signed and is for testing only. Production distribution must use a release-signed APK built from the approved release commit.
+CI-produced APKs remain debug/acceptance artifacts and must not replace the published production-signed package.
 
 ## Production build requirements
 
@@ -29,7 +29,7 @@ The CI-produced APK is debug-signed and is for testing only. Production distribu
 
 After enrollment, the normal screen should show the school, next collection date, and a no-action-required state.
 
-When a collection is due, ARES Sync first attempts local collection silently. If the phone cannot reach the school server, the app asks the teacher to connect to ARES2 or ARES. After local collection, pending usage data is stored in the app-private pending directory and is sent automatically when normal validated internet access later becomes available.
+When a collection is due, ARES Sync first attempts local collection silently. If the current network cannot reach the school server, the app can request app-specific access to ARES or ARES2; the documented manual connection remains the fallback. After local collection, pending usage data is stored in the app-private pending directory and is sent automatically when normal validated internet access later becomes available.
 
 ## Installation behavior
 

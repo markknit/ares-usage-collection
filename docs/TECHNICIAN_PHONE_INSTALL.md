@@ -1,6 +1,6 @@
-# ARES Sync - Technician Installation and Teacher Handoff
+# ARES Sync - Technician Rollout Installation and Teacher Handoff
 
-Use this guide when an ARES technician or ARES Advocate helps a teacher install and enroll ARES Sync. Complete the installation at the school, with normal Internet available and at least one school network named **ARES** or **ARES2** in range.
+Use this guide when an ARES technician or ARES Advocate prepares a school server, then helps a teacher install and enroll ARES Sync. Complete both parts at the school, with normal Internet available and at least one school network named **ARES** or **ARES2** in range.
 
 ## What ARES Sync does
 
@@ -10,7 +10,8 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 ## Before visiting the teacher
 
-- Confirm the school server has passed the ARES usage-collection server installation and verification procedure.
+- Obtain the centrally approved ARES usage-collection release folder. Do not assemble an update from individual files.
+- Confirm the school server's existing usage report works and that you have administrator access.
 - Confirm the canonical school name and `ARES-S00XX` ID.
 - Confirm the school has an ARES Advocate or other named support contact.
 - Bring the official setup address: `https://areseducation.org/phone-setup/`.
@@ -19,12 +20,33 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 ## What you need at the school
 
 - The teacher's Android phone, with sufficient battery and storage.
+- Terminal access to the school server and its assigned canonical `ARES-S00XX` ID.
 - Normal Internet through mobile data or Internet-capable Wi-Fi.
 - ARES or ARES2 within range.
 - Access to the protected ARES staff enrollment portal.
 - The teacher's permission to install the app and approve the required Android prompts.
 
-## 1. Generate the one-time installation key
+<!-- pagebreak -->
+
+## 1. Update and verify the school server
+
+Complete this section before installing ARES Sync on the teacher's phone.
+
+1. Copy the complete, centrally approved `ares-usage-collection` release folder to the school server.
+2. Open a terminal, change into the root of that release folder, and confirm that `local-server/update_school_server.sh` is present.
+3. Confirm the existing report source is present and nonempty at `/mnt/sda3/var/www/tracker/reports/combined_usage.csv`.
+4. Run `sudo bash local-server/update_school_server.sh --school-code ARES-S00XX`, replacing `ARES-S00XX` with the school's assigned canonical ID.
+5. If the server's PHP worker does not use `www-data`, add `--web-user PHP_USER` with the correct account.
+6. Wait for `ARES usage-collection server installation complete.` and `AUTO export smoke test passed`.
+7. Record the backup-directory path and measured CSV byte count printed by the updater.
+8. Confirm that the measured file is greater than zero and no more than `2097152` bytes.
+9. Follow the post-install checks in `docs/TECHNICIAN_SERVER_INSTALL.md`, including the state-aware due-endpoint check.
+
+The updater validates the approved production schedule and existing report path before changing installed files. It backs up replaced components, installs the export wrapper, PHP endpoints, production schedule, configuration, upload directory, and scoped sudoers entry, then generates a test export.
+
+If any check fails, stop. Do not enroll a teacher's phone until the server problem is understood and the update passes. Keep the terminal output and backup path for ARES technical support; do not improvise by deleting server or phone data.
+
+## 2. Generate the one-time installation key
 
 1. On your own trusted device, open the protected ARES staff enrollment portal.
 2. Sign in with the shared staff password.
@@ -39,7 +61,7 @@ If the portal reports that an unused code already exists, do not replace it auto
 
 <!-- pagebreak -->
 
-## 2. Download and install ARES Sync
+## 3. Download and install ARES Sync
 
 1. Keep the phone connected to normal Internet.
 2. In Chrome, open `https://areseducation.org/phone-setup/`.
@@ -54,7 +76,7 @@ If the portal reports that an unused code already exists, do not replace it auto
 
 Android wording varies by phone. Stop and contact ARES technical support if Android offers no safe path to install the official APK.
 
-## 3. Enroll the phone
+## 4. Enroll the phone
 
 1. In ARES Sync, type at least two letters of the school name and select **Find school**.
 2. Select the exact canonical school. Verify the school with the teacher before continuing.
@@ -63,7 +85,7 @@ Android wording varies by phone. Stop and contact ARES technical support if Andr
 
 If enrollment fails, do not generate multiple keys blindly. Recheck the selected school, Internet connection, and code. A used code cannot be reused.
 
-## 4. Approve automatic school-network access
+## 5. Approve automatic school-network access
 
 After enrollment, ARES Sync starts one-time Wi-Fi setup. Approve each prompt that appears:
 
@@ -74,7 +96,7 @@ After enrollment, ARES Sync starts one-time Wi-Fi setup. Approve each prompt tha
 
 ARES Sync may try both ARES2 and ARES. Wait for it to finish. A successful setup returns automatically to the main screen.
 
-## 5. Verify the completed installation
+## 6. Verify the completed installation
 
 Do not leave until the main screen shows all of the following:
 
@@ -88,7 +110,7 @@ If the next collection date is already past or the app reports a pending collect
 
 <!-- pagebreak -->
 
-## 6. Explain the system to the teacher
+## 7. Explain the system to the teacher
 
 Use this short explanation:
 
@@ -117,6 +139,9 @@ Whenever possible, let pending files upload over ordinary Internet Wi-Fi. ARES S
 Record only non-secret rollout information:
 
 - School name and ID: ______________________________
+- Server update passed: Yes / No
+- Server backup path: ______________________________
+- Measured CSV size in bytes: ______________________
 - Teacher or assigned phone: _______________________
 - Phone model and Android version: _________________
 - Installation date: _______________________________
@@ -130,6 +155,13 @@ Do not record the one-time installation key, staff password, device credential, 
 <!-- pagebreak -->
 
 ## Quick troubleshooting
+
+### School-server update fails
+
+- Stop before enrolling the teacher's phone.
+- Preserve the complete terminal output and any backup-directory path shown.
+- Confirm that the approved release folder is complete, the school ID is correct, and the existing report builder and source CSV are available.
+- Do not restore, delete, or replace server files manually; contact ARES technical support with the non-secret error text.
 
 ### Download will not start
 

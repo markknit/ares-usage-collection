@@ -18,7 +18,7 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 ## Main components
 
 - `android/ares-sync/` - ARES Sync Android application.
-- `local-server/` - one-command school-server updater, installer, local export wrapper, due-collection endpoint, and schedule.
+- `local-server/` - one-command school-server updater, safe school-code reassignment command, installer, local export wrapper, due-collection endpoint, and schedule.
 - `central-monitoring/web-upload/` - HTTPS upload, school search, enrollment, and device-authentication service.
 - `central-monitoring/process_incoming.py` - local incoming-file processor for the central server.
 - `public/` - teacher-facing setup portal assets.

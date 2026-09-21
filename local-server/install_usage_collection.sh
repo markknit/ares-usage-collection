@@ -20,7 +20,7 @@ Usage:
   sudo bash local-server/install_usage_collection.sh --school-code ARES-S00XX [options]
 
 Required:
-  --school-code CODE           Stable school/export code. Prefer the canonical ARES-S00XX ID.
+  --school-code CODE           Canonical ARES-S00XX ID, or a unique provisional code such as PENDING-SRV001.
 
 Options:
   --tracker-dir PATH           Tracker web directory (default: /mnt/sda3/var/www/tracker)
@@ -93,6 +93,7 @@ fi
 
 for source in \
   "$SCRIPT_DIR/ares_prepare_usage_upload.sh" \
+  "$SCRIPT_DIR/ares_set_school_code.sh" \
   "$SCRIPT_DIR/prepare_usage_upload.php" \
   "$SCRIPT_DIR/prepare_due_usage_upload.php" \
   "$SCHEDULE_FILE"; do
@@ -189,6 +190,7 @@ backup_logical() {
 }
 
 WRAPPER_LOGICAL=/usr/local/sbin/ares_prepare_usage_upload.sh
+SET_CODE_LOGICAL=/usr/local/sbin/ares-set-school-code
 CONF_LOGICAL=/etc/ares/usage-upload.conf
 SUDOERS_LOGICAL=/etc/sudoers.d/ares-usage-export
 UPLOAD_ENDPOINT_LOGICAL="$TRACKER_DIR/prepare_usage_upload.php"
@@ -197,7 +199,7 @@ SCHEDULE_LOGICAL="$TRACKER_DIR/collection_schedule.json"
 EXPORT_LOGICAL="$TRACKER_DIR/uploads"
 LOCK_LOGICAL=/run/lock/ares-usage-upload.lock
 
-for logical in "$WRAPPER_LOGICAL" "$CONF_LOGICAL" "$SUDOERS_LOGICAL" \
+for logical in "$WRAPPER_LOGICAL" "$SET_CODE_LOGICAL" "$CONF_LOGICAL" "$SUDOERS_LOGICAL" \
   "$UPLOAD_ENDPOINT_LOGICAL" "$DUE_ENDPOINT_LOGICAL"; do
   backup_logical "$logical"
 done
@@ -210,6 +212,7 @@ install -d -m 0755 "$(rooted /usr/local/sbin)" "$(rooted /etc/ares)" \
   "$(rooted /etc/sudoers.d)" "$(rooted /run/lock)" \
   "$(rooted "$TRACKER_DIR")" "$(rooted "$EXPORT_LOGICAL")"
 install -m 0755 "$SCRIPT_DIR/ares_prepare_usage_upload.sh" "$(rooted "$WRAPPER_LOGICAL")"
+install -m 0755 "$SCRIPT_DIR/ares_set_school_code.sh" "$(rooted "$SET_CODE_LOGICAL")"
 install -m 0644 "$SCRIPT_DIR/prepare_usage_upload.php" "$(rooted "$UPLOAD_ENDPOINT_LOGICAL")"
 install -m 0644 "$SCRIPT_DIR/prepare_due_usage_upload.php" "$(rooted "$DUE_ENDPOINT_LOGICAL")"
 
@@ -235,6 +238,7 @@ printf '%s ALL=(root) NOPASSWD: %s *\n' "$WEB_USER" "$WRAPPER_LOGICAL" > "$(root
 chmod 0440 "$(rooted "$SUDOERS_LOGICAL")"
 
 bash -n "$(rooted "$WRAPPER_LOGICAL")"
+bash -n "$(rooted "$SET_CODE_LOGICAL")"
 php -l "$(rooted "$UPLOAD_ENDPOINT_LOGICAL")" >/dev/null
 php -l "$(rooted "$DUE_ENDPOINT_LOGICAL")" >/dev/null
 if command -v visudo >/dev/null 2>&1; then
@@ -277,4 +281,5 @@ Next checks:
   1. Confirm the due endpoint returns 204 when called with the phone's latest completed collection and no later collection is due.
   2. Use a controlled due collection to test HTTP 200 download from ARES Sync.
   3. Confirm the phone later uploads to the central HTTPS service when Internet returns.
+  4. If the school code is provisional, run 'sudo ares-set-school-code ARES-S00XX' before phone enrollment.
 EOF2

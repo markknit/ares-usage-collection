@@ -60,6 +60,14 @@ sudo bash local-server/update_school_server.sh --school-code ARES-S00XX
 
 The updater validates prerequisites before making changes, backs up every replaced component, deploys the approved usage-export wrapper, PHP endpoints, production schedule, configuration, upload directory, and scoped sudoers entry, then runs an export smoke test and reports the exact CSV size. The central service rejects a CSV above 2 MiB.
 
+If the final school assignment is not yet known, install with a unique asset-based provisional code such as `PENDING-SRV001`. Before enrolling a phone, assign the canonical ID without reinstalling other components:
+
+```bash
+sudo ares-set-school-code ARES-S00XX
+```
+
+The reassignment command backs up the configuration, validates the canonical format, runs an `AUTO` export verification, and automatically restores the previous code if verification fails.
+
 After installation, validate the existing report builder and the state-aware scheduled endpoint as documented in `docs/TECHNICIAN_SERVER_INSTALL.md`.
 
 ## 6. Central HTTPS collection

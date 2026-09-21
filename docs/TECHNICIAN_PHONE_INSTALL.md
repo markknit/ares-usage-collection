@@ -26,6 +26,14 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 - Access to the protected ARES staff enrollment portal.
 - The teacher's permission to install the app and approve the required Android prompts.
 
+## If the final school ID is not assigned yet
+
+- Install the server package with a unique provisional code such as `PENDING-SRV001`; use the server's asset identifier so it remains traceable.
+- Record which physical server received that provisional code.
+- Do **not** enroll a teacher's phone while the server still has a provisional code.
+- After ARES assigns the canonical ID, run `sudo ares-set-school-code ARES-S00XX` on the server.
+- Continue only after the command reports reassignment complete and its verified `AUTO` filename contains the final ID.
+
 <!-- pagebreak -->
 
 ## 1. Update and verify the school server

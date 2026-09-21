@@ -10,6 +10,7 @@ import unittest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = REPO_ROOT / "local-server" / "install_usage_collection.sh"
 UPDATER = REPO_ROOT / "local-server" / "update_school_server.sh"
+REASSIGNER = Path("usr/local/sbin/ares-set-school-code")
 PRODUCTION_SCHEDULE = REPO_ROOT / "local-server" / "collection_schedule.json"
 TRACKER = Path("mnt/sda3/var/www/tracker")
 
@@ -65,6 +66,9 @@ class ServerInstallerTest(unittest.TestCase):
         wrapper = self.root / "usr/local/sbin/ares_prepare_usage_upload.sh"
         self.assertTrue(wrapper.is_file())
         self.assertTrue(wrapper.stat().st_mode & stat.S_IXUSR)
+        reassigner = self.root / REASSIGNER
+        self.assertTrue(reassigner.is_file())
+        self.assertTrue(reassigner.stat().st_mode & stat.S_IXUSR)
         self.assertTrue((self.root / TRACKER / "prepare_usage_upload.php").is_file())
         self.assertTrue((self.root / TRACKER / "prepare_due_usage_upload.php").is_file())
         self.assertEqual(
@@ -97,6 +101,75 @@ class ServerInstallerTest(unittest.TestCase):
         )
         self.assertEqual(1, len(backups))
         self.assertEqual(previous, backups[0].read_text(encoding="utf-8"))
+
+    def test_provisional_install_can_be_reassigned_to_canonical_school(self):
+        self._run(
+            UPDATER,
+            "--school-code",
+            "PENDING-SRV001",
+            "--install-root",
+            self.root,
+        )
+
+        output = self._run(
+            self.root / REASSIGNER,
+            "ARES-S0007",
+            "--install-root",
+            self.root,
+        )
+
+        self.assertIn("ARES school-code reassignment complete", output)
+        self.assertIn("Previous school code: PENDING-SRV001", output)
+        self.assertIn("New school code: ARES-S0007", output)
+        config = (self.root / "etc/ares/usage-upload.conf").read_text(encoding="utf-8")
+        self.assertIn("SCHOOL_CODE=ARES-S0007", config)
+        self.assertNotIn("SCHOOL_CODE=PENDING-SRV001", config)
+        backups = list(
+            (self.root / "var/backups/ares-usage-collection").glob(
+                "*_school-code_*/etc/ares/usage-upload.conf"
+            )
+        )
+        self.assertEqual(1, len(backups))
+        self.assertIn("SCHOOL_CODE=PENDING-SRV001", backups[0].read_text(encoding="utf-8"))
+        exports = list(
+            (self.root / TRACKER / "uploads").glob("ARES_USAGE_ARES-S0007_AUTO_*.csv")
+        )
+        self.assertEqual(1, len(exports))
+
+    def test_reassignment_rejects_noncanonical_school_code_without_changes(self):
+        self._run(UPDATER, *self._common_args())
+        config_path = self.root / "etc/ares/usage-upload.conf"
+        before = config_path.read_text(encoding="utf-8")
+
+        output = self._run(
+            self.root / REASSIGNER,
+            "PENDING-SRV002",
+            "--install-root",
+            self.root,
+            expected=1,
+        )
+
+        self.assertIn("Final school code must match ARES-S0000", output)
+        self.assertEqual(before, config_path.read_text(encoding="utf-8"))
+
+    def test_reassignment_restores_old_code_when_smoke_test_fails(self):
+        self._run(UPDATER, *self._common_args())
+        builder = self.root / "usr/local/sbin/ares_build_reports.sh"
+        builder.write_text("#!/usr/bin/env bash\nexit 9\n", encoding="utf-8")
+        builder.chmod(0o755)
+
+        output = self._run(
+            self.root / REASSIGNER,
+            "ARES-S0008",
+            "--install-root",
+            self.root,
+            expected=9,
+        )
+
+        self.assertIn("restored the prior school code ARES-S0099", output)
+        config = (self.root / "etc/ares/usage-upload.conf").read_text(encoding="utf-8")
+        self.assertIn("SCHOOL_CODE=ARES-S0099", config)
+        self.assertNotIn("SCHOOL_CODE=ARES-S0008", config)
 
     def test_base_installer_preserves_existing_schedule_without_replace_flag(self):
         schedule = self.root / TRACKER / "collection_schedule.json"

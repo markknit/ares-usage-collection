@@ -146,7 +146,7 @@ def header_footer(canvas, doc):
     canvas.line(18 * mm, 15 * mm, width - 18 * mm, 15 * mm)
     canvas.setFillColor(colors.HexColor("#66757D"))
     canvas.setFont("DejaVu", 7.5)
-    canvas.drawString(18 * mm, 10 * mm, "ARES Education - ARES Sync rollout guide - Revision 2026-09-17")
+    canvas.drawString(18 * mm, 10 * mm, "ARES Education - ARES Sync rollout guide - Revision 2026-09-21")
     canvas.drawRightString(width - 18 * mm, 10 * mm, f"Page {doc.page}")
     canvas.restoreState()
 

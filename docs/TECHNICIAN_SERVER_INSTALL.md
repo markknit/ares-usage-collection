@@ -7,6 +7,7 @@ Use this procedure on an **existing ARES school server that already has the norm
 The installer adds the school-side components needed by ARES Sync:
 
 - `/usr/local/sbin/ares_prepare_usage_upload.sh`
+- `/usr/local/sbin/ares-set-school-code`
 - `/etc/ares/usage-upload.conf`
 - `/mnt/sda3/var/www/tracker/prepare_usage_upload.php`
 - `/mnt/sda3/var/www/tracker/prepare_due_usage_upload.php`
@@ -29,7 +30,7 @@ Confirm all of the following:
    ls -lh /mnt/sda3/var/www/tracker/reports/combined_usage.csv
    ```
 3. The server already serves `http://ares.local/` to phones connected to `ARES` or `ARES2`.
-4. You know the school's stable ARES school ID. Prefer the canonical central ID such as `ARES-S0016` rather than an old hostname.
+4. You know the school's stable ARES school ID, or have assigned a unique provisional code such as `PENDING-SRV001` based on the server asset identifier. Prefer the canonical central ID such as `ARES-S0016` whenever it is available.
 5. `local-server/collection_schedule.json` has been reviewed and is the approved schedule for this installation. The installer preserves an existing server schedule unless `--replace-schedule` is explicitly supplied.
 
 ## Recommended rollout update
@@ -41,6 +42,14 @@ sudo bash local-server/update_school_server.sh --school-code ARES-S00XX
 ```
 
 Replace `ARES-S00XX` with the school's assigned ID.
+
+If ARES has not yet assigned the final school ID, use a unique provisional code:
+
+```bash
+sudo bash local-server/update_school_server.sh --school-code PENDING-SRV001
+```
+
+Record the provisional code and physical server together. Do not enroll a teacher's phone until the final canonical ID has been installed and verified.
 
 The update command intentionally replaces the server's collection schedule with the approved schedule in the release folder. It backs up the existing schedule and every other replaced component first. Stop if the folder's schedule has not been approved for production.
 
@@ -59,6 +68,32 @@ For a first installation where an already-reviewed local schedule must be preser
 ```bash
 sudo bash local-server/install_usage_collection.sh --school-code ARES-S00XX
 ```
+
+## Assign or change the final school ID
+
+The installer adds a dedicated reassignment command. After ARES assigns the canonical ID, run:
+
+```bash
+sudo ares-set-school-code ARES-S00XX
+```
+
+If the command is not found, that server was installed with an older package. Run the current approved `update_school_server.sh` package once to install the reassignment command, then run it again as shown above with the final ID.
+
+The command accepts only the canonical `ARES-S0000` format. It changes only `SCHOOL_CODE` in `/etc/ares/usage-upload.conf`; it does not reinstall the schedule, endpoints, or other server components. It:
+
+1. backs up the current configuration under `/var/backups/ares-usage-collection/`;
+2. writes the new ID atomically;
+3. runs an `AUTO` export smoke test;
+4. verifies that the generated filename contains the new ID and that the CSV is within the 2 MiB limit; and
+5. automatically restores the previous configuration if verification fails.
+
+Confirm the final installed value:
+
+```bash
+sudo grep '^SCHOOL_CODE=' /etc/ares/usage-upload.conf
+```
+
+Do not proceed to phone enrollment unless the reassignment command reports success and its verified `AUTO` filename contains the correct final ID.
 
 ## Expected result
 

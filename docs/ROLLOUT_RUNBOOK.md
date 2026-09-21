@@ -69,6 +69,8 @@ Record only:
 
 Stop the rollout at that school if the update fails, the measured CSV is zero, or it exceeds `2097152` bytes.
 
+When a server must be prepared before its final school assignment is known, install it with a unique asset-based provisional code such as `PENDING-SRV001`. After the canonical ID is assigned, run `sudo ares-set-school-code ARES-S00XX`. Phone enrollment remains blocked until reassignment and its `AUTO` export verification both pass.
+
 ## Gate 3 - teacher phone
 
 Use [Technician Installation and Teacher Handoff](TECHNICIAN_PHONE_INSTALL.md). Give the teacher [ARES Sync - Teacher Installation and Use Guide](TEACHER_PHONE_GUIDE.md), printed or electronically.

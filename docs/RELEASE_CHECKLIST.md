@@ -1,17 +1,32 @@
 # Release checklist
 
-- [ ] Portal validation passes.
-- [ ] HTTPS certificate is valid.
-- [ ] Admin page is access-controlled.
-- [ ] Approved Round Sync APK hash recorded.
-- [ ] Round Sync configuration imported successfully on a clean phone.
-- [ ] Every school automation file exists.
-- [ ] Reminder dates match the approved calendar.
-- [ ] Wi-Fi trigger tested on at least three phone manufacturers.
-- [ ] Offline download succeeds while internet is unavailable.
+## APK and offline installer
+
+- [ ] `config/approved_apk.json` identifies package `org.areseducation.sync` on the production channel.
+- [ ] Approved production APK SHA-256 is recorded and independently checked.
+- [ ] Offline builder refuses an APK whose SHA-256 differs from the approval manifest.
+- [ ] Debug/acceptance APK artifacts are not used as production fallbacks.
+- [ ] Field ZIP passes `unzip -t` and package `SHA256SUMS` verification.
+- [ ] Offline preflight reports `READY TO INSTALL` on the target ARES server.
+- [ ] Full field installation completes with WAN/Internet disconnected.
+- [ ] `http://ares.local/app_install/` opens from a phone connected to ARES/ARES2.
+- [ ] `http://ares.local/downloads/ares-sync.apk` downloads successfully while Internet is unavailable.
+- [ ] Downloaded APK installs successfully on a clean test phone.
+- [ ] One-time installation/enrollment key works on the intended phone.
+- [ ] Teacher guide and technician guide use `http://ares.local/app_install/` and match the current enrollment process.
+
+## Usage collection
+
+- [ ] Existing tracking/reporting job still runs after the server update.
+- [ ] Scheduled usage collection works from the local ARES server.
 - [ ] Pending file survives phone restart.
-- [ ] Upload succeeds after later cellular or Wi-Fi internet access.
-- [ ] Teacher receives collection and completion notices.
-- [ ] Central processor archives once and suppresses duplicates.
-- [ ] Existing tracking/reporting job runs after accepted uploads.
-- [ ] Printed school QR codes open the correct school page.
+- [ ] Upload succeeds after later cellular or Internet-capable Wi-Fi access.
+- [ ] Teacher receives expected collection/completion status.
+- [ ] Central processor accepts the upload once and suppresses duplicates.
+
+## Security and operations
+
+- [ ] Staff enrollment/admin interface remains access-controlled.
+- [ ] One-time installation keys are not stored in rollout documents or logs.
+- [ ] APK is served only as the approved production file; the school installer does not rebuild it.
+- [ ] Tailscale/TigerVNC remain optional and are not required for offline school installation.

@@ -8,15 +8,11 @@ Deploy the contents of `public/` as the web root. Give the sibling `data/` direc
 
 Protect `admin.html` and the event APIs with HTTP authentication or your normal administrative access control.
 
-## 2. Required master-phone artifacts
+## 2. Approved ARES Sync APK
 
-Place these in `public/assets/downloads/`:
+The production APK approval record is `config/approved_apk.json`. It identifies the production download URL and exact SHA-256 used by the ARES Q4 Offline Builder.
 
-- `roundsync-approved.apk`: exact pilot-tested APK.
-- `ARES-RoundSync-Config.zip`: exported from the tested Round Sync master phone.
-- `ARES-<SCHOOL_CODE>-Automation.macro`: exported MacroDroid automation for each school.
-
-Record SHA-256 hashes before publishing. Do not replace an APK or configuration silently; update the deployment register and rerun acceptance tests.
+Do not substitute GitHub debug or acceptance APK artifacts for the production APK. Do not silently replace the approved APK; update the approval manifest only after the replacement production APK has been tested and its SHA-256 recorded.
 
 ## 3. Add schools
 
@@ -26,39 +22,59 @@ Run:
 python3 tools/build_school_assets.py --code KISASI --name "Kisasi Secondary School" --ssid ARES2
 ```
 
-Then create and place `public/assets/downloads/ARES-KISASI-Automation.macro`.
+Use the canonical permanent school ID assigned by ARES.
 
-## 4. Production URL and QR codes
+## 4. Production online setup
 
-Use school-specific URLs:
-
-`https://setup.example.org/setup.html?school=MISUUNI`
-
-Generate and print one QR code per school. The school code is carried in the URL; browser cookies are not required.
+The hosted setup portal remains available for installations where normal Internet is convenient. The offline school package described below is the preferred fallback where Internet is unavailable or unreliable.
 
 ## 5. Local ARES server
 
-Deploy:
+Deploy the usage-collection server components using the approved rollout package. The Q4 Offline Installer additionally deploys:
 
-- `local-server/ares_prepare_usage_upload.sh` to `/usr/local/sbin/`.
-- `local-server/usage-upload.conf.example` to `/etc/ares/usage-upload.conf`, edited for that school.
-- `local-server/prepare_usage_upload.php` to the tracker web directory.
-- `local-server/collection_schedule.json` to `/tracker/collection_schedule.json`.
+- the approved production ARES Sync APK to `/mnt/sda3/var/www/downloads/ares-sync.apk`;
+- its checksum to `/mnt/sda3/var/www/downloads/ares-sync.apk.sha256`; and
+- the teacher installation page to `/mnt/sda3/var/www/app_install/index.html`.
 
-Add a narrowly scoped sudoers entry allowing the web-server account to run only the report wrapper.
+The teacher-facing local URL is:
 
-## 6. Cloud upload target
+`http://ares.local/app_install/`
 
-The validated pilot target is Google Drive through the Round Sync remote `ARESGoogleDrive`.
+The direct APK URL is:
 
-Use this destination folder:
+`http://ares.local/downloads/ares-sync.apk`
 
-`ARESGoogleDrive:ARES Usage Uploads/Incoming`
+The `app_install` path is intentionally more specific than a generic `install` path to reduce accidental discovery by users who do not need the app.
 
-Round Sync performs a **Copy** from `Download/ARES-Usage`. Successfully confirmed files are moved locally to `Download/ARES-Usage-Sent` by the later MacroDroid workflow.
+The school-side installer must verify the bundled APK checksum before publishing it. Installing the APK from the local server does not require Internet. Enrollment may still require normal Internet/mobile data when the one-time installation key is submitted to the central enrollment service.
 
-## 7. Central processing
+## 6. Offline field bundle
 
-Run `central-monitoring/process_incoming.py` on a schedule against the Google Drive Incoming folder through rclone. The processor is provider-neutral: pass the configured rclone remote path with `--remote` and the archive destination with `--archive`.
+Build the field package on an Internet-connected ARES/Linux machine with the approved Offline Builder:
 
-It validates names and CSV structure, suppresses exact duplicates by SHA-256, archives accepted files, removes accepted incoming files, and optionally runs the existing reporting command.
+```bash
+sudo bash build_offline_bundle.sh \
+  --source "/home/ares/Downloads/ARES_Q4_Update" \
+  --output "/home/ares/Downloads/ARES_Q4_Update_offline"
+```
+
+The builder reads `config/approved_apk.json`, downloads the approved production APK, verifies the exact SHA-256, bundles the APK and Lesson3 container images, generates package checksums, and refuses Internet-dependent field scripts.
+
+At the school:
+
+```bash
+sudo bash preflight.sh ARES-S00XX
+sudo bash install_offline.sh ARES-S00XX
+```
+
+Do not proceed when preflight reports `NOT READY`.
+
+## 7. Teacher installation at an offline school
+
+1. Connect the Android phone to ARES or ARES2.
+2. Open `http://ares.local/app_install/`.
+3. Download and install ARES Sync.
+4. Use the one-time installation/enrollment code supplied by ARES staff.
+5. If enrollment requires central verification, enable normal Internet or mobile data for that step.
+
+See `docs/TECHNICIAN_PHONE_INSTALL.md` and `docs/TEACHER_PHONE_GUIDE.md` for the detailed procedure.

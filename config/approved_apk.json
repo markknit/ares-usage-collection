@@ -2,8 +2,8 @@
   "schema_version": 1,
   "app_id": "org.areseducation.sync",
   "channel": "production",
-  "download_url": "https://areseducation.org/phone-setup/assets/downloads/ares-sync.apk",
-  "sha256": "16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8",
-  "approved_at": "2026-09-16",
-  "notes": "Approved production-signed ARES Sync APK. Offline bundle builders must verify this SHA-256 and must not substitute debug or acceptance variants."
+  "download_url": "",
+  "sha256": "",
+  "approved_at": "",
+  "notes": "Populate only after verifying the exact production-signed ARES Sync APK. Offline bundle builders must refuse automatic download while download_url or sha256 is blank, and must never substitute debug or acceptance variants."
 }

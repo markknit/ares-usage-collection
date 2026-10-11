@@ -1,0 +1,226 @@
+<!-- position:17 -->
+<style>
+  .lesson-plans-module {
+    --ares-blue:#123d6a;
+    --ares-blue-2:#1d5f9e;
+    --ares-teal:#168a8a;
+    --ares-gold:#f2b544;
+    --ares-green:#2f7d4a;
+    --ares-ink:#1f2937;
+    --ares-muted:#5f6b7a;
+    max-width:1040px;
+    margin:10px auto;
+    padding:0 14px 14px;
+    color:var(--ares-ink);
+    font-family:Arial,Helvetica,sans-serif;
+  }
+  .lesson-plans-module *{box-sizing:border-box;}
+
+  .lesson-plans-hero{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;
+    gap:16px;
+    padding:14px 18px;
+    border-radius:14px;
+    background:linear-gradient(135deg,var(--ares-blue) 0%,var(--ares-blue-2) 62%,var(--ares-teal) 100%);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(18,61,106,.16);
+  }
+  .lesson-plans-logo{
+    display:block;
+    max-width:120px;
+    max-height:50px;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    background:rgba(255,255,255,.96);
+    border-radius:8px;
+    padding:5px 7px;
+  }
+  .lesson-plans-hero-copy{text-align:center;min-width:0;}
+  .lesson-plans-kicker{
+    margin-bottom:2px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff2c8;
+  }
+  .lesson-plans-hero h1{
+    margin:0 0 4px;
+    font-size:clamp(24px,3vw,32px);
+    line-height:1.05;
+  }
+  .lesson-plans-intro{
+    margin:0 auto;
+    max-width:700px;
+    font-size:13.5px;
+    line-height:1.35;
+    color:#f7fbff;
+  }
+  .lesson-plans-badges{
+    margin-top:7px;
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .lesson-plans-badges span{
+    padding:3px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.13);
+    border:1px solid rgba(255,255,255,.24);
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .lesson-plans-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .lesson-plans-card{
+    display:grid;
+    grid-template-columns:34px 1fr auto;
+    align-items:center;
+    gap:12px;
+    min-height:112px;
+    padding:14px 16px;
+    border-radius:13px;
+    background:#fff;
+    border-left:5px solid var(--ares-blue-2);
+    box-shadow:0 5px 14px rgba(23,52,84,.09);
+  }
+  .lesson-plans-card.editor{border-left-color:var(--ares-green);}
+  .lesson-plans-icon{font-size:27px;line-height:1;}
+  .lesson-plans-card h2{
+    margin:0 0 4px;
+    color:var(--ares-blue);
+    font-size:18px;
+    line-height:1.15;
+  }
+  .lesson-plans-card p{
+    margin:0;
+    color:var(--ares-muted);
+    font-size:12.5px;
+    line-height:1.32;
+  }
+  .lesson-plans-button{
+    display:inline-block;
+    min-width:118px;
+    padding:9px 12px;
+    border-radius:8px;
+    background:var(--ares-blue-2);
+    color:#fff!important;
+    text-decoration:none!important;
+    font-size:13px;
+    font-weight:700;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .lesson-plans-card-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:118px;
+  }
+  .lesson-plans-card.editor .lesson-plans-button{background:var(--ares-green);}
+  .lesson-plans-card.editor .lesson-plans-button.guide{
+    background:#fff;
+    color:var(--ares-green)!important;
+    border:1px solid var(--ares-green);
+  }
+  .lesson-plans-button:hover,.lesson-plans-button:focus{filter:brightness(1.07);}
+
+  .lesson-plans-details{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+    padding:8px 12px;
+    border-radius:10px;
+    background:#fff7df;
+    border-left:4px solid var(--ares-gold);
+    color:#6f4d00;
+    font-size:12.5px;
+    text-align:center;
+  }
+  .lesson-plans-details a{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:7px;
+    background:#8b6205;
+    color:#fff!important;
+    text-decoration:none!important;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  @media (max-width:760px){
+    .lesson-plans-hero{grid-template-columns:1fr;padding:14px;gap:8px;}
+    .lesson-plans-logo{display:none;}
+    .lesson-plans-actions{grid-template-columns:1fr;}
+    .lesson-plans-card{grid-template-columns:32px 1fr;min-height:0;}
+    .lesson-plans-card-actions{grid-column:1 / -1;width:100%;}
+    .lesson-plans-button{width:100%;margin-top:2px;}
+    .lesson-plans-details{flex-direction:column;gap:6px;}
+  }
+</style>
+
+<div class="indexmodule lesson-plans-module">
+  <section class="lesson-plans-hero">
+    <img class="lesson-plans-logo" src="<?php echo $dir ?>/ARES-Logo.png" alt="ARES Education">
+
+    <div class="lesson-plans-hero-copy">
+      <div class="lesson-plans-kicker">Kenyan CBE • Grade 10 STEM</div>
+      <h1>CBE Lesson Plans</h1>
+      <p class="lesson-plans-intro">Curriculum-aligned lesson plans from ARES Education and Seavuria, with integrated ARES resources for classroom use.</p>
+      <div class="lesson-plans-badges" aria-label="Lesson plan highlights">
+        <span>✓ KICD-aligned</span><span>✓ Classroom-ready</span><span>✓ ARES resources</span>
+      </div>
+    </div>
+
+    <img class="lesson-plans-logo" src="<?php echo $dir ?>/SeaVuria-Logo-2.jpg" alt="Seavuria" onerror="this.style.display='none'">
+  </section>
+
+  <section class="lesson-plans-actions" aria-label="Lesson plan tools">
+    <article class="lesson-plans-card">
+      <div class="lesson-plans-icon" aria-hidden="true">📚</div>
+      <div>
+        <h2>Lesson Plan Directory</h2>
+        <p>Browse Grade 10 STEM lesson plans, explanations, and reference tables.</p>
+      </div>
+      <a class="lesson-plans-button"
+         href="http://ares.local/tracker/local_launch.html?module_id=lesson_plans_directory&amp;target=%2Fmodules%2FLesson_Plans%2FPDF%2Findex.html"
+         target="_blank" rel="noopener">Open Plans</a>
+    </article>
+
+    <article class="lesson-plans-card editor">
+      <div class="lesson-plans-icon" aria-hidden="true">✏️</div>
+      <div>
+        <h2>Lesson Plan Editor</h2>
+        <p>Edit or extend school lesson plans while preserving the ARES originals.</p>
+      </div>
+      <div class="lesson-plans-card-actions">
+        <a class="lesson-plans-button"
+           href="http://ares.local/tracker/external_launch.html?module_id=lesson_plan_editor&amp;target=http%3A%2F%2Fares.local%3A3001%2Flogin"
+           target="_blank" rel="noopener">Open Editor</a>
+        <a class="lesson-plans-button guide"
+           href="http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
+           target="_blank" rel="noopener">User Guide (PDF)</a>
+      </div>
+    </article>
+  </section>
+
+  <div class="lesson-plans-details">
+    <span>ℹ️ Learn what is included and how the plans were developed.</span>
+    <a href="http://ares.local/modules/Lesson_Plans/index.html" target="_blank" rel="noopener">Details</a>
+  </div>
+</div>
+
+<!-- ARES_TRACKER_START -->
+<script src="/js/ares_tracker.js" data-module-id="lesson_plans_landing"></script>
+<!-- ARES_TRACKER_END -->

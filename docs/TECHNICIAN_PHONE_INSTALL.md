@@ -1,6 +1,9 @@
 # ARES Sync - Technician Rollout Installation and Teacher Handoff
 
-Use this guide when an ARES technician or ARES Advocate prepares a school server, then helps a teacher install and enroll ARES Sync. Complete both parts at the school, with normal Internet available and at least one school network named **ARES** or **ARES2** in range.
+Use this guide when an ARES technician or ARES Advocate performs a fresh ARES Q4 v1.10 school
+installation, then helps a teacher install and enroll ARES Sync. The server package installs without
+Internet at the school. Normal Internet or mobile data is still required for central phone
+enrollment, and at least one school network named **ARES** or **ARES2** must be in range.
 
 ## What ARES Sync does
 
@@ -10,8 +13,8 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 ## Before visiting the teacher
 
-- Obtain the centrally approved ARES usage-collection release folder. Do not assemble an update from individual files.
-- Confirm the school server's existing usage report works and that you have administrator access.
+- Obtain the complete, centrally approved `ARES_Q4_Offline_v0.93_amd64_v1.10.zip`. Do not assemble a school package from individual files.
+- Confirm you have local administrator access to the Ubuntu 24.04 AMD64 school server.
 - Confirm the canonical school name and `ARES-S00XX` ID.
 - Confirm the school has an ARES Advocate or other named support contact.
 - Bring the official setup address: `https://areseducation.org/phone-setup/`.
@@ -21,6 +24,7 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 - The teacher's Android phone, with sufficient battery and storage.
 - Terminal access to the school server and its assigned canonical `ARES-S00XX` ID.
+- The complete v1.10 field ZIP and its SHA-256 checksum.
 - Normal Internet through mobile data or Internet-capable Wi-Fi.
 - ARES or ARES2 within range.
 - Access to the protected ARES staff enrollment portal.
@@ -36,21 +40,29 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 <!-- pagebreak -->
 
-## 1. Update and verify the school server
+## 1. Install and verify the school server
 
 Complete this section before installing ARES Sync on the teacher's phone.
 
-1. Copy the complete, centrally approved `ares-usage-collection` release folder to the school server.
-2. Open a terminal, change into the root of that release folder, and confirm that `local-server/update_school_server.sh` is present.
-3. Confirm the existing report source is present and nonempty at `/mnt/sda3/var/www/tracker/reports/combined_usage.csv`.
-4. Run `sudo bash local-server/update_school_server.sh --school-code ARES-S00XX`, replacing `ARES-S00XX` with the school's assigned canonical ID.
-5. If the server's PHP worker does not use `www-data`, add `--web-user PHP_USER` with the correct account.
-6. Wait for `ARES usage-collection server installation complete.` and `AUTO export smoke test passed`.
-7. Record the backup-directory path and measured CSV byte count printed by the updater.
-8. Confirm that the measured file is greater than zero and no more than `2097152` bytes.
-9. Follow the post-install checks in `docs/TECHNICIAN_SERVER_INSTALL.md`, including the state-aware due-endpoint check.
+1. Copy the complete v1.10 field ZIP to the server and extract it.
+2. Change into the extracted directory.
+3. Run `sudo bash preflight.sh ARES-S00XX`, replacing the example with the final or approved provisional school code.
+4. Do not continue unless the preflight ends with `READY TO INSTALL: 0 failures`.
+5. Run `sudo bash install_offline.sh ARES-S00XX` with the same code.
+6. When the installer pauses, open `http://ares.local:3001/login`, create the first Lesson3 Site Administrator, store the credentials securely, then return to the terminal and type `READY`.
+7. Enter the Site Administrator credentials when prompted. The installer imports the approved corpus and verifies 95 lesson plans and 806 lessons before continuing.
+8. Wait for `ARES Q4 offline installation completed successfully` and record the installation-log path printed by the installer.
+9. Sign in to Lesson3 and open sample plans from several subjects. Confirm the plans show Official version `1.0.0`.
+10. Confirm `http://ares.local/app_install/` and `http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf` open from the school network.
 
-The updater validates the approved production schedule and existing report path before changing installed files. It backs up replaced components, installs the export wrapper, PHP endpoints, production schedule, configuration, upload directory, and scoped sudoers entry, then generates a test export.
+The installer deploys the Lesson Plan module, Lesson3 v0.93 and its approved JSON corpus, tracking
+mappings, ARES Sync usage collection, the approved local APK, `ares.local`, and the school-code
+reassignment command. It also installs Tailscale and TigerVNC packages but leaves them stopped,
+disabled, and unregistered. It disables the base-image `x11vnc` service. Remote access is activated
+later only for an authorized support session with `sudo ares-enable-remote-access`.
+
+The Tsavo Trust module is not included in v1.10; use its separately reviewed installer when it is
+ready.
 
 If any check fails, stop. Do not enroll a teacher's phone until the server problem is understood and the update passes. Keep the terminal output and backup path for ARES technical support; do not improvise by deleting server or phone data.
 

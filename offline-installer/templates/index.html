@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CBE Lesson Plans - Details</title>
+  <style>
+    :root {
+      --ares-blue: #123d6a;
+      --ares-blue-2: #1d5f9e;
+      --ares-teal: #168a8a;
+      --ares-gold: #f2b544;
+      --ares-green: #2f7d4a;
+      --ink: #1f2937;
+      --muted: #5f6b7a;
+      --soft: #f3f7fb;
+      --card: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #eef5fb 0%, #ffffff 420px);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: min(1080px, calc(100% - 28px));
+      margin: 26px auto 50px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 32px 30px 34px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--ares-blue) 0%, var(--ares-blue-2) 63%, var(--ares-teal) 100%);
+      color: #fff;
+      box-shadow: 0 14px 34px rgba(18, 61, 106, 0.22);
+      text-align: center;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .hero::before {
+      width: 240px;
+      height: 240px;
+      left: -100px;
+      bottom: -120px;
+    }
+
+    .hero::after {
+      width: 190px;
+      height: 190px;
+      right: -65px;
+      top: -80px;
+    }
+
+    .brands {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 26px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .brands img {
+      display: block;
+      width: auto;
+      max-width: 42%;
+      object-fit: contain;
+      background: rgba(255,255,255,0.97);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+    }
+
+    .brands .ares { max-height: 80px; }
+    .brands .seavuria { max-height: 90px; }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      margin: 2px 0 4px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #fff2c8;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 4px 0 10px;
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.08;
+    }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      font-size: 18px;
+      color: #f5fbff;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin: 22px 0;
+    }
+
+    .action-card {
+      padding: 22px;
+      border-radius: 17px;
+      background: var(--card);
+      box-shadow: 0 8px 22px rgba(23, 52, 84, 0.10);
+      border-top: 6px solid var(--ares-blue-2);
+    }
+
+    .action-card.editor { border-top-color: var(--ares-green); }
+
+    .action-card .icon {
+      font-size: 36px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .action-card h2 {
+      margin: 0 0 6px;
+      color: var(--ares-blue);
+      font-size: 23px;
+    }
+
+    .action-card p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: var(--ares-blue-2);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 5px 12px rgba(29,95,158,0.20);
+    }
+
+    .editor .button { background: var(--ares-green); }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .button.secondary {
+      background: #fff;
+      color: var(--ares-green);
+      border: 2px solid var(--ares-green);
+      box-shadow: none;
+    }
+
+    .button:hover,
+    .button:focus {
+      filter: brightness(1.07);
+      transform: translateY(-1px);
+    }
+
+    .section {
+      margin-top: 18px;
+      padding: 24px 26px;
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(23, 52, 84, 0.08);
+    }
+
+    .section h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      color: var(--ares-blue);
+      font-size: 24px;
+    }
+
+    .section p {
+      margin: 0 0 12px;
+    }
+
+    .section p:last-child { margin-bottom: 0; }
+
+    .coverage {
+      border-left: 7px solid var(--ares-gold);
+      background: #fffaf0;
+    }
+
+    .methodology {
+      border-left: 7px solid var(--ares-teal);
+    }
+
+    .included-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .included-item {
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      font-weight: 700;
+      color: #34495e;
+    }
+
+    .closing {
+      margin-top: 20px;
+      padding: 20px 24px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, #e7f6ec, #eff9f9);
+      border: 1px solid #c9e8d2;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #255f3b;
+    }
+
+    @media (max-width: 720px) {
+      .actions,
+      .included-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 26px 18px;
+      }
+
+      .brands img {
+        max-width: 76%;
+      }
+
+      .section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="brands">
+        <img class="ares" src="ARES-Logo.png" alt="ARES Education">
+        <img class="seavuria" src="SeaVuria-Logo-2.jpg" alt="Seavuria" onerror="this.style.display='none'">
+      </div>
+      <div class="eyebrow">ARES Education + Seavuria</div>
+      <h1>CBE Lesson Plans</h1>
+      <p>
+        A comprehensive set of lesson plans aligned with Kenya's Competency Based Education curriculum and integrated with ARES resources for easy access to relevant text, video, and classroom content.
+      </p>
+    </section>
+
+    <section class="actions" aria-label="Lesson plan tools">
+      <article class="action-card">
+        <div class="icon" aria-hidden="true">📚</div>
+        <h2>Lesson Plan Directory</h2>
+        <p>Browse lesson plans, final explanations, and summary tables by subject and curriculum sub-strand.</p>
+        <a class="button"
+           href="http://ares.local/tracker/local_launch.html?module_id=lesson_plans_directory&amp;target=%2Fmodules%2FLesson_Plans%2FPDF%2Findex.html"
+           target="_blank" rel="noopener">Open Directory</a>
+      </article>
+
+      <article class="action-card editor">
+        <div class="icon" aria-hidden="true">✏️</div>
+        <h2>Lesson Plan Editor</h2>
+        <p>Adapt or augment lesson plans for your school, subject, or classroom needs where editing rights have been assigned.</p>
+        <div class="button-row">
+          <a class="button"
+             href="http://ares.local/tracker/external_launch.html?module_id=lesson_plan_editor&amp;target=http%3A%2F%2Fares.local%3A3001%2Flogin"
+             target="_blank" rel="noopener">Open Editor</a>
+          <a class="button secondary"
+             href="http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
+             target="_blank" rel="noopener">User Guide (PDF)</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2><span aria-hidden="true">🧭</span> What each module contains</h2>
+      <p>
+        Each curriculum sub-strand includes a complete set of detailed lessons, together with supporting materials that teachers and students can use throughout the learning sequence.
+      </p>
+      <div class="included-grid">
+        <div class="included-item">📝 Detailed lesson plans</div>
+        <div class="included-item">✅ Final Explanation document</div>
+        <div class="included-item">📋 Summary Table reference</div>
+      </div>
+    </section>
+
+    <section class="section coverage">
+      <h2><span aria-hidden="true">🎯</span> Coverage</h2>
+      <p>
+        The initial delivery covers the full scope of Grade 10 STEM topics: Mathematics, Physics, Biology, Chemistry, Math Fundamentals, and General Science.
+      </p>
+      <p>
+        Future releases are planned to add Grades 11 and 12 STEM lesson plans and later expand to both STEM and non-STEM subjects across additional grades.
+      </p>
+    </section>
+
+    <section class="section methodology">
+      <h2><span aria-hidden="true">🔬</span> Methodology</h2>
+      <p>
+        The STEM lesson-plan templates were carefully authored with teaching staff at Seavuria Schools in Taita Taveta County, with production tools provided and managed by ARES Education.
+      </p>
+      <p>
+        The lessons are designed around Kenyan curriculum expectations and internationally recognized STEM teaching practices. They emphasize student engagement, inquiry, self-discovery, collaboration, and practical classroom use, while being localized to a Kenyan context.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2><span aria-hidden="true">🛠️</span> Editing and local adaptation</h2>
+      <p>
+        The Lesson Plan Editor allows schools and teachers to adapt or extend the supplied lesson plans where appropriate. A school administrator can control editing rights by subject and document.
+      </p>
+      <p>
+        For step-by-step instructions covering teacher, editor, subject-grade administrator, and site-administrator functions, open the <a href="http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf" target="_blank" rel="noopener">Lesson3 User Guide (PDF)</a>.
+      </p>
+    </section>
+
+    <div class="closing">We hope these resources make lesson preparation easier and classroom learning more engaging.</div>
+  </main>
+</body>
+</html>

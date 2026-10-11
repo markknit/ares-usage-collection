@@ -279,9 +279,11 @@ PYAPK
   actual_tailscale_sha="$(sha256sum "$REMOTE_WORK/$TAILSCALE_FILE" | awk '{print $1}')"
   [[ "${actual_tailscale_sha,,}" == "${expected_tailscale_sha,,}" ]] \
     || die "Tailscale archive checksum mismatch"
-  tar -tzf "$REMOTE_WORK/$TAILSCALE_FILE" | grep -Eq '(^|/)tailscale$' \
+  # Do not use grep -q here. With pipefail enabled, grep exits after the first
+  # match, tar receives SIGPIPE, and the valid archive is reported as missing.
+  tar -tzf "$REMOTE_WORK/$TAILSCALE_FILE" | grep -E '(^|/)tailscale$' >/dev/null \
     || die "Tailscale archive does not contain the tailscale client"
-  tar -tzf "$REMOTE_WORK/$TAILSCALE_FILE" | grep -Eq '(^|/)tailscaled$' \
+  tar -tzf "$REMOTE_WORK/$TAILSCALE_FILE" | grep -E '(^|/)tailscaled$' >/dev/null \
     || die "Tailscale archive does not contain the tailscaled daemon"
   install -m 0644 "$REMOTE_WORK/$TAILSCALE_FILE" "$STAGE/remote-access/tailscale/$TAILSCALE_FILE"
   (cd "$STAGE/remote-access/tailscale" && sha256sum "$TAILSCALE_FILE" > SHA256SUMS)

@@ -107,6 +107,10 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('TIGERVNC_VERSION="1.13.1+dfsg-2build2"', builder)
         self.assertIn('$TAILSCALE_BASE/$TAILSCALE_FILE.sha256', builder)
         self.assertIn('tigervnc-standalone-server=$TIGERVNC_VERSION', builder)
+        self.assertIn("grep -E '(^|/)tailscale$' >/dev/null", builder)
+        self.assertIn("grep -E '(^|/)tailscaled$' >/dev/null", builder)
+        self.assertNotIn("grep -Eq '(^|/)tailscale$'", builder)
+        self.assertNotIn("grep -Eq '(^|/)tailscaled$'", builder)
         self.assertIn('--chmod=Du+w,Fu+w', builder)
         self.assertIn('chmod -R u+rwX "$STAGE"', builder)
 

@@ -140,6 +140,19 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('--chmod=Du+w,Fu+w', builder)
         self.assertIn('chmod -R u+rwX "$STAGE"', builder)
 
+    def test_builder_removes_generated_payloads_from_prior_field_source(self):
+        builder = (BUILDER / "build_offline_bundle.sh").read_text(encoding="utf-8")
+        for stale_path in (
+            "$STAGE/lesson3/release",
+            "$STAGE/lesson3/images",
+            "$STAGE/lesson3/corpus",
+            "$STAGE/teacher-app",
+            "$STAGE/remote-access",
+        ):
+            with self.subTest(stale_path=stale_path):
+                self.assertIn(stale_path, builder)
+        self.assertIn('$STAGE/NOT_FIELD_READY.txt', builder)
+
 
 class CorpusStatusTests(unittest.TestCase):
     def run_status(self, counts):

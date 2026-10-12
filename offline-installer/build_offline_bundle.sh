@@ -97,6 +97,24 @@ rsync -a --chmod=Du+w,Fu+w \
   "$SOURCE/" "$STAGE/"
 chmod -R u+rwX "$STAGE"
 
+# The supported source may be either the historic ARES Q4 source tree or an
+# extracted earlier offline field bundle. Remove only builder-generated payloads
+# before recreating them so v0.93 images, old corpus files, APKs, or remote-access
+# packages cannot leak into a v0.94 bundle.
+for generated_path in \
+  "$STAGE/lesson3/release" \
+  "$STAGE/lesson3/images" \
+  "$STAGE/lesson3/corpus" \
+  "$STAGE/tracking" \
+  "$STAGE/teacher-app" \
+  "$STAGE/remote-access"; do
+  if [[ -e "$generated_path" ]]; then
+    chmod -R u+rwX "$generated_path" || die "could not make stale generated payload removable: $generated_path"
+    rm -rf -- "$generated_path"
+  fi
+done
+rm -f -- "$STAGE/MANIFEST.txt" "$STAGE/SHA256SUMS" "$STAGE/NOT_FIELD_READY.txt"
+
 # The Q4 source archive predates the reviewed school-code reassignment command.
 # Always replace its rollout directory with the vetted copy shipped with this
 # builder so an older source folder cannot silently remove current safeguards.
@@ -407,6 +425,7 @@ for required in \
   docs/TECHNICIAN_PHONE_INSTALL.md \
   docs/TEACHER_PHONE_GUIDE.md \
   docs/LESSON3_CORPUS_INSTALL.md \
+  docs/LESSON3_V094_ACCEPTANCE.md \
   docs/REMOTE_ACCESS.md \
   docs/pdf/ARES_Sync_Technician_Guide.pdf \
   docs/pdf/ARES_Sync_Teacher_Guide.pdf \
@@ -453,6 +472,7 @@ Remote access: Tailscale $TAILSCALE_VERSION and TigerVNC $TIGERVNC_VERSION insta
 Source directory: $SOURCE
 Field command: sudo bash install_offline.sh ARES-S00XX
 Lesson3 corpus: guided installation within install_offline.sh after first Site Administrator creation
+Lesson3 discussions: enabled by default; complete docs/LESSON3_V094_ACCEPTANCE.md before rollout
 Later remote-access activation: sudo ares-enable-remote-access
 Tsavo Trust module: not included; use the separately reviewed Tsavo installer
 TXT

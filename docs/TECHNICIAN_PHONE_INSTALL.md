@@ -1,6 +1,6 @@
 # ARES Sync - Technician Rollout Installation and Teacher Handoff
 
-Use this guide when an ARES technician or ARES Advocate performs a fresh ARES Q4 v1.10 school
+Use this guide when an ARES technician or ARES Advocate performs a fresh ARES Q4 v1.11 school
 installation, then helps a teacher install and enroll ARES Sync. The server package installs without
 Internet at the school. Normal Internet or mobile data is still required for central phone
 enrollment, and at least one school network named **ARES** or **ARES2** must be in range.
@@ -13,7 +13,7 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 ## Before visiting the teacher
 
-- Obtain the complete, centrally approved `ARES_Q4_Offline_v0.93_amd64_v1.10.zip`. Do not assemble a school package from individual files.
+- Obtain the complete, centrally approved `ARES_Q4_Offline_v0.94_amd64_v1.11.zip`. Do not assemble a school package from individual files.
 - Confirm you have local administrator access to the Ubuntu 24.04 AMD64 school server.
 - Confirm the canonical school name and `ARES-S00XX` ID.
 - Confirm the school has an ARES Advocate or other named support contact.
@@ -24,7 +24,7 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 - The teacher's Android phone, with sufficient battery and storage.
 - Terminal access to the school server and its assigned canonical `ARES-S00XX` ID.
-- The complete v1.10 field ZIP and its SHA-256 checksum.
+- The complete v1.11 field ZIP and its SHA-256 checksum.
 - Normal Internet through mobile data or Internet-capable Wi-Fi.
 - ARES or ARES2 within range.
 - Access to the protected ARES staff enrollment portal.
@@ -44,7 +44,7 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 
 Complete this section before installing ARES Sync on the teacher's phone.
 
-1. Copy the complete v1.10 field ZIP to the server and extract it.
+1. Copy the complete v1.11 field ZIP to the server and extract it.
 2. Change into the extracted directory.
 3. Run `sudo bash preflight.sh ARES-S00XX`, replacing the example with the final or approved provisional school code.
 4. Do not continue unless the preflight ends with `READY TO INSTALL: 0 failures`.
@@ -53,15 +53,18 @@ Complete this section before installing ARES Sync on the teacher's phone.
 7. Enter the Site Administrator credentials when prompted. The installer imports the approved corpus and verifies 95 lesson plans and 806 lessons before continuing.
 8. Wait for `ARES Q4 offline installation completed successfully` and record the installation-log path printed by the installer.
 9. Sign in to Lesson3 and open sample plans from several subjects. Confirm the plans show Official version `1.0.0`.
-10. Confirm `http://ares.local/app_install/` and `http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf` open from the school network.
+10. Sign in as a disposable teacher and confirm **Discuss** is visible. Before approving v1.11 for
+    wider rollout, complete every required check in the bundled
+    `docs/LESSON3_V094_ACCEPTANCE.md` checklist.
+11. Confirm `http://ares.local/app_install/` and `http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf` open from the school network.
 
-The installer deploys the Lesson Plan module, Lesson3 v0.93 and its approved JSON corpus, tracking
+The installer deploys the Lesson Plan module, Lesson3 v0.94 and its approved JSON corpus, tracking
 mappings, ARES Sync usage collection, the approved local APK, `ares.local`, and the school-code
 reassignment command. It also installs Tailscale and TigerVNC packages but leaves them stopped,
 disabled, and unregistered. It disables the base-image `x11vnc` service. Remote access is activated
 later only for an authorized support session with `sudo ares-enable-remote-access`.
 
-The Tsavo Trust module is not included in v1.10; use its separately reviewed installer when it is
+The Tsavo Trust module is not included in v1.11; use its separately reviewed installer when it is
 ready.
 
 If any check fails, stop. Do not enroll a teacher's phone until the server problem is understood and the update passes. Keep the terminal output and backup path for ARES technical support; do not improvise by deleting server or phone data.

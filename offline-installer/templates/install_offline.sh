@@ -115,6 +115,7 @@ run_step "8) Post-install verification" bash -c '
   systemctl is-active --quiet nginx
   curl -fsS --max-time 8 -H "Host: ares.local" http://127.0.0.1/ >/dev/null
   curl -fsS --max-time 8 http://127.0.0.1:3001/login >/dev/null
+  grep -qx "v0.94" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
   grep -q "module:lesson_plans_directory" /mnt/sda3/var/www/tracker/key_map.csv
   grep -q "module:lesson_plan_editor" /mnt/sda3/var/www/tracker/key_map.csv
   test -f /mnt/sda3/var/www/modules/Lesson_Plans/index.htmlf
@@ -151,5 +152,6 @@ echo "Teacher ARES Sync installer: http://ares.local/app_install/"
 echo "Direct teacher APK: http://ares.local/downloads/ares-sync.apk"
 echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"
+echo "Lesson3 discussions: v0.94 installs them enabled by default; complete the v0.94 acceptance checklist before rollout."
 echo "Remote access: Tailscale and TigerVNC are installed but stopped, disabled, and unregistered."
 echo "Later activation: sudo ares-enable-remote-access"

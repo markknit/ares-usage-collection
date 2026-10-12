@@ -1,6 +1,18 @@
-# ARES Q4 Offline Installer Builder v1.10
+# ARES Q4 Offline Installer Builder v1.11
 
 This kit converts the approved ARES Q4 update folder into a field package that can be installed at a school with **no Internet connection**.
+
+## v1.11 changes
+
+- Pins the official Lesson3 `v0.94` release and its immutable container-image references.
+- Adds Lesson3 Discussions for signed-in teachers. Discussions are enabled by default and remain
+  local to each school's Lesson3 database; a Site Administrator can disable or moderate them.
+- Retains the field-tested fresh-install corpus workflow: 95 JSON plans are uploaded in two
+  authenticated batches and verified as 806 lessons. The new administrator ZIP-upload feature is
+  available for later managed content updates but is not substituted into the installer.
+- Refreshes the bundled Lesson3 User Guide for Discussions, ZIP uploads, and administrator controls.
+- Produces a separately versioned v1.11 field package. Retain v1.10 as the known-good fallback until
+  v1.11 completes offline field acceptance.
 
 ## v1.10 changes
 
@@ -97,7 +109,7 @@ sudo bash build_offline_bundle.sh \
   --output "/home/ares/Downloads/ARES_Q4_Update_offline"
 ```
 
-The default Lesson3 release is pinned to `v0.93`.
+The default Lesson3 release is pinned to `v0.94`.
 
 ### APK approval rule
 
@@ -120,7 +132,7 @@ or:
 Extract the completed field ZIP on the ARES server and run:
 
 ```bash
-cd ARES_Q4_Offline_v0.93_amd64_v1.10
+cd ARES_Q4_Offline_v0.94_amd64_v1.11
 sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```
@@ -156,6 +168,7 @@ The completed field bundle includes:
 - `docs/pdf/ARES_Sync_Teacher_Guide.pdf`
 - `docs/LESSON3_USER_GUIDE.pdf`
 - `docs/LESSON3_CORPUS_INSTALL.md`
+- `docs/LESSON3_V094_ACCEPTANCE.md`
 - `docs/REMOTE_ACCESS.md`
 
 The installed Lesson3 User Guide is also available locally from the Lesson Plan Editor area at `http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf`.

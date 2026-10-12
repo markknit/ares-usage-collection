@@ -32,6 +32,21 @@ class OfflineInstallerSourceTests(unittest.TestCase):
                 with self.subTest(path=path):
                     self.assertEqual(expected, path.read_bytes())
         self.assertTrue((BUILDER / "docs" / "REMOTE_ACCESS.md").is_file())
+        self.assertTrue((BUILDER / "docs" / "LESSON3_V094_ACCEPTANCE.md").is_file())
+
+    def test_v094_acceptance_gate_covers_discussion_controls(self):
+        checklist = (BUILDER / "docs" / "LESSON3_V094_ACCEPTANCE.md").read_text(
+            encoding="utf-8"
+        )
+        for required in (
+            "Teacher discussions",
+            "blue unread indication",
+            "disable Discussions",
+            "Moderate discussions",
+            "v1.10/v0.93",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, checklist)
 
     def test_embedded_rollout_matches_canonical_server_files(self):
         names = (
@@ -67,7 +82,17 @@ class OfflineInstallerSourceTests(unittest.TestCase):
             "ARES_Sync_Rollout_Package/server-installer/ares_set_school_code.sh",
             builder,
         )
-        self.assertIn('BUNDLE_REVISION="v1.10"', builder)
+        self.assertIn('BUNDLE_REVISION="v1.11"', builder)
+        self.assertIn('LESSON3_VERSION="v0.94"', builder)
+
+    def test_lesson3_runtime_defaults_match_v094(self):
+        for relative in (
+            "templates/preflight.sh",
+            "templates/lesson3_offline.sh",
+        ):
+            with self.subTest(relative=relative):
+                source = (BUILDER / relative).read_text(encoding="utf-8")
+                self.assertIn('LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"', source)
 
     def test_main_installer_guides_and_verifies_corpus_install(self):
         installer = (BUILDER / "templates" / "install_offline.sh").read_text(
@@ -77,6 +102,7 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('Type READY after the Site Administrator exists', installer)
         self.assertIn('LESSON3_CORPUS_STATUS=installed', installer)
         self.assertIn('CORPUS_INSTALLED.txt', installer)
+        self.assertIn('grep -qx "v0.94"', installer)
 
     def test_remote_access_is_prepared_but_not_activated(self):
         prepare = (BUILDER / "templates" / "prepare_remote_access.sh").read_text(

@@ -1,7 +1,7 @@
 ARES Sync Rollout Package
 Prepared: 2026-10-11
 Repository branch: production-baseline-cleanup
-Builder release: ARES Q4 Offline Installer v1.10
+Builder release: ARES Q4 Offline Installer v1.11
 
 CONTENTS
 

@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SCHOOL_CODE="${1:-}"
-LESSON3_VERSION="${LESSON3_VERSION:-v0.93}"
+LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"
 FAILURES=0
 WARNINGS=0
 

@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-LESSON3_VERSION="${LESSON3_VERSION:-v0.93}"
+LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"
 LESSON3_URL="${LESSON3_URL:-http://ares.local:3001}"
 BASE_DIR="${LESSON3_BASE_DIR:-/mnt/sda3/var/www/lesson3-download}"
 INSTALL_DIR="$BASE_DIR/lesson3-deploy"

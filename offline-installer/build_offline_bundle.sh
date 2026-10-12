@@ -5,11 +5,11 @@ set -Eeuo pipefail
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE=""
 OUTPUT=""
-LESSON3_VERSION="v0.93"
+LESSON3_VERSION="v0.94"
 PLATFORM="linux/amd64"
 SCAFFOLD_ONLY=0
 APK_PATH=""
-BUNDLE_REVISION="v1.10"
+BUNDLE_REVISION="v1.11"
 APK_URL=""
 APK_SHA256=""
 APK_MANIFEST_URL="https://raw.githubusercontent.com/markknit/ares-usage-collection/main/config/approved_apk.json"
@@ -27,7 +27,7 @@ Usage:
   bash build_offline_bundle.sh --source /path/to/ARES_Q4_Update --output /path/to/output [options]
 
 Options:
-  --lesson3-version v0.93   Lesson3 release to pin (default: v0.93)
+  --lesson3-version v0.94   Lesson3 release to pin (default: v0.94)
   --apk /path/ares-sync.apk Approved signed production ARES Sync APK (optional override)
   --apk-url URL             Approved production APK URL (requires --apk-sha256)
   --apk-sha256 HEX          Expected SHA-256 for --apk-url
@@ -138,6 +138,7 @@ mkdir -p "$STAGE/docs"
 install -m 0644 "$SELF_DIR/docs/TECHNICIAN_PHONE_INSTALL.md" "$STAGE/docs/TECHNICIAN_PHONE_INSTALL.md"
 install -m 0644 "$SELF_DIR/docs/TEACHER_PHONE_GUIDE.md" "$STAGE/docs/TEACHER_PHONE_GUIDE.md"
 install -m 0644 "$SELF_DIR/docs/LESSON3_CORPUS_INSTALL.md" "$STAGE/docs/LESSON3_CORPUS_INSTALL.md"
+install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3_V094_ACCEPTANCE.md"
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
 mkdir -p "$STAGE/docs/pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf"

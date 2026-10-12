@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the pinned ARES JSON corpus into a fresh Lesson3 v0.93 database.
+# Install the pinned ARES JSON corpus into a fresh Lesson3 v0.94 database.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

@@ -1,6 +1,6 @@
 # Optional Remote Access: Tailscale and TigerVNC
 
-ARES Q4 Offline Installer v1.10 installs the remote-access prerequisites but leaves them inactive.
+ARES Q4 Offline Installer v1.11 installs the remote-access prerequisites but leaves them inactive.
 The field installation does not register the server with Tailscale, create a VNC password, start a
 VNC desktop, or expose a VNC port.
 
@@ -67,5 +67,5 @@ The expected service result is `inactive`, port 5901 is closed, and `x11vnc` is 
 ## Desktop fallback
 
 Cinnamon 2D is the tested default for Ubuntu 24.04 ARES servers. Openbox remains installed as a
-manual recovery fallback, but v1.10 does not automatically switch desktop sessions. XFCE, Xpra,
+manual recovery fallback, but v1.11 does not automatically switch desktop sessions. XFCE, Xpra,
 and the Tsavo Trust module are not included in this remote-access package.

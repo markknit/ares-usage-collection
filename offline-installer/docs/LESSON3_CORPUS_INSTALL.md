@@ -42,7 +42,7 @@ finished field ZIP contains the corpus manifest and checksums.
 Run the normal offline installation first:
 
 ```bash
-cd ARES_Q4_Offline_v0.93_amd64_v1.10
+cd ARES_Q4_Offline_v0.94_amd64_v1.11
 sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```
@@ -54,7 +54,7 @@ The installer pauses at the required content step:
 3. Enter the Site Administrator email and password when prompted.
 
 The password is not printed or written to the installation receipt. Do not open a second installer
-terminal or run the corpus script separately during the normal v1.10 installation.
+terminal or run the corpus script separately during the normal v1.11 installation.
 
 The corpus installer:
 
@@ -81,7 +81,7 @@ sudo bash lesson3/corpus/install_lesson3_corpus.sh --status
 ```
 
 Manual import with `sudo bash lesson3/corpus/install_lesson3_corpus.sh` is reserved for a reviewed
-recovery workflow; the normal v1.10 path is the single `install_offline.sh` command.
+recovery workflow; the normal v1.11 path is the single `install_offline.sh` command.
 
 ## Field acceptance check
 

@@ -49,7 +49,7 @@ actual Ubuntu server, phone, client-resolution and desktop evidence is recorded.
 
 - `785825f`: canonical release metadata and sealed production/test profiles.
 - `3dccba4`: consolidated OpenSSH/TigerVNC activation, rollback and optional prompt.
-- Final validation stage: compiled XML/identity checks, alias inventory, printable
+- `608cb7e`: compiled XML/identity checks, alias inventory, printable
   profile guides, CI configuration and acceptance records. Bundle revision is
   v1.12 to distinguish the changed package from published v1.11 artifacts; the
   approved Lesson3 release remains canonical v0.94.

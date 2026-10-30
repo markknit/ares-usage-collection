@@ -1,6 +1,9 @@
 # Two-profile acceptance record
 
 Date: 2026-10-29. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
+Implementation commits: `785825f`, `3dccba4`, and `608cb7e` (Lesson3 v0.94 / bundle v1.12).
+Live acceptance status: **Pending for every check in both profiles**, including
+the target procedure and referenced Lesson3 UI/content checks below.
 No live Ubuntu server or client connection is supplied to this checkout yet.
 Do not infer field success from mocked service checks or fixture scaffolds.
 
@@ -10,6 +13,7 @@ Do not infer field success from mocked service checks or fixture scaffolds.
 | 95 plans / 806 lessons | Pending | Pending | Installer status and actual database counts |
 | Client-side mDNS | Pending | Pending | Resolve selected alias on a separate client; match target LAN address |
 | Nginx and Lesson3 URLs | Pending | Pending | Client browser, Host-header HTTP checks, ADMIN_URL and empty SERVER_URL check |
+| ARES Sync discovery/collection | Pending | Pending | Actual phone using the matching approved profile APK against the selected server alias |
 | Tailscale enrollment | Pending | Pending | Device approved, matching machine identity, Tailscale IP; no secrets in evidence |
 | Standard OpenSSH over Tailscale | Pending | Pending | Actual SSH login to Tailscale IP and RunSSH=false |
 | VNC tunnel and desktop | Pending | Pending | SSH forwarding, VNC authentication, usable Cinnamon 2D desktop |

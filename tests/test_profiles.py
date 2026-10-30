@@ -24,14 +24,84 @@ render = load("render_profile")
 nginx = load("configure_nginx")
 
 
-def compiled_policy(alias):
-    data = bytes([len(alias), len(alias)]) + alias.encode() + b"\0"
+def compiled_strings(*strings):
+    data = b""
+    offsets = []
+    for value in strings:
+        offsets.append(len(data))
+        data += bytes([len(value), len(value)]) + value.encode() + b"\0"
     data += b"\0" * ((-len(data)) % 4)
-    pool = struct.pack("<HHIIIIII", 1, 28, 32 + len(data), 1, 0, 0x100, 32, 0) + struct.pack("<I", 0) + data
+    start = 28 + 4 * len(strings)
+    pool = struct.pack("<HHIIIIII", 1, 28, start + len(data), len(strings), 0, 0x100, start, 0)
+    pool += b"".join(struct.pack("<I", offset) for offset in offsets) + data
     return struct.pack("<HHI", 3, 8, 8 + len(pool)) + pool
 
 
+def compiled_policy(*aliases):
+    return compiled_strings("network-security-config", "domain-config", "domain",
+                            "cleartextTrafficPermitted", *aliases)
+
+
 class ProfileTests(unittest.TestCase):
+    def write_apk(self, apk, profile, resources, *, dex=None, identity=None):
+        alias = render.ALIASES[profile]
+        if dex is None:
+            dex = b"\0".join(("http://" + alias + "/tracker/" + endpoint).encode()
+                              for endpoint in ("prepare_due_usage_upload.php", "collection_schedule.json"))
+        if identity is None:
+            identity = "org.areseducation.sync" + (".test" if profile == "test" else "")
+        with zipfile.ZipFile(apk, "w") as archive:
+            archive.writestr("classes.dex", dex)
+            archive.writestr("AndroidManifest.xml", compiled_strings(identity))
+            for name, content in resources.items():
+                archive.writestr(name, content)
+
+    def test_apk_accepts_obfuscated_policy_with_unrelated_and_malformed_resources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / "app.apk"
+            for profile, alias in render.ALIASES.items():
+                with self.subTest(profile=profile):
+                    self.write_apk(apk, profile, {
+                        "res/drawable/icon.png": b"\x89PNG\r\n\x1a\n",
+                        "res/raw/truncated.xml": struct.pack("<HHI", 3, 8, 16) + struct.pack("<HHI", 1, 8, 8),
+                        "res/raw/bad-text.xml": compiled_policy(alias).replace(alias.encode(), b"\xff" * len(alias)),
+                        "res/layout/screen.xml": compiled_strings(alias, "domain"),
+                        "res/8G.xml": compiled_policy(alias),
+                    })
+                    render.verify_apk(apk, profile)
+
+    def test_apk_rejects_missing_wrong_or_mixed_obfuscated_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / "app.apk"
+            for profile, alias in render.ALIASES.items():
+                other = next(value for value in render.ALIASES.values() if value != alias)
+                for resources in ({},
+                                  {"res/8G.xml": b"not binary XML"},
+                                  {"res/8G.xml": compiled_strings(alias)},
+                                  {"assets/8G.xml": compiled_policy(alias)},
+                                  {"res/8G.xml": compiled_policy(other)},
+                                  {"res/8G.xml": compiled_policy(alias, other)},
+                                  {"res/8G.xml": compiled_policy(alias), "res/9G.xml": compiled_policy(other)}):
+                    with self.subTest(profile=profile, resources=list(resources)):
+                        self.write_apk(apk, profile, resources)
+                        with self.assertRaisesRegex(ValueError, "cleartext policy"):
+                            render.verify_apk(apk, profile)
+
+    def test_obfuscated_policy_does_not_bypass_endpoint_or_identity_checks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / "app.apk"
+            for profile, alias in render.ALIASES.items():
+                resources = {"res/8G.xml": compiled_policy(alias)}
+                for endpoint in ("prepare_due_usage_upload.php", "collection_schedule.json"):
+                    with self.subTest(profile=profile, endpoint=endpoint):
+                        self.write_apk(apk, profile, resources,
+                                       dex=("http://" + alias + "/tracker/" + endpoint).encode())
+                        with self.assertRaisesRegex(ValueError, "lacks compiled endpoint"):
+                            render.verify_apk(apk, profile)
+                self.write_apk(apk, profile, resources, identity="org.example.wrong")
+                with self.assertRaisesRegex(ValueError, "application identity"):
+                    render.verify_apk(apk, profile)
+
     def test_both_sealed_profiles_override_environment(self):
         for profile, alias in render.ALIASES.items():
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as directory:

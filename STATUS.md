@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-10-29
+Last updated: 2026-10-30
 
 ## Current checkout
 
@@ -18,12 +18,17 @@ Last updated: 2026-10-29
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | Implemented; live acceptance pending | `3dccba4` records consolidated activation, failure cleanup and the optional post-core prompt. Verified with `git show --stat 3dccba4`. Real service, tunnel and desktop checks remain pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
+| Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
 | Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Field artifacts and rollout approval | Pending | No full field ZIP or approved signed replacement APK is established by these commits. Complete live profile and Lesson3 acceptance before rollout approval; retain the documented fallback. |
 
 ## Known Issues / Lessons Learned
 
+- Android release builds may rename compiled XML (the approved APK uses
+  `res/8G.xml`). Discover network-security policies by parsed structural strings
+  beneath `res/`, retaining profile alias, DEX endpoint and application identity
+  validation; never assume the source resource filename survives packaging.
 - Software fixtures, debug APK builds and rendered guides do not establish live
   acceptance. Keep both profile columns Pending until actual target/client logs,
   package checksums and UI evidence support each result. See
@@ -37,6 +42,29 @@ Last updated: 2026-10-29
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - APK policy resource discovery fix
+
+- Replaced the literal network-security XML path with compiled-content discovery
+  under `res/`. Unparseable resources are ignored; absent policies and any policy
+  candidate with missing/wrong/mixed profile aliases fail closed. Both DEX endpoint
+  checks and application identity validation remain enforced.
+- Added regressions for `res/8G.xml` in both profiles, unrelated/malformed
+  resources, missing/wrong/mixed policies, missing endpoints and wrong identity.
+- Passed 27 tests with bundled Python 3.12 and Git Bash:
+  `python -B -m unittest test_profiles test_remote_support test_bundle_profiles test_offline_installer.OfflineInstallerSourceTests -v`
+  (`PYTHONPATH=tests`). The three Linux/root corpus integration tests were not run
+  on Windows; they remain covered by the configured Ubuntu CI job, without a claim
+  of a new CI result here.
+- Confirmed the local release APK SHA-256 is
+  `16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8`;
+  production verification passes. Existing production and test debug APKs also
+  pass their respective verifier checks. No APK was rebuilt or modified.
+
+Still open:
+
+- All live profile acceptance and Lesson3 UI/content gates remain Pending.
+- Complete field artifact and live target/client evidence before rollout approval.
 
 ### 2026-10-29 - Profile reconciliation continuity update
 

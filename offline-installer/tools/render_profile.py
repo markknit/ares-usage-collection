@@ -14,11 +14,13 @@ ALIASES = {"production": "ares.local", "test": "ares-test.local"}
 
 def binary_xml_strings(value):
     """Read Android's compiled XML string pool (UTF-8 or UTF-16)."""
+    if len(value) < 8 or struct.unpack_from("<HHI", value) != (3, 8, len(value)):
+        raise ValueError("Invalid compiled XML header")
     strings = []
     offset = 8
     while offset + 8 <= len(value):
         kind, header, size = struct.unpack_from("<HHI", value, offset)
-        if size < 8 or offset + size > len(value):
+        if header < 8 or header > size or offset + size > len(value):
             raise ValueError("Invalid compiled XML chunk")
         if kind == 1:
             count, _, flags, start, _ = struct.unpack_from("<IIIII", value, offset + 8)
@@ -60,14 +62,31 @@ def verify_apk(path, profile):
     other = ("http://" + ALIASES["test" if profile == "production" else "production"] + "/tracker/").encode()
     with zipfile.ZipFile(path) as apk:
         dex = b"".join(apk.read(name) for name in apk.namelist() if name.endswith(".dex"))
-        policy = binary_xml_strings(apk.read("res/xml/network_security_config.xml"))
+        # Release builds may rename XML resources (for example to res/8G.xml).
+        # Identify policies by their compiled structure, never by filename.
+        policies = []
+        structure = {"network-security-config", "domain-config", "domain", "cleartextTrafficPermitted"}
+        for entry in apk.infolist():
+            if entry.is_dir() or not entry.filename.startswith("res/"):
+                continue
+            try:
+                strings = set(binary_xml_strings(apk.read(entry)))
+            except (ValueError, struct.error, IndexError):
+                # Images, raw assets and malformed binary XML are not policies.
+                continue
+            if structure <= strings:
+                policies.append(strings)
         manifest = binary_xml_strings(apk.read("AndroidManifest.xml"))
     for endpoint in (b"prepare_due_usage_upload.php", b"collection_schedule.json"):
         if expected + endpoint not in dex:
             raise ValueError("APK lacks compiled endpoint for " + profile + ": " + endpoint.decode())
     if other in dex:
         raise ValueError("APK contains endpoints for the other profile")
-    if ALIASES[profile] not in policy or any(alias in policy for name, alias in ALIASES.items() if name != profile):
+    if not policies or any(
+        ALIASES[profile] not in policy
+        or any(alias in policy for name, alias in ALIASES.items() if name != profile)
+        for policy in policies
+    ):
         raise ValueError("APK cleartext policy does not match profile")
     expected_id = "org.areseducation.sync" + (".test" if profile == "test" else "")
     if expected_id not in manifest:

@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/ares_config.sh" "$SCRIPT_DIR/package.conf"
 SCHOOL_CODE="${1:-}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="/var/log/ares-offline-install-${STAMP}.log"
@@ -54,7 +55,7 @@ install_lesson3_corpus_guided() {
 ACTION REQUIRED: create the first Lesson3 Site Administrator.
 
 1. Leave this installer open.
-2. In a browser, open: http://ares.local:3001/login
+2. In a browser, open: ${LESSON3_URL}/login
 3. Create the first Site Administrator and store its credentials securely.
 4. Return to this terminal.
 
@@ -87,7 +88,7 @@ echo "Log:    $LOG_FILE"
 run_step "0) Preflight - verify server and package before changes" \
   bash "$SCRIPT_DIR/preflight.sh" "$SCHOOL_CODE"
 
-run_step "1) Install/update Lesson Plan module + ares.local" \
+run_step "1) Install/update Lesson Plan module + $ARES_ALIAS" \
   bash "$SCRIPT_DIR/lesson_plan/install.sh"
 
 run_step "2) Install Lesson Plan Editor from offline images" \
@@ -113,9 +114,9 @@ run_step "8) Post-install verification" bash -c '
   set -e
   nginx -t
   systemctl is-active --quiet nginx
-  curl -fsS --max-time 8 -H "Host: ares.local" http://127.0.0.1/ >/dev/null
+  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/ >/dev/null
   curl -fsS --max-time 8 http://127.0.0.1:3001/login >/dev/null
-  grep -qx "v0.94" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
+  grep -qx "$LESSON3_VERSION" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
   grep -q "module:lesson_plans_directory" /mnt/sda3/var/www/tracker/key_map.csv
   grep -q "module:lesson_plan_editor" /mnt/sda3/var/www/tracker/key_map.csv
   test -f /mnt/sda3/var/www/modules/Lesson_Plans/index.htmlf
@@ -125,9 +126,9 @@ run_step "8) Post-install verification" bash -c '
   test -s /mnt/sda3/var/www/downloads/ares-sync.apk
   test -f /mnt/sda3/var/www/downloads/ares-sync.apk.sha256
   test -f /mnt/sda3/var/www/app_install/index.html
-  curl -fsS --max-time 8 -H "Host: ares.local" http://127.0.0.1/app_install/ >/dev/null
-  curl -fsS --max-time 8 -H "Host: ares.local" http://127.0.0.1/downloads/ares-sync.apk -o /dev/null
-  curl -fsS --max-time 8 -H "Host: ares.local" http://127.0.0.1/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf -o /dev/null
+  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/app_install/ >/dev/null
+  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/downloads/ares-sync.apk -o /dev/null
+  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf -o /dev/null
   test -x "$0/lesson3/corpus/install_lesson3_corpus.sh"
   test -s "$0/lesson3/corpus/MANIFEST.json"
   test -s /mnt/sda3/var/www/lesson3-download/lesson3-deploy/CORPUS_INSTALLED.txt
@@ -146,10 +147,10 @@ run_step "8) Post-install verification" bash -c '
 
 echo
 echo "ARES Q4 offline installation completed successfully for $SCHOOL_CODE."
-echo "Lesson Plan Editor: http://ares.local:3001/login"
-echo "Lesson3 User Guide: http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
-echo "Teacher ARES Sync installer: http://ares.local/app_install/"
-echo "Direct teacher APK: http://ares.local/downloads/ares-sync.apk"
+echo "Lesson Plan Editor: ${LESSON3_URL}/login"
+echo "Lesson3 User Guide: ${ARES_URL}/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
+echo "Teacher ARES Sync installer: ${ARES_URL}/app_install/"
+echo "Direct teacher APK: ${ARES_URL}/downloads/ares-sync.apk"
 echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"
 echo "Lesson3 discussions: v0.94 installs them enabled by default; complete the v0.94 acceptance checklist before rollout."

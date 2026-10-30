@@ -16,6 +16,10 @@ val releaseSigningConfigured = listOf(
     releaseKeyPassword
 ).all { !it.isNullOrBlank() }
 
+val aresProfile = providers.gradleProperty("aresProfile").orElse("production").get()
+require(aresProfile in listOf("production", "test")) { "aresProfile must be production or test" }
+val localServerHost = if (aresProfile == "test") "ares-test.local" else "ares.local"
+
 android {
     namespace = "org.areseducation.sync"
     compileSdk = 36
@@ -27,6 +31,12 @@ android {
         versionCode = 23
         versionName = "0.8.0-rc15"
         buildConfigField("boolean", "ACCEPTANCE_TEST_MODE", "false")
+        buildConfigField("String", "LOCAL_SERVER_URL", "\"http://$localServerHost\"")
+        resValue("string", "ares_server_host", localServerHost)
+        if (aresProfile == "test") {
+            applicationId = "org.areseducation.sync.test"
+            versionNameSuffix = "-test-profile"
+        }
     }
 
     buildFeatures {

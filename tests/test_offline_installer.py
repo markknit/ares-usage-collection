@@ -83,7 +83,8 @@ class OfflineInstallerSourceTests(unittest.TestCase):
             builder,
         )
         self.assertIn('BUNDLE_REVISION="v1.11"', builder)
-        self.assertIn('LESSON3_VERSION="v0.94"', builder)
+        self.assertIn('"$SELF_DIR/package.conf"', builder)
+        self.assertIn('LESSON3_VERSION=v0.94', (BUILDER / 'package.conf').read_text())
 
     def test_lesson3_runtime_defaults_match_v094(self):
         for relative in (
@@ -92,7 +93,8 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         ):
             with self.subTest(relative=relative):
                 source = (BUILDER / relative).read_text(encoding="utf-8")
-                self.assertIn('LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"', source)
+                self.assertIn('ares_config.sh', source)
+                self.assertNotIn('v0.94', source)
 
     def test_main_installer_guides_and_verifies_corpus_install(self):
         installer = (BUILDER / "templates" / "install_offline.sh").read_text(
@@ -102,7 +104,7 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('Type READY after the Site Administrator exists', installer)
         self.assertIn('LESSON3_CORPUS_STATUS=installed', installer)
         self.assertIn('CORPUS_INSTALLED.txt', installer)
-        self.assertIn('grep -qx "v0.94"', installer)
+        self.assertIn('grep -qx "$LESSON3_VERSION"', installer)
 
     def test_remote_access_is_prepared_but_not_activated(self):
         prepare = (BUILDER / "templates" / "prepare_remote_access.sh").read_text(

@@ -5,7 +5,7 @@ set -Eeuo pipefail
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE=""
 OUTPUT=""
-LESSON3_VERSION="v0.94"
+source "$SELF_DIR/templates/ares_config.sh" "$SELF_DIR/package.conf"
 PLATFORM="linux/amd64"
 SCAFFOLD_ONLY=0
 APK_PATH=""
@@ -27,7 +27,7 @@ Usage:
   bash build_offline_bundle.sh --source /path/to/ARES_Q4_Update --output /path/to/output [options]
 
 Options:
-  --lesson3-version v0.94   Lesson3 release to pin (default: v0.94)
+  --profile production|test Profile sealed into this package (default: production)
   --apk /path/ares-sync.apk Approved signed production ARES Sync APK (optional override)
   --apk-url URL             Approved production APK URL (requires --apk-sha256)
   --apk-sha256 HEX          Expected SHA-256 for --apk-url
@@ -49,7 +49,7 @@ while (($#)); do
   case "$1" in
     --source) SOURCE=${2:-}; shift 2 ;;
     --output) OUTPUT=${2:-}; shift 2 ;;
-    --lesson3-version) LESSON3_VERSION=${2:-}; shift 2 ;;
+    --profile) ARES_PROFILE=${2:-}; shift 2 ;;
     --apk) APK_PATH=${2:-}; shift 2 ;;
     --apk-url) APK_URL=${2:-}; shift 2 ;;
     --apk-sha256) APK_SHA256=${2:-}; shift 2 ;;
@@ -60,6 +60,15 @@ while (($#)); do
   esac
 done
 
+case "$ARES_PROFILE" in
+  production) ARES_ALIAS=ares.local ;;
+  test) ARES_ALIAS=ares-test.local ;;
+  *) die "--profile must be production or test" ;;
+esac
+ARES_URL="http://$ARES_ALIAS"
+if [[ "$ARES_PROFILE" == test && -z "$APK_PATH" && $SCAFFOLD_ONLY -eq 0 ]]; then
+  die "test profile requires an explicitly supplied test-profile APK via --apk"
+fi
 [[ -n "$SOURCE" && -d "$SOURCE" ]] || die "--source must name the extracted ARES Q4 source directory"
 [[ -n "$OUTPUT" ]] || die "--output is required"
 SOURCE="$(cd "$SOURCE" && pwd)"
@@ -83,6 +92,7 @@ if (( ! SCAFFOLD_ONLY )); then
 fi
 
 BUNDLE_NAME="ARES_Q4_Offline_${LESSON3_VERSION}_amd64_${BUNDLE_REVISION}"
+[[ "$ARES_PROFILE" == production ]] || BUNDLE_NAME="${BUNDLE_NAME}_test"
 STAGE="$OUTPUT/$BUNDLE_NAME"
 ZIPFILE="$OUTPUT/$BUNDLE_NAME.zip"
 if [[ -e "$STAGE" ]]; then
@@ -138,6 +148,9 @@ rm -f "$STAGE/ares_q4_update.sh" "$STAGE/lesson3.sh"
 rm -f "$STAGE/lesson_plan/install_ares_lesson_plan_editor_proxy.sh"
 
 mkdir -p "$STAGE/lesson3/release" "$STAGE/lesson3/images" "$STAGE/lesson3/corpus" "$STAGE/tracking" "$STAGE/teacher-app"
+install -m 0644 "$SELF_DIR/templates/ares_config.sh" "$STAGE/ares_config.sh"
+printf 'LESSON3_VERSION=%s\nARES_PROFILE=%s\n' "$LESSON3_VERSION" "$ARES_PROFILE" > "$STAGE/package.conf"
+install -m 0644 "$SELF_DIR/tools/configure_nginx.py" "$STAGE/lesson_plan/configure_nginx.py"
 mkdir -p "$STAGE/remote-access/tigervnc" "$STAGE/remote-access/tailscale"
 install -m 0755 "$SELF_DIR/templates/install_offline.sh" "$STAGE/install_offline.sh"
 install -m 0755 "$SELF_DIR/templates/preflight.sh" "$STAGE/preflight.sh"
@@ -448,6 +461,11 @@ if (( ! SCAFFOLD_ONLY )); then
     || die "Lesson3 corpus field package has the wrong file count"
 fi
 
+python3 "$SELF_DIR/tools/render_profile.py" --root "$STAGE" --profile "$ARES_PROFILE"
+if (( ! SCAFFOLD_ONLY )); then
+  python3 "$SELF_DIR/tools/render_profile.py" --apk "$STAGE/teacher-app/ares-sync.apk" --profile "$ARES_PROFILE"
+fi
+
 # Field-side shell scripts must not install/download from the Internet.
 if grep -RInE 'github\.com|tailscale\.com|apt-get[[:space:]]+(update|install)|docker([[:space:]]+compose)?[[:space:]]+pull|wget[[:space:]]' \
     "$STAGE" --include='*.sh' > "$STAGE/.offline-audit.txt"; then
@@ -465,9 +483,10 @@ Lesson3 corpus commit: $CORPUS_COMMIT
 Lesson3 corpus: $CORPUS_EXPECTED_FILES plans / $CORPUS_EXPECTED_LESSONS lessons
 Target architecture: linux/amd64
 Offline bundle revision: $BUNDLE_REVISION
-Teacher APK: bundled approved production APK with SHA-256 verification
-Teacher install URL after deployment: http://ares.local/app_install/
-Lesson3 User Guide after deployment: http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf
+Profile: $ARES_PROFILE ($ARES_ALIAS)
+Teacher APK: bundled profile-matching APK with SHA-256 verification
+Teacher install URL after deployment: $ARES_URL/app_install/
+Lesson3 User Guide after deployment: $ARES_URL/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf
 Remote access: Tailscale $TAILSCALE_VERSION and TigerVNC $TIGERVNC_VERSION installed dormant
 Source directory: $SOURCE
 Field command: sudo bash install_offline.sh ARES-S00XX

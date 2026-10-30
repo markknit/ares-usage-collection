@@ -37,3 +37,10 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local Android build state; wrapper source remains reviewable.
+android/ares-sync/.gradle/
+android/ares-sync/build/
+android/ares-sync/app/build/
+android/ares-sync/local.properties
+output/reconciliation/

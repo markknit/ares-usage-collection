@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/ares_config.sh" "$SCRIPT_DIR/package.conf"
 SCHOOL_CODE="${1:-}"
-LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"
 FAILURES=0
 WARNINGS=0
 
@@ -44,6 +44,9 @@ if id www-data >/dev/null 2>&1; then pass "www-data user exists"; else fail "www
 if nginx -t >/dev/null 2>&1; then pass "current Nginx configuration validates"; else fail "current Nginx configuration does not validate"; fi
 
 for f in \
+  "$SCRIPT_DIR/package.conf" \
+  "$SCRIPT_DIR/ares_config.sh" \
+  "$SCRIPT_DIR/lesson_plan/configure_nginx.py" \
   "$SCRIPT_DIR/lesson_plan/install.sh" \
   "$SCRIPT_DIR/lesson_plan/payload/index.htmlf" \
   "$SCRIPT_DIR/lesson_plan/payload/index.html" \

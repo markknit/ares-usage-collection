@@ -253,7 +253,7 @@ public final class WifiSetupActivity extends Activity {
                     lastError = "The " + ssid + " request was interrupted.";
                     break;
                 } catch (Exception error) {
-                    lastError = ssid + " connected but ares.local could not be reached: " + error.getMessage();
+                    lastError = ssid + " connected but " + BuildConfig.LOCAL_SERVER_URL + " could not be reached: " + error.getMessage();
                 } finally {
                     connector.close();
                 }

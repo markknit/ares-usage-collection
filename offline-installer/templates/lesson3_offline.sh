@@ -3,8 +3,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-LESSON3_VERSION="${LESSON3_VERSION:-v0.94}"
-LESSON3_URL="${LESSON3_URL:-http://ares.local:3001}"
+source "$SCRIPT_DIR/../ares_config.sh" "$SCRIPT_DIR/../package.conf"
 BASE_DIR="${LESSON3_BASE_DIR:-/mnt/sda3/var/www/lesson3-download}"
 INSTALL_DIR="$BASE_DIR/lesson3-deploy"
 RELEASE_DIR="$SCRIPT_DIR/release"
@@ -35,6 +34,8 @@ mkdir -p "$BASE_DIR"
 if [[ -f "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/compose.yaml" ]]; then
     log "existing Lesson3 deployment found at $INSTALL_DIR"
     if curl -fsS --max-time 5 http://127.0.0.1:3001/login >/dev/null 2>&1; then
+        [[ "$(cat "$INSTALL_DIR/VERSION")" == "$LESSON3_VERSION" ]] || die "existing release differs from packaged release; explicit upgrade required"
+        grep -qx "SERVER_URL=$LESSON3_URL" "$INSTALL_DIR/.env" || die "existing SERVER_URL differs from profile; explicit migration required"
         log "existing Lesson3 is healthy; no fresh install is needed"
         exit 0
     fi
@@ -87,7 +88,9 @@ on_error() {
 trap on_error ERR
 
 log "preparing configuration with ADMIN_URL=$LESSON3_URL"
-LESSON3_URL="$LESSON3_URL" ./install.sh --prepare-only
+LESSON3_URL="$LESSON3_URL" SERVER_URL="$LESSON3_URL" ./install.sh --prepare-only
+# Refuse to start an upstream release that ignored the approved URL.
+grep -qx "SERVER_URL=$LESSON3_URL" .env || die "prepared SERVER_URL does not match packaged profile"
 
 log "starting Lesson3 from locally loaded images"
 docker compose -f compose.offline.yaml up -d --no-build --pull never

@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
 
 public final class AresServerClient {
     private static final String ENDPOINT =
-            "http://ares.local/tracker/prepare_due_usage_upload.php";
+            BuildConfig.LOCAL_SERVER_URL + "/tracker/prepare_due_usage_upload.php";
     private static final String PROBE_ENDPOINT =
-            "http://ares.local/tracker/collection_schedule.json";
+            BuildConfig.LOCAL_SERVER_URL + "/tracker/collection_schedule.json";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     public interface Callback {

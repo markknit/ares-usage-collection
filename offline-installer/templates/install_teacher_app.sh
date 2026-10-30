@@ -3,6 +3,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../ares_config.sh" "$SCRIPT_DIR/../package.conf"
 APK_SOURCE="$SCRIPT_DIR/ares-sync.apk"
 APK_HASH_SOURCE="$SCRIPT_DIR/ares-sync.apk.sha256"
 PAGE_SOURCE="$SCRIPT_DIR/install-page.html"
@@ -38,9 +39,9 @@ install -m 0644 -o ares -g www-data "$PAGE_SOURCE" "$PAGE_TARGET"
 # Leave unrelated content untouched.
 if [[ -f "$LEGACY_INSTALL_DIR/index.html" ]] && grep -q "Install ARES Sync" "$LEGACY_INSTALL_DIR/index.html"; then
   rm -rf "$LEGACY_INSTALL_DIR"
-  log "removed legacy teacher install page: http://ares.local/install/"
+  log "removed legacy teacher install page: ${ARES_URL}/install/"
 fi
 
 log "deployed APK: $APK_TARGET"
-log "teacher install page: http://ares.local/app_install/"
-log "direct APK URL: http://ares.local/downloads/ares-sync.apk"
+log "teacher install page: ${ARES_URL}/app_install/"
+log "direct APK URL: ${ARES_URL}/downloads/ares-sync.apk"

@@ -3,3 +3,6 @@
 # Shell scripts are executed on Linux servers and must not acquire Windows CRLF endings.
 *.sh text eol=lf
 *.bash text eol=lf
+offline-installer/rollout/** text=auto eol=lf
+local-server/** text=auto eol=lf
+offline-installer/package.conf text eol=lf

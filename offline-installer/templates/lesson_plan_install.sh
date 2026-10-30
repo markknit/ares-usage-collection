@@ -23,6 +23,7 @@ set -u  # error on unset variables; deliberately NOT using -e — we want to
         # partway through a 100-server rollout.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../ares_config.sh" "$SCRIPT_DIR/../package.conf"
 PAYLOAD_DIR="$SCRIPT_DIR/payload"
 MODULE_DIR="/mnt/sda3/var/www/modules/Lesson_Plans"
 PDF_DIR="$MODULE_DIR/PDF"
@@ -49,7 +50,7 @@ mkdir -p "$BACKUP_DIR"
 echo "Backups of anything replaced will be saved to: $BACKUP_DIR"
 
 # ============================================================================
-step "1. mDNS alias (ares.local) — systemd service"
+step "1. mDNS alias ($ARES_ALIAS) — systemd service"
 # ============================================================================
 # Works identically whether this box is running its own DHCP/DNS (hotspot
 # mode) or is just a client on someone else's router. The publisher prefers
@@ -59,12 +60,16 @@ step "1. mDNS alias (ares.local) — systemd service"
 if ! command -v avahi-publish >/dev/null 2>&1; then
   fail "avahi-publish not found. Is avahi-utils installed? Skipping mDNS setup — fix manually."
 else
+  install -d -m 0755 /etc/ares
+  printf 'ARES_ALIAS=%s\n' "$ARES_ALIAS" > /etc/ares/mdns-profile.conf
+  chmod 0644 /etc/ares/mdns-profile.conf
   cat > /usr/local/bin/ares-mdns-alias.sh << 'EOF'
 #!/bin/bash
 # Publishes a fixed mDNS alias (ares.local) pointing at this box's current
 # IP. Re-publishes automatically if the IP changes (e.g. DHCP lease renewal
 # on boxes that are DNS/DHCP clients rather than the server).
-ALIAS="ares.local"
+source /etc/ares/mdns-profile.conf
+ALIAS="$ARES_ALIAS"
 CHECK_INTERVAL=30
 current_pid=""
 last_ip=""
@@ -152,13 +157,14 @@ EOF
   ok "wrote /etc/systemd/system/ares-mdns-alias.service"
 
   systemctl daemon-reload
-  systemctl enable --now ares-mdns-alias.service
+  systemctl enable ares-mdns-alias.service
+  systemctl restart ares-mdns-alias.service
   sleep 2
   if systemctl is-active --quiet ares-mdns-alias.service; then
-    if timeout 8 avahi-resolve -4 -n ares.local >/dev/null 2>&1; then
-      ok "ares-mdns-alias.service is running and ares.local resolves"
+    if timeout 8 avahi-resolve -4 -n "$ARES_ALIAS" >/dev/null 2>&1; then
+      ok "ares-mdns-alias.service is running and $ARES_ALIAS resolves"
     else
-      fail "ares-mdns-alias.service is running, but ares.local did not resolve"
+      fail "ares-mdns-alias.service is running, but $ARES_ALIAS did not resolve"
     fi
   else
     fail "ares-mdns-alias.service did not start — check: systemctl status ares-mdns-alias.service"
@@ -166,7 +172,7 @@ EOF
 fi
 
 # ============================================================================
-step "2. nginx — add ares.local to server_name"
+step "2. nginx — configure $ARES_ALIAS in server_name"
 # ============================================================================
 # Different boxes may have differently-named site config files (we found
 # NINE variously-named backups on one test box alone) — so this resolves
@@ -185,21 +191,14 @@ done
 
 if [ -z "$NGINX_ACTIVE_CONF" ]; then
   fail "Could not find an active nginx config with an 'ares' server_name. Skipping — patch manually."
-elif grep -qE "server_name[^;]*\bares\.local\b" "$NGINX_ACTIVE_CONF"; then
-  ok "nginx config already includes ares.local ($NGINX_ACTIVE_CONF) — nothing to do"
 else
   cp "$NGINX_ACTIVE_CONF" "$BACKUP_DIR/$(basename "$NGINX_ACTIVE_CONF").bak"
-  sed -i -E 's/(server_name[^;]*ares\.edu[^;]*)\s*;/\1 ares.local;/' "$NGINX_ACTIVE_CONF"
-  if grep -qE "server_name[^;]*\bares\.local\b" "$NGINX_ACTIVE_CONF"; then
-    if nginx -t 2>&1 | grep -q "syntax is ok"; then
-      systemctl reload nginx
-      ok "added ares.local to $NGINX_ACTIVE_CONF and reloaded nginx"
-    else
-      cp "$BACKUP_DIR/$(basename "$NGINX_ACTIVE_CONF").bak" "$NGINX_ACTIVE_CONF"
-      fail "nginx config test failed after edit — reverted. Check manually: nginx -t"
-    fi
+  if python3 "$SCRIPT_DIR/configure_nginx.py" "$NGINX_ACTIVE_CONF" "$ARES_ALIAS" && nginx -t; then
+    systemctl reload nginx || fail "Nginx reload failed"
+    ok "configured $ARES_ALIAS in $NGINX_ACTIVE_CONF"
   else
-    fail "Edit did not apply as expected in $NGINX_ACTIVE_CONF — left unchanged. Patch manually."
+    cp "$BACKUP_DIR/$(basename "$NGINX_ACTIVE_CONF").bak" "$NGINX_ACTIVE_CONF"
+    fail "Nginx profile configuration failed; restored backup"
   fi
 fi
 
@@ -327,9 +326,9 @@ else
 fi
 echo ""
 echo "Verify manually from ANOTHER device on this school's network:"
-echo "  ping ares.local"
+echo "  ping $ARES_ALIAS"
 echo "  (then open the Curriculum Teacher Aids module and click into Grade 10 STEM CBE Lesson Plans)"
-echo "  http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
+echo "  $ARES_URL/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
 echo ""
 echo "Backups of anything replaced are in: $BACKUP_DIR"
 exit "$FINAL_RC"

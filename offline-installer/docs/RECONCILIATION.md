@@ -27,13 +27,13 @@ Build with `--profile production` (default, `ares.local`) or `--profile test`
 never derive from Linux or Tailscale hostnames. No live demo is changed.
 
 The builder renders inherited HTML, HTML fragments, JS, JSON and Markdown URLs
-before generating checksums. Production-reference PDFs remain byte-identical;
-their production URL examples must be interpreted using the profile guide.
+before generating checksums. Full builds regenerate profile-specific printed
+rollout guides, copy them into the embedded rollout and refresh both manifests.
 The existing source package is still required for lesson PDF payloads and assets.
 
 Android: use `-ParesProfile=test` for the isolated `org.areseducation.sync.test`
 application; production remains `org.areseducation.sync`. Each profile compiles
-its collection/probe URLs and cleartext-domain resource. The test builder requires
+its collection/probe URLs and literal cleartext-domain XML. The test builder requires
 an explicitly supplied matching APK, and the builder checks compiled DEX endpoints
 for both profiles. A debug build is validation evidence, not an approved field APK.
 Central HTTPS upload/enrollment destinations and collection schedules are unchanged.
@@ -44,3 +44,17 @@ Software checks and live target/client acceptance are distinct. No unattended
 activation, credentials, hostname changes, deployment, or corpus import is performed
 from this Windows checkout. The live acceptance matrix will remain pending until
 actual Ubuntu server, phone, client-resolution and desktop evidence is recorded.
+
+## Review stages
+
+- `785825f`: canonical release metadata and sealed production/test profiles.
+- `3dccba4`: consolidated OpenSSH/TigerVNC activation, rollback and optional prompt.
+- Final validation stage: compiled XML/identity checks, alias inventory, printable
+  profile guides, CI configuration and acceptance records. Bundle revision is
+  v1.12 to distinguish the changed package from published v1.11 artifacts; the
+  approved Lesson3 release remains canonical v0.94.
+
+No full field ZIP or approved signed replacement APK was produced in this Windows
+session. No push or deployment was performed. Local-only APKs and PDF QA artifacts
+remain ignored under `output/reconciliation`; original untracked wrapper files
+and `-Destination` remain outside these commits.

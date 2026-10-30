@@ -12,14 +12,16 @@ def configure(value, alias):
 
     def replace(match):
         nonlocal matches
-        names = match.group(1).split()
+        if match.group(2) is None:  # A comment is never an active directive.
+            return match.group(0)
+        names = match.group(2).split()
         if not any("ares" in name for name in names):
             return match.group(0)
         matches += 1
         names = [name for name in names if name not in ("ares.local", "ares-test.local")]
         return "server_name " + " ".join(names + [alias]) + ";"
 
-    result = re.sub(r"\bserver_name\s+([^;]+);", replace, value)
+    result = re.sub(r"(#[^\n]*|\bserver_name\s+([^;]+);)", replace, value)
     if not matches:
         raise ValueError("No ARES server_name found")
     return result

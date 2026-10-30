@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'android/ares-sync/**'
+      - 'offline-installer/tools/render_profile.py'
       - 'public/**'
       - '.github/workflows/android-ares-sync.yml'
   pull_request:
     paths:
       - 'android/ares-sync/**'
+      - 'offline-installer/tools/render_profile.py'
       - 'public/**'
       - '.github/workflows/android-ares-sync.yml'
 
@@ -26,6 +28,8 @@ jobs:
           gradle-version: '8.13'
       - name: Build debug APK
         run: gradle -p android/ares-sync :app:assembleDebug
+      - name: Verify compiled production endpoints and cleartext domain
+        run: python3 offline-installer/tools/render_profile.py --profile production --apk android/ares-sync/app/build/outputs/apk/debug/app-debug.apk
       - name: Build controlled acceptance APK
         run: gradle -p android/ares-sync :app:assembleAcceptance
       - name: Upload debug APK
@@ -73,3 +77,12 @@ jobs:
           name: ares-phone-setup-acceptance
           path: build/phone-setup-acceptance/
           include-hidden-files: true
+      - name: Build isolated permanent-test-profile APK
+        run: gradle -p android/ares-sync :app:assembleDebug -ParesProfile=test
+      - name: Verify compiled test endpoints and cleartext domain
+        run: python3 offline-installer/tools/render_profile.py --profile test --apk android/ares-sync/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload permanent-test-profile debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ares-sync-test-profile-debug-apk
+          path: android/ares-sync/app/build/outputs/apk/debug/app-debug.apk

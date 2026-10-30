@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 import zipfile
+import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILDER = ROOT / "offline-installer"
@@ -21,6 +22,13 @@ def load(name):
 
 render = load("render_profile")
 nginx = load("configure_nginx")
+
+
+def compiled_policy(alias):
+    data = bytes([len(alias), len(alias)]) + alias.encode() + b"\0"
+    data += b"\0" * ((-len(data)) % 4)
+    pool = struct.pack("<HHIIIIII", 1, 28, 32 + len(data), 1, 0, 0x100, 32, 0) + struct.pack("<I", 0) + data
+    return struct.pack("<HHI", 3, 8, 8 + len(pool)) + pool
 
 
 class ProfileTests(unittest.TestCase):
@@ -55,6 +63,18 @@ class ProfileTests(unittest.TestCase):
             self.assertIn("server_name other.example;", changed)
             self.assertEqual(nginx.configure(changed, alias), changed)
         self.assertNotIn("ares-test.local", nginx.configure(original, "ares.local"))
+        with self.assertRaises(ValueError):
+            nginx.configure("# server_name ares.local;\nserver_name other.example;", "ares-test.local")
+
+    def test_apk_rejects_wrong_cleartext_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / "app.apk"
+            with zipfile.ZipFile(apk, "w") as archive:
+                archive.writestr("classes.dex", b"http://ares-test.local/tracker/prepare_due_usage_upload.php\0http://ares-test.local/tracker/collection_schedule.json")
+                archive.writestr("res/xml/network_security_config.xml", compiled_policy("ares.local"))
+                archive.writestr("AndroidManifest.xml", compiled_policy("org.areseducation.sync.test"))
+            with self.assertRaisesRegex(ValueError, "cleartext policy"):
+                render.verify_apk(apk, "test")
 
     def test_apk_rejects_wrong_profile_and_mixed_endpoints(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -64,11 +84,15 @@ class ProfileTests(unittest.TestCase):
                                   for endpoint in ("prepare_due_usage_upload.php", "collection_schedule.json"))
                 with zipfile.ZipFile(apk, "w") as archive:
                     archive.writestr("classes.dex", dex)
+                    archive.writestr("res/xml/network_security_config.xml", compiled_policy(alias))
+                    archive.writestr("AndroidManifest.xml", compiled_policy("org.areseducation.sync" + (".test" if profile == "test" else "")))
                 render.verify_apk(apk, profile)
                 with self.assertRaises(ValueError):
                     render.verify_apk(apk, "test" if profile == "production" else "production")
                 with zipfile.ZipFile(apk, "w") as archive:
                     archive.writestr("classes.dex", dex + b"http://ares.local/tracker/" + b"http://ares-test.local/tracker/")
+                    archive.writestr("res/xml/network_security_config.xml", compiled_policy(alias))
+                    archive.writestr("AndroidManifest.xml", compiled_policy("org.areseducation.sync" + (".test" if profile == "test" else "")))
                 with self.assertRaises(ValueError):
                     render.verify_apk(apk, profile)
 

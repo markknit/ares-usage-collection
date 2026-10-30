@@ -82,7 +82,7 @@ class OfflineInstallerSourceTests(unittest.TestCase):
             "ARES_Sync_Rollout_Package/server-installer/ares_set_school_code.sh",
             builder,
         )
-        self.assertIn('BUNDLE_REVISION="v1.11"', builder)
+        self.assertIn('BUNDLE_REVISION="v1.12"', builder)
         self.assertIn('"$SELF_DIR/package.conf"', builder)
         self.assertIn('LESSON3_VERSION=v0.94', (BUILDER / 'package.conf').read_text())
 

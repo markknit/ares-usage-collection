@@ -1,8 +1,18 @@
-# ARES Q4 Offline Installer Builder v1.11
+# ARES Q4 Offline Installer Builder v1.12
 
 This kit converts the approved ARES Q4 update folder into a field package that can be installed at a school with **no Internet connection**.
 
-## v1.11 changes
+The builder now seals a production (`ares.local`, default) or permanent test
+(`ares-test.local`) profile. See [profiles](docs/PROFILES.md), the
+[reconciliation record](docs/RECONCILIATION.md), and the pending
+[two-profile acceptance matrix](docs/PROFILE_ACCEPTANCE.md). Live target/client
+acceptance has not been completed by the source changes. Tsavo and the historical
+checksum-bypass wrapper are excluded. Remote support uses standard OpenSSH over
+Tailscale with Tailscale SSH explicitly disabled and a default-No activation prompt
+after successful core installation. The connected build machine also requires
+Python ReportLab to regenerate profile-specific printed rollout guides.
+
+## v1.12 changes
 
 - Pins the official Lesson3 `v0.94` release and its immutable container-image references.
 - Adds Lesson3 Discussions for signed-in teachers. Discussions are enabled by default and remain
@@ -11,8 +21,8 @@ This kit converts the approved ARES Q4 update folder into a field package that c
   authenticated batches and verified as 806 lessons. The new administrator ZIP-upload feature is
   available for later managed content updates but is not substituted into the installer.
 - Refreshes the bundled Lesson3 User Guide for Discussions, ZIP uploads, and administrator controls.
-- Produces a separately versioned v1.11 field package. Retain v1.10 as the known-good fallback until
-  v1.11 completes offline field acceptance.
+- Produces a separately versioned v1.12 field package. Retain v1.10 as the known-good fallback until
+  v1.12 completes offline field acceptance.
 
 ## v1.10 changes
 
@@ -132,7 +142,7 @@ or:
 Extract the completed field ZIP on the ARES server and run:
 
 ```bash
-cd ARES_Q4_Offline_v0.94_amd64_v1.11
+cd ARES_Q4_Offline_v0.94_amd64_v1.12
 sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```
@@ -149,7 +159,8 @@ The same `install_offline.sh` process then creates a rollback snapshot, imports 
 batches, and verifies the final 95 plans / 806 lessons. It runs only against an empty Lesson3
 content database and will not silently revise or overwrite lesson plans already present at a school.
 
-The installation also prepares Tailscale and TigerVNC without enabling or registering either one.
+The installation prepares dormant Tailscale and TigerVNC, then offers optional
+activation after all core checks pass. It does not erase a previous registration.
 See `docs/REMOTE_ACCESS.md` before later running `sudo ares-enable-remote-access`.
 
 After successful installation, a teacher connected to ARES/ARES2 can install the app locally from:

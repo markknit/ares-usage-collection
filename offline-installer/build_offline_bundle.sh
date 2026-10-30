@@ -9,7 +9,7 @@ source "$SELF_DIR/templates/ares_config.sh" "$SELF_DIR/package.conf"
 PLATFORM="linux/amd64"
 SCAFFOLD_ONLY=0
 APK_PATH=""
-BUNDLE_REVISION="v1.11"
+BUNDLE_REVISION="v1.12"
 APK_URL=""
 APK_SHA256=""
 APK_MANIFEST_URL="https://raw.githubusercontent.com/markknit/ares-usage-collection/main/config/approved_apk.json"
@@ -89,6 +89,7 @@ if (( ! SCAFFOLD_ONLY )); then
   fi
   for cmd in curl docker git apt-get dpkg-deb; do command -v "$cmd" >/dev/null 2>&1 || die "required build command not found: $cmd"; done
   docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is required on the build machine"
+  python3 -c 'import reportlab' || die "profile-specific printed guides require Python reportlab on the build machine"
 fi
 
 BUNDLE_NAME="ARES_Q4_Offline_${LESSON3_VERSION}_amd64_${BUNDLE_REVISION}"
@@ -473,6 +474,13 @@ if (( ! SCAFFOLD_ONLY )); then
 fi
 
 python3 "$SELF_DIR/tools/render_profile.py" --root "$STAGE" --profile "$ARES_PROFILE"
+if (( ! SCAFFOLD_ONLY )); then
+  python3 "$SELF_DIR/tools/render_rollout_guides.py" --source-dir "$STAGE/docs" --output-dir "$STAGE/docs/pdf"
+  cp "$STAGE/docs/pdf/ARES_Sync_Teacher_Guide.pdf" "$STAGE/ARES_Sync_Rollout_Package/guides/"
+  cp "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/ARES_Sync_Rollout_Package/guides/"
+  # Guide bytes changed; retain the embedded rollout manifest as well as root checksums.
+  (cd "$STAGE/ARES_Sync_Rollout_Package"; sha256sum README.txt guides/*.pdf server-installer/* > SHA256SUMS.txt)
+fi
 if (( ! SCAFFOLD_ONLY )); then
   python3 "$SELF_DIR/tools/render_profile.py" --apk "$STAGE/teacher-app/ares-sync.apk" --profile "$ARES_PROFILE"
 fi

@@ -47,9 +47,10 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
    approved 95-plan/806-lesson corpus before continuing.
 8. Confirm the final installer summary reports success.
 9. Sign in as a disposable teacher and confirm Lesson3 **Discuss** is visible. Complete the focused
-   checks in `docs/LESSON3_V094_ACCEPTANCE.md` before approving v1.11 for wider rollout.
-10. Note that Tailscale and TigerVNC are installed but stopped, disabled, and unregistered. Do not
-   activate them during routine installation. The base-image `x11vnc` service is disabled.
+   checks in `docs/LESSON3_V094_ACCEPTANCE.md` before approving v1.12 for wider rollout.
+10. Remote components are prepared dormant before optional activation. Answer No at the
+    default-No prompt during routine installation; answer Yes only for an authorized support
+    session. A prior registration is retained. The base-image `x11vnc` service is disabled.
 11. If this server used a provisional code, run `sudo ares-set-school-code ARES-S00XX` after the
     final ID is assigned and before enrolling any teacher phone.
 12. Confirm the local teacher-install page responds:
@@ -66,7 +67,7 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
 
 The field installer verifies the APK checksum before publishing it. Do not replace the APK on the school server manually.
 
-The Tsavo Trust module is not included in v1.11 and must use its separately reviewed installer.
+The Tsavo Trust module is not included in v1.12 and must use its separately reviewed installer.
 For later authorized remote access, read `docs/REMOTE_ACCESS.md` before running
 `sudo ares-enable-remote-access`.
 

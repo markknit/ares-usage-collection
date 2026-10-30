@@ -19,8 +19,24 @@ Do not infer field success from mocked service checks or fixture scaffolds.
 
 ## Software evidence recorded locally
 
+Final local command (24 passing checks):
+
+```powershell
+$env:PYTHONPATH='tests'
+python -B -m unittest test_profiles test_remote_support test_bundle_profiles test_offline_installer.OfflineInstallerSourceTests -v
+```
+
+Python used: bundled Codex runtime Python 3.12; Bash: Git for Windows.
+The three existing corpus-status integration tests require Linux/root and are
+configured in the Ubuntu CI workflow; they were not counted as local passes.
+CI workflows have been updated locally but have not been published or executed.
+
 - Both Android debug profiles build with Gradle 8.13 offline using the installed SDK.
 - Both compiled DEX endpoint sets pass profile validation.
+- Both compiled Android network-security XML files contain their profile's literal
+  hostname and exclude the other profile.
+- Test-profile printed guides were regenerated, all five pages rendered and visually
+  inspected, and extracted text contains test URLs with no production-alias URL.
 - Shell syntax and isolated profile/remote-support/source checks pass.
 - Both scaffold profiles package successfully, preserve checksum generation, and
   reject modified package content using actual `sha256sum -c`.
@@ -56,5 +72,5 @@ post-core default-No and failed-activation paths and record core success separat
 Do not deliberately break the online demo or alter real school identities/data.
 
 Keep the v0.94 discussion/content gates in `LESSON3_V094_ACCEPTANCE.md` pending until
-their actual UI checks are complete. Test-profile PDF URL examples remain a known
-documentation limitation; no claim of complete test-profile/field acceptance is made.
+their actual UI checks are complete. No claim of complete test-profile/field
+acceptance is made before live target and client validation.

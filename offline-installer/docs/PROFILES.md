@@ -48,9 +48,10 @@ The builder rejects APKs containing the other profile's collection endpoints.
 Use a reviewed signed test APK for an actual field/test package; locally built
 debug APKs are not production-approved releases.
 
-Bundled PDF references currently retain production URL examples. Use the rendered
-profile Markdown guides and actual teacher pages for test-profile URLs. This is a
-known documentation limitation, not evidence of complete test-profile acceptance.
+Full builds regenerate both printed rollout guides from the rendered profile
+Markdown, update the embedded guide copies, and regenerate their checksum manifest.
+The Lesson3 reference PDF contains no production-alias URL and remains unchanged.
+Build-machine Python requires ReportLab; the field installer needs no PDF tooling.
 See `LOCAL_ALIAS_AUDIT.md` for every tracked text occurrence and `PROFILE_ACCEPTANCE.md`
 for remaining physical/client/target gates.
 

@@ -22,6 +22,9 @@ done
 [[ -f "$TAILSCALE_DIR/SHA256SUMS" ]] || die "Tailscale checksum manifest is missing"
 [[ -n "$TAILSCALE_ARCHIVE" && -f "$TAILSCALE_ARCHIVE" ]] || die "Tailscale amd64 archive is missing"
 [[ -x "$ACTIVATE_SOURCE" && -x "$DISABLE_SOURCE" ]] || die "remote-access control scripts are missing"
+[[ -r "$SCRIPT_DIR/remote_support_config.py" ]] || die "remote-support configuration helper is missing"
+systemctl cat ssh.service >/dev/null 2>&1 || die "OpenSSH server must be installed in the base image"
+[[ -f /usr/share/xsessions/cinnamon2d.desktop ]] || die "Cinnamon 2D must be installed in the base image"
 
 log "verifying offline remote-access payload"
 (cd "$TIGERVNC_DIR" && sha256sum -c SHA256SUMS)
@@ -93,6 +96,8 @@ fi
 
 install -m 0755 "$ACTIVATE_SOURCE" /usr/local/sbin/ares-enable-remote-access
 install -m 0755 "$DISABLE_SOURCE" /usr/local/sbin/ares-disable-remote-access
+install -d -m 0755 /usr/local/lib/ares
+install -m 0644 "$SCRIPT_DIR/remote_support_config.py" /usr/local/lib/ares/remote_support_config.py
 systemctl daemon-reload
 systemctl disable --now tailscaled.service >/dev/null 2>&1 || true
 

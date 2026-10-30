@@ -1,71 +1,67 @@
-# Optional Remote Access: Tailscale and TigerVNC
+# Optional remote support: OpenSSH over Tailscale, localhost TigerVNC
 
-ARES Q4 Offline Installer v1.11 installs the remote-access prerequisites but leaves them inactive.
-The field installation does not register the server with Tailscale, create a VNC password, start a
-VNC desktop, or expose a VNC port.
+Core installation prepares Tailscale and TigerVNC, stops/disables both, and disables
+legacy x11vnc. It offers activation only after core verification succeeds; the
+default answer is No. A declined or failed activation leaves core success intact.
+Preparation does not erase an existing Tailscale registration or VNC password.
 
-## State immediately after field installation
+OpenSSH and Cinnamon 2D must already exist in the Ubuntu 24.04 base image. Neither
+preflight nor core installation enrolls the server in a tailnet. No router port
+forward, public VNC listener, or Tailscale SSH server is created.
 
-- Tailscale and TigerVNC are installed from the checksummed offline payload.
-- `tailscaled.service` and `tigervncserver@:1.service` are stopped and disabled.
-- Tailscale is not registered with a tailnet.
-- No TigerVNC listener exists on port 5901.
-- The base-image `x11vnc` service is stopped and disabled.
-- The future TigerVNC session is configured for Cinnamon 2D and localhost-only listening.
+## Activate
 
-This state requires no remote-access credentials and does not open a remote-control service.
+At the console, with Internet access, run `sudo ares-enable-remote-access`.
+Enter the full school name, confirm its normalized Linux/Tailscale hostname,
+complete Tailscale browser approval if needed, and create a unique VNC password
+if none exists. The account is `ares`, session Cinnamon 2D, display `:1`, port
+5901. The mDNS profile alias is independent and is never changed by activation.
 
-## Activate during an authorized support session
+The canonical source is `templates/ares_enable_remote_access.sh`; the builder
+packages that file and preparation installs it under `/usr/local/sbin`.
+Its Python configuration helper is installed under `/usr/local/lib/ares`.
+There is no second activation implementation or post-preparation overwrite.
 
-The server must have working Internet access. At the server console, run:
+Activation explicitly runs `tailscale set --ssh=false` and uses standard OpenSSH.
+The official [Tailscale instructions](https://tailscale.com/docs/features/tailscale-ssh)
+document that command for disabling previously enabled Tailscale SSH.
+Tailnet policy must permit standard TCP 22, and the support user needs ordinary
+OpenSSH credentials/authorized keys. No credentials are embedded in this package.
 
-```bash
-sudo ares-enable-remote-access
+The bundled Ubuntu Noble `tigervnc-standalone-server` version
+`1.13.1+dfsg-2build2` reads Perl syntax from `~/.vnc/tigervnc.conf` and its password
+from `~/.vnc/passwd`, per the exact-version
+[Ubuntu manual](https://manpages.ubuntu.com/manpages/noble/man8/tigervncsession.8.html).
+The command writes these under the `ares` home with restricted permissions.
+It rejects an existing `:1` assignment to another user, preserves other displays,
+and rejects an unrelated listener occupying 5901. Every detected 5901 listener
+must be IPv4/IPv6 loopback. A failing check stops/disables TigerVNC and Tailscale.
+
+Successful activation enables both services for reboot autostart. It also enables
+OpenSSH, records its prior active/enabled state, and preserves that baseline on
+subsequent activation. A failure restores the prior SSH state and rolls back a
+hostname change. Error logs are root-only under `/var/lib/ares/remote-support`.
+Configuration and tailnet enrollment may remain for a retry after failure.
+
+From the authorized support computer, use the Tailscale IP printed by activation:
+
+```powershell
+ssh -N -L 5901:127.0.0.1:5901 ares@100.x.y.z
 ```
 
-The command:
+Keep that terminal open and connect the VNC viewer to `127.0.0.1:5901`. A service
+health check is not evidence of a working client tunnel or usable desktop.
 
-1. requests a new, unique VNC password without printing or storing it in the installation log;
-2. starts a separate headless Cinnamon 2D desktop on display `:1`;
-3. binds TigerVNC only to localhost on TCP 5901;
-4. starts Tailscale and asks the technician to complete its normal browser authorization;
-5. enables Tailscale SSH; and
-6. prints the SSH-tunnel command needed before connecting a VNC viewer.
+## Disable and re-enable
 
-Do not expose TCP 5901 through the router, Nginx, or a public firewall rule. The intended connection
-is a VNC viewer through an authenticated Tailscale SSH tunnel.
+Run `sudo ares-disable-remote-access`. It stops/disables TigerVNC and Tailscale,
+checks that 5901 is closed, and restores the pre-activation OpenSSH service state.
+Existing SSH used for another purpose remains available. It retains the tailnet
+registration, VNC password and hostname. Account-side removal from the tailnet is
+a separate administrative action. Re-enable with the same activation command;
+an existing VNC password is reused, and the machine hostname is confirmed again.
 
-If activation fails, the command stops both services so a partial activation does not leave remote
-access running.
-
-## Disable after support
-
-Run:
-
-```bash
-sudo ares-disable-remote-access
-```
-
-This stops and disables TigerVNC and Tailscale while retaining their packages and local
-configuration for a later authorized session. If the server must also be removed from the
-organization's Tailscale device list, an authorized Tailscale administrator must perform that
-separate account-side action.
-
-## Verification
-
-After installation, but before activation:
-
-```bash
-sudo systemctl is-active tailscaled.service || true
-sudo systemctl is-active 'tigervncserver@:1.service' || true
-sudo ss -ltnp | grep ':5901 ' || echo 'PASS: port 5901 is closed'
-sudo pgrep -x x11vnc || echo 'PASS: x11vnc is not running'
-```
-
-The expected service result is `inactive`, port 5901 is closed, and `x11vnc` is not running.
-
-## Desktop fallback
-
-Cinnamon 2D is the tested default for Ubuntu 24.04 ARES servers. Openbox remains installed as a
-manual recovery fallback, but v1.11 does not automatically switch desktop sessions. XFCE, Xpra,
-and the Tsavo Trust module are not included in this remote-access package.
+Verify on the server: `systemctl is-active tailscaled.service`,
+`systemctl is-active 'tigervncserver@:1.service'`, and `ss -ltnp`.
+Complete the live checks in `PROFILE_ACCEPTANCE.md` for both profiles before
+field acceptance. Tsavo is a separate future extension and is not called by core.

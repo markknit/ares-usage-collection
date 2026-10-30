@@ -2,6 +2,8 @@
 # Source with the absolute package.conf path. Profiles never rename the machine.
 [[ -r "$1" ]] || { echo "Missing packaged configuration: $1" >&2; exit 1; }
 source "$1"
+: "${LESSON3_SERVER_URL?Missing packaged offline security posture}"
+[[ -z "$LESSON3_SERVER_URL" ]] || { echo "Offline package requires empty SERVER_URL" >&2; exit 1; }
 [[ "$LESSON3_VERSION" =~ ^v[0-9]+\.[0-9]+$ ]] || { echo "Invalid release" >&2; exit 1; }
 case "$ARES_PROFILE" in
   production) ARES_ALIAS=ares.local ;;
@@ -10,4 +12,4 @@ case "$ARES_PROFILE" in
 esac
 ARES_URL="http://$ARES_ALIAS"
 LESSON3_URL="$ARES_URL:3001"
-export LESSON3_VERSION ARES_PROFILE ARES_ALIAS ARES_URL LESSON3_URL
+export LESSON3_VERSION LESSON3_SERVER_URL ARES_PROFILE ARES_ALIAS ARES_URL LESSON3_URL

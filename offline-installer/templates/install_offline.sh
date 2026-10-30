@@ -117,6 +117,7 @@ run_step "8) Post-install verification" bash -c '
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/ >/dev/null
   curl -fsS --max-time 8 http://127.0.0.1:3001/login >/dev/null
   grep -qx "$LESSON3_VERSION" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
+  python3 "$0/lesson3/configure_url.py" check /mnt/sda3/var/www/lesson3-download/lesson3-deploy/.env "$LESSON3_URL" "$LESSON3_SERVER_URL"
   grep -q "module:lesson_plans_directory" /mnt/sda3/var/www/tracker/key_map.csv
   grep -q "module:lesson_plan_editor" /mnt/sda3/var/www/tracker/key_map.csv
   test -f /mnt/sda3/var/www/modules/Lesson_Plans/index.htmlf
@@ -138,10 +139,12 @@ run_step "8) Post-install verification" bash -c '
   command -v tailscaled >/dev/null
   test -x /usr/local/sbin/ares-enable-remote-access
   test -x /usr/local/sbin/ares-disable-remote-access
-  ! systemctl is-active --quiet tailscaled.service
-  ! systemctl is-active --quiet "tigervncserver@:1.service"
-  ! pgrep -x x11vnc >/dev/null
-  ! ss -ltn | awk "{print \$4}" | grep -Eq "(^|:)5901$"
+  if systemctl is-active --quiet tailscaled.service || systemctl is-active --quiet "tigervncserver@:1.service"; then
+    echo "ERROR: remote services are active before optional activation" >&2; exit 1
+  fi
+  if pgrep -x x11vnc >/dev/null || ss -H -ltn | grep -E ":5901[[:space:]]" >/dev/null; then
+    echo "ERROR: remote desktop listener exists before optional activation" >&2; exit 1
+  fi
   echo "PASS: Nginx, ARES root, Lesson3, tracking, Lesson Plans, and offline teacher APK verified"
 ' "$SCRIPT_DIR"
 
@@ -153,6 +156,6 @@ echo "Teacher ARES Sync installer: ${ARES_URL}/app_install/"
 echo "Direct teacher APK: ${ARES_URL}/downloads/ares-sync.apk"
 echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"
-echo "Lesson3 discussions: v0.94 installs them enabled by default; complete the v0.94 acceptance checklist before rollout."
-echo "Remote access: Tailscale and TigerVNC are installed but stopped, disabled, and unregistered."
-echo "Later activation: sudo ares-enable-remote-access"
+echo "Lesson3 $LESSON3_VERSION: complete the packaged acceptance checklist before rollout."
+source "$SCRIPT_DIR/optional_remote_support.sh"
+optional_remote_support

@@ -32,7 +32,6 @@ android {
         versionName = "0.8.0-rc15"
         buildConfigField("boolean", "ACCEPTANCE_TEST_MODE", "false")
         buildConfigField("String", "LOCAL_SERVER_URL", "\"http://$localServerHost\"")
-        resValue("string", "ares_server_host", localServerHost)
         if (aresProfile == "test") {
             applicationId = "org.areseducation.sync.test"
             versionNameSuffix = "-test-profile"
@@ -42,6 +41,9 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    // Domain text in network-security XML must be a literal hostname.
+    sourceSets.getByName("main").res.srcDir("src/profiles/$aresProfile/res")
 
     signingConfigs {
         create("release") {

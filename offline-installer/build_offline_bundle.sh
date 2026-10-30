@@ -95,6 +95,8 @@ BUNDLE_NAME="ARES_Q4_Offline_${LESSON3_VERSION}_amd64_${BUNDLE_REVISION}"
 [[ "$ARES_PROFILE" == production ]] || BUNDLE_NAME="${BUNDLE_NAME}_test"
 STAGE="$OUTPUT/$BUNDLE_NAME"
 ZIPFILE="$OUTPUT/$BUNDLE_NAME.zip"
+[[ "$SOURCE/" != "$STAGE/"* && "$STAGE/" != "$SOURCE/"* ]] \
+  || die "source and staging trees must be separate"
 if [[ -e "$STAGE" ]]; then
   chmod -R u+rwX "$STAGE" || die "could not make prior staging directory removable: $STAGE"
 fi
@@ -104,6 +106,8 @@ mkdir -p "$STAGE"
 log "copying ARES source package"
 rsync -a --chmod=Du+w,Fu+w \
   --exclude='setup-ares-tailscale-vnc-v2.sh' \
+  --exclude='install_offline_no_sha_checks.sh' \
+  --exclude='tsavo_trust_module_install.sh' \
   "$SOURCE/" "$STAGE/"
 chmod -R u+rwX "$STAGE"
 
@@ -149,10 +153,12 @@ rm -f "$STAGE/lesson_plan/install_ares_lesson_plan_editor_proxy.sh"
 
 mkdir -p "$STAGE/lesson3/release" "$STAGE/lesson3/images" "$STAGE/lesson3/corpus" "$STAGE/tracking" "$STAGE/teacher-app"
 install -m 0644 "$SELF_DIR/templates/ares_config.sh" "$STAGE/ares_config.sh"
-printf 'LESSON3_VERSION=%s\nARES_PROFILE=%s\n' "$LESSON3_VERSION" "$ARES_PROFILE" > "$STAGE/package.conf"
+printf 'LESSON3_VERSION=%s\nLESSON3_SERVER_URL=%s\nARES_PROFILE=%s\n' "$LESSON3_VERSION" "$LESSON3_SERVER_URL" "$ARES_PROFILE" > "$STAGE/package.conf"
+install -m 0644 "$SELF_DIR/tools/configure_lesson3_url.py" "$STAGE/lesson3/configure_url.py"
 install -m 0644 "$SELF_DIR/tools/configure_nginx.py" "$STAGE/lesson_plan/configure_nginx.py"
 mkdir -p "$STAGE/remote-access/tigervnc" "$STAGE/remote-access/tailscale"
 install -m 0755 "$SELF_DIR/templates/install_offline.sh" "$STAGE/install_offline.sh"
+install -m 0644 "$SELF_DIR/templates/optional_remote_support.sh" "$STAGE/optional_remote_support.sh"
 install -m 0755 "$SELF_DIR/templates/preflight.sh" "$STAGE/preflight.sh"
 install -m 0755 "$SELF_DIR/templates/lesson3_offline.sh" "$STAGE/lesson3/install_lesson3_offline.sh"
 install -m 0755 "$SELF_DIR/templates/install_lesson3_corpus.sh" "$STAGE/lesson3/corpus/install_lesson3_corpus.sh"
@@ -163,6 +169,7 @@ install -m 0755 "$SELF_DIR/templates/lesson_plan_install.sh" "$STAGE/lesson_plan
 install -m 0755 "$SELF_DIR/templates/prepare_remote_access.sh" "$STAGE/remote-access/prepare_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/ares_enable_remote_access.sh" "$STAGE/remote-access/ares_enable_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/ares_disable_remote_access.sh" "$STAGE/remote-access/ares_disable_remote_access.sh"
+install -m 0644 "$SELF_DIR/tools/remote_support_config.py" "$STAGE/remote-access/remote_support_config.py"
 install -m 0644 "$SELF_DIR/templates/index.htmlf" "$STAGE/lesson_plan/payload/index.htmlf"
 install -m 0644 "$SELF_DIR/templates/index.html" "$STAGE/lesson_plan/payload/index.html"
 mkdir -p "$STAGE/docs"
@@ -171,6 +178,8 @@ install -m 0644 "$SELF_DIR/docs/TEACHER_PHONE_GUIDE.md" "$STAGE/docs/TEACHER_PHO
 install -m 0644 "$SELF_DIR/docs/LESSON3_CORPUS_INSTALL.md" "$STAGE/docs/LESSON3_CORPUS_INSTALL.md"
 install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3_V094_ACCEPTANCE.md"
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
+install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
+install -m 0644 "$SELF_DIR/docs/PROFILE_ACCEPTANCE.md" "$STAGE/docs/PROFILE_ACCEPTANCE.md"
 mkdir -p "$STAGE/docs/pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Teacher_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Teacher_Guide.pdf"
@@ -435,6 +444,8 @@ for required in \
   remote-access/prepare_remote_access.sh \
   remote-access/ares_enable_remote_access.sh \
   remote-access/ares_disable_remote_access.sh \
+  remote-access/remote_support_config.py \
+  optional_remote_support.sh \
   docs/TECHNICIAN_PHONE_INSTALL.md \
   docs/TEACHER_PHONE_GUIDE.md \
   docs/LESSON3_CORPUS_INSTALL.md \

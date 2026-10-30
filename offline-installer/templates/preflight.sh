@@ -38,6 +38,8 @@ else
   fail "Docker Compose v2 is unavailable"
 fi
 
+if systemctl cat ssh.service >/dev/null 2>&1; then pass "OpenSSH base-image service exists"; else fail "OpenSSH base-image service missing"; fi
+if [[ -f /usr/share/xsessions/cinnamon2d.desktop ]]; then pass "Cinnamon 2D exists"; else fail "Cinnamon 2D is missing"; fi
 if id ares >/dev/null 2>&1; then pass "ares user exists"; else fail "ares user does not exist"; fi
 if id www-data >/dev/null 2>&1; then pass "www-data user exists"; else fail "www-data user does not exist"; fi
 
@@ -46,7 +48,9 @@ if nginx -t >/dev/null 2>&1; then pass "current Nginx configuration validates"; 
 for f in \
   "$SCRIPT_DIR/package.conf" \
   "$SCRIPT_DIR/ares_config.sh" \
+  "$SCRIPT_DIR/optional_remote_support.sh" \
   "$SCRIPT_DIR/lesson_plan/configure_nginx.py" \
+  "$SCRIPT_DIR/lesson3/configure_url.py" \
   "$SCRIPT_DIR/lesson_plan/install.sh" \
   "$SCRIPT_DIR/lesson_plan/payload/index.htmlf" \
   "$SCRIPT_DIR/lesson_plan/payload/index.html" \
@@ -71,6 +75,7 @@ for f in \
   "$SCRIPT_DIR/remote-access/prepare_remote_access.sh" \
   "$SCRIPT_DIR/remote-access/ares_enable_remote_access.sh" \
   "$SCRIPT_DIR/remote-access/ares_disable_remote_access.sh" \
+  "$SCRIPT_DIR/remote-access/remote_support_config.py" \
   "$SCRIPT_DIR/remote-access/tigervnc/SHA256SUMS" \
   "$SCRIPT_DIR/remote-access/tailscale/SHA256SUMS"; do
     [[ -f "$f" ]] && pass "package file present: ${f#$SCRIPT_DIR/}" || fail "package file missing: ${f#$SCRIPT_DIR/}"

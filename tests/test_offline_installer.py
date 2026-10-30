@@ -116,9 +116,10 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn("systemctl disable --now tailscaled.service", prepare)
         self.assertIn("systemctl disable --now 'tigervncserver@:1.service'", prepare)
         self.assertNotIn("tailscale up", prepare)
-        self.assertIn('localhost=yes', activate)
-        self.assertIn('tailscale up --hostname "$TAILSCALE_HOSTNAME" --ssh', activate)
-        self.assertIn("rollback_activation", activate)
+        self.assertIn('$localhost = "yes";', activate)
+        self.assertIn('tailscale set --ssh=false', activate)
+        self.assertIn('tailscale up --hostname="$new_hostname" --ssh=false', activate)
+        self.assertIn('trap cleanup EXIT', activate)
 
     def test_mdns_selector_excludes_non_lan_networks(self):
         installer = (BUILDER / "templates" / "lesson_plan_install.sh").read_text(

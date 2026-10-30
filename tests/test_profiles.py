@@ -28,7 +28,7 @@ class ProfileTests(unittest.TestCase):
         for profile, alias in render.ALIASES.items():
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as directory:
                 conf = Path(directory) / "package.conf"
-                conf.write_text("LESSON3_VERSION=v0.94\nARES_PROFILE=" + profile + "\n")
+                conf.write_text("LESSON3_VERSION=v0.94\nLESSON3_SERVER_URL=\nARES_PROFILE=" + profile + "\n")
                 result = subprocess.run([BASH, "-c", 'source "$1" "$2"; printf "%s|%s" "$ARES_ALIAS" "$LESSON3_URL"',
                                          "test", (BUILDER / "templates/ares_config.sh").as_posix(), conf.as_posix()],
                                         capture_output=True, text=True, check=True,

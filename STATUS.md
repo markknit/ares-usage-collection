@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 
 - Repository: `C:/dev/ares-usage-collection`.
 - Branch: `production-baseline-cleanup`.
-- Implementation tip reviewed: `608cb7e7a2dde4a60ab16dbb25dec61e8ef10939`.
+- Implementation tip reviewed: `973708935eacac62a210e7d065779090170733bf`.
 - Approved Lesson3 release: v0.94; revised bundle: v1.12.
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
 - This continuity record does not establish live deployment or field acceptance.
@@ -21,7 +21,30 @@ Last updated: 2026-10-30
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
 | Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
-| Field artifacts and rollout approval | Pending | No full field ZIP or approved signed replacement APK is established by these commits. Complete live profile and Lesson3 acceptance before rollout approval; retain the documented fallback. |
+| Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
+| Field rollout approval | Pending | Production ZIP verification is complete; all live installation, profile and Lesson3 acceptance checks remain Pending. Retain the documented fallback until evidence is reviewed. |
+
+## Production v1.12 artifact
+
+- Filename: `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`.
+- ZIP SHA-256: `fef897456108b70664fae280e4d3e4de354be23d3e0acbe4dc313dc1b458cd4a`.
+- Size: 1,761,932,869 bytes.
+- Builder commit: `973708935eacac62a210e7d065779090170733bf`, confirmed by
+  the user; the ZIP manifest does not embed this Git identity.
+- Manifest build time: `2026-10-30T13:16:47-07:00`.
+- Profile: production (`ares.local`); Lesson3 v0.94; bundle revision v1.12.
+- Corpus source commit: `e07c243da77ad4554a2f404ae7790ef6e9d3e1b0`;
+  packaged manifest contains 95 plans / 806 lessons.
+- Bundled approved APK SHA-256:
+  `16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8`.
+- Windows copy:
+  `C:/Users/MRKni/OneDrive/ARES Utilities/Offline Installer Releases/V1.1.2/ARES_Q4_Offline_v0.94_amd64_v1.12.zip`.
+- User reports builder, independent verification and Windows copy verification
+  passed. This update independently rechecked the Windows ZIP hash against its
+  sidecar, ZIP CRC integrity, all 411 entries in internal checksum manifests,
+  corpus manifest counts and the bundled APK hash; all passed.
+- All live installation and field-acceptance checks remain **Pending**, including
+  installed database counts. Packaged corpus counts do not establish import success.
 
 ## Known Issues / Lessons Learned
 
@@ -42,6 +65,22 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - Production v1.12 artifact verification record
+
+- Recorded the successfully built production artifact, exact filename, ZIP hash,
+  size, manifest build time, packaged corpus and APK identity, and Windows copy.
+  Builder completion and independent verification were reported by the user;
+  the Windows artifact and checks listed above were rechecked during this update.
+- Recorded user-confirmed builder commit
+  `973708935eacac62a210e7d065779090170733bf`; checked its identity in Git.
+- Corrected the active artifact thread: a full production ZIP is now available
+  and verified. Earlier no-full-ZIP statements describe the pre-build session.
+  All live installation, field acceptance and rollout approval gates stay Pending.
+
+Still open:
+
+- Complete all live target, phone/client and Lesson3 UI/content acceptance gates.
 
 ### 2026-10-30 - APK policy resource discovery fix
 

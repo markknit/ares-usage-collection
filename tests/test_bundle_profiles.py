@@ -64,6 +64,7 @@ shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*exc
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 stage = next(path for path in output.iterdir() if path.is_dir())
                 self.assertTrue((stage / "NOT_FIELD_READY.txt").exists())
+                self.assertTrue((stage / "remote-access/remote_support_common.sh").is_file())
                 self.assertIn("v1.13", stage.name)
                 self.assertFalse((stage / "TsavoTrust").exists())
                 self.assertFalse((stage / "tsavo/unreviewed.txt").exists())

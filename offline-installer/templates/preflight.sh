@@ -28,7 +28,7 @@ esac
 [[ -d /mnt/sda3 ]] && pass "/mnt/sda3 exists" || fail "/mnt/sda3 is missing"
 
 for cmd in bash nginx php python3 rsync avahi-publish avahi-resolve docker openssl sha256sum tar curl systemctl \
-  ss tee grep awk df find flock install stat visudo sed ip dpkg dpkg-query pgrep timeout; do
+  ss tee grep awk df find flock install stat visudo sed ip dpkg dpkg-query pgrep timeout journalctl tail dbus-run-session; do
   if command -v "$cmd" >/dev/null 2>&1; then pass "$cmd available"; else fail "$cmd not found"; fi
 done
 
@@ -39,6 +39,11 @@ else
 fi
 
 if systemctl cat ssh.service >/dev/null 2>&1; then pass "OpenSSH base-image service exists"; else fail "OpenSSH base-image service missing"; fi
+if systemctl cat ssh.socket >/dev/null 2>&1; then
+  pass "OpenSSH socket activation is available; activation will preserve service/socket baselines"
+else
+  warn "ssh.socket is absent; activation will use the existing ssh.service"
+fi
 if [[ -f /usr/share/xsessions/cinnamon2d.desktop ]]; then pass "Cinnamon 2D exists"; else fail "Cinnamon 2D is missing"; fi
 if id ares >/dev/null 2>&1; then pass "ares user exists"; else fail "ares user does not exist"; fi
 if id www-data >/dev/null 2>&1; then pass "www-data user exists"; else fail "www-data user does not exist"; fi
@@ -81,6 +86,7 @@ for f in \
   "$SCRIPT_DIR/remote-access/ares_enable_remote_access.sh" \
   "$SCRIPT_DIR/remote-access/ares_disable_remote_access.sh" \
   "$SCRIPT_DIR/remote-access/remote_support_config.py" \
+  "$SCRIPT_DIR/remote-access/remote_support_common.sh" \
   "$SCRIPT_DIR/remote-access/tigervnc/SHA256SUMS" \
   "$SCRIPT_DIR/remote-access/tailscale/SHA256SUMS"; do
     [[ -f "$f" ]] && pass "package file present: ${f#$SCRIPT_DIR/}" || fail "package file missing: ${f#$SCRIPT_DIR/}"

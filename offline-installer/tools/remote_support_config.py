@@ -2,6 +2,8 @@
 """Pure transformations used by the canonical remote-support command."""
 import argparse
 import re
+import json
+import sys
 from pathlib import Path
 
 
@@ -49,13 +51,21 @@ def display_map(value):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("hostname", "hosts", "display"))
+    parser.add_argument("mode", choices=("hostname", "hosts", "display", "connected", "redact"))
     parser.add_argument("values", nargs="*")
     args = parser.parse_args()
     if args.mode == "hostname":
         print(hostname(args.values[0]))
     elif args.mode == "hosts":
         print(hosts(Path(args.values[0]).read_text(), args.values[1], args.values[2]), end="")
-    else:
+    elif args.mode == "display":
         path = Path(args.values[0])
         print(display_map(path.read_text() if path.exists() else ""), end="")
+    elif args.mode == "connected":
+        state = json.load(sys.stdin)
+        sys.exit(0 if state.get("BackendState") == "Running" and state.get("Self", {}).get("Online") is True else 1)
+    else:
+        # Enrollment bypasses logs entirely. Defense in depth for diagnostic
+        # output: no HTTP(S) URL from a subprocess is persisted by tee either.
+        for line in sys.stdin:
+            print(re.sub(r"https?://\S+", "[URL omitted]", line), end="", flush=True)

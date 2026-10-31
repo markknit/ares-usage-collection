@@ -143,6 +143,7 @@ run_step "9) Post-install verification" bash -c '
   command -v tailscaled >/dev/null
   test -x /usr/local/sbin/ares-enable-remote-access
   test -x /usr/local/sbin/ares-disable-remote-access
+  test -r /usr/local/lib/ares/remote_support_common.sh
   if systemctl is-active --quiet tailscaled.service || systemctl is-active --quiet "tigervncserver@:1.service"; then
     echo "ERROR: remote services are active before optional activation" >&2; exit 1
   fi

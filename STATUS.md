@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 
 - Repository: `C:/dev/ares-usage-collection`.
 - Branch: `production-baseline-cleanup`.
-- Implementation tip reviewed: `973708935eacac62a210e7d065779090170733bf`.
+- Implementation baseline for this step: `32634eb108312581177c5c45b2d5adf0fa740c06`.
 - Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
 - Verified production artifact retained: v1.12 (identity and evidence below).
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
@@ -17,7 +17,7 @@ Last updated: 2026-10-30
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
-| Optional OpenSSH / TigerVNC support | Implemented; live acceptance pending | `3dccba4` records consolidated activation, failure cleanup and the optional post-core prompt. Verified with `git show --stat 3dccba4`. Real service, tunnel and desktop checks remain pending. |
+| Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -51,6 +51,12 @@ Last updated: 2026-10-30
 
 ## Known Issues / Lessons Learned
 
+- Remote command-line readiness and desktop readiness are separate outcomes.
+  After Tailscale/SSH succeed, a VNC failure must diagnose and stop only the owned
+  VNC unit, return partial failure and retain the working command-line path. Send
+  enrollment output to the controlling terminal rather than original stdout:
+  original stdout may already be a parent installer's log pipe. Preserve both
+  SSH service/socket baselines and do not enable a service behind an active socket.
 - TsavoTrust media belongs in the normalized external build source, not Git or
   Git LFS. Validate exact pinned paths/sizes/hashes before changing build outputs.
   Use UTF-8 explicitly when reading checksum filenames on Windows: one approved
@@ -76,6 +82,54 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - Optional remote-support corrections for v1.13
+
+- Implemented the approved partial-failure policy as a separate step after
+  TsavoTrust commit `32634eb`. TigerVNC failure after Tailscale/SSH readiness
+  returns 2, diagnoses before stopping the owned VNC unit, retains the command-line
+  path/identity/confirmed hostname and prints the retry command. Unresolved display
+  ownership does not authorize stopping another user's unit. The optional core
+  wrapper distinguishes partial failure, deferral and other errors while keeping
+  successful core installation intact.
+- Enrollment explains server outbound Internet and off-network cellular-phone
+  browser approval. Auth output goes to `/dev/tty`, bypassing both log pipelines;
+  diagnostics additionally redact URLs. The 120-second CLI timeout is bounded by
+  an outer 125-second deadline plus five-second kill grace. Offline/timeout/deferred
+  paths return 3 and print `sudo ares-enable-remote-access`. Connected enrollment
+  is reused; no logout, forced reauthentication or identity deletion is performed.
+- Added validated non-secret active/enabled baselines for `ssh.service` and
+  `ssh.socket`, preserved over retries and restored by disable. Socket-activated
+  Ubuntu behavior, static/runtime states and conservative legacy-record migration
+  have fixture coverage. No saved file is evaluated as shell code.
+- Added hidden, matching 6-8-character password prompts with three attempts,
+  one normal eight-byte `tigervncpasswd -f` record and no view-only dialogue.
+  Corrected `$AlwaysShared`, installed per-user `Xtigervnc-session` using a separate
+  dbus-run-session/Cinnamon 2D session, and require three consecutive active/
+  loopback-only samples. No physical GNOME/AnyDesk process/service is modified.
+- Ran with bundled Python 3.12 (`PYTHONPATH=tests`):
+  `python -X utf8 -B -m unittest test_remote_support test_profiles test_bundle_profiles test_offline_installer.OfflineInstallerSourceTests test_tsavo_content test_tsavo_install -v`.
+  Result: 60 run, 59 passed, one native POSIX-link test skipped. Windows filesystem
+  transaction fixtures still substitute link operations; service/network/password
+  tests use stubs and are not live acceptance.
+- Additional Windows checks passed: six incoming-processor tests (Python launcher
+  adapted to the bundled executable, Git coreutils on PATH), static portal tests
+  with UTF-8 mode, and shell syntax for all 19 scripts. Not run on Windows: three
+  Linux/root corpus tests and nine Linux school-server installer fixtures. Native
+  systemd/Tailscale/TigerVNC, interactive terminal and client tests remain Pending.
+- Verified the v1.12 ZIP hash remains
+  `fef897456108b70664fae280e4d3e4de354be23d3e0acbe4dc313dc1b458cd4a`;
+  dated evidence is unchanged. No final v1.13 field ZIP was built and no root-
+  checksum-bypass implementation was started. Lesson3 v0.94 and pinned offline
+  remote binaries remain unchanged.
+
+Still open:
+
+- All packaged `:1`, Tailscale-path SSH/VNC, physical-session coexistence,
+  enrollment/log privacy, reboot/autostart, disable/re-enable and partial-retry
+  acceptance checks for both profiles remain Pending.
+- All other unperformed live installation, TsavoTrust, Lesson3 and rollout gates
+  remain Pending. Stop after the dedicated remote-support commit; no push.
 
 ### 2026-10-30 - TsavoTrust integration for v1.13
 

@@ -30,13 +30,20 @@ for both profiles.
 | Standard OpenSSH over Tailscale | Pending | Pending | Actual SSH login to Tailscale IP and RunSSH=false |
 | VNC tunnel and desktop | Pending | Pending | SSH forwarding, VNC authentication, usable Cinnamon 2D desktop |
 | Disable/re-enable | Pending | Pending | Service states, closed 5901 after disable, successful reconnection and reboot autostart |
-| Activation failure cleanup | Pending | Pending | Inject failure on disposable target, verify remote services stopped and no 5901 listener |
+| Activation partial failure and retry | Pending | Pending | Fail TigerVNC after Tailscale/SSH succeed; capture diagnostics before VNC stop, working command-line path, preserved identity and enrollment-free VNC retry |
+| SSH service/socket baseline restoration | Pending | Pending | Ubuntu 24.04 active/enabled ssh.socket and inactive/disabled ssh.service; saved pair restored by disable without unnecessary service enablement |
+| Enrollment timeout and secret-free logs | Pending | Pending | Offline/deferred/timeout retry command, connected identity reuse, console-only authentication URL and absence from activation/installer logs |
 | Core success when declined/failed | Pending | Pending | Real install exit status/logs for default-No and failed activation |
 | TsavoTrust offline install and repeat | Pending | Pending | Installed eight-file hashes, unchanged prior mapping rows, exactly one new Tsavo key and correct portal link |
 | TsavoTrust portal, videos and tracking | Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |
 | TsavoTrust failure restoration | Pending | Pending | Disposable-target copy/publication/HTTP failure, restored prior module/link/map and reviewed recovery evidence |
 
-## Software evidence recorded locally
+## Historical v1.12 software evidence recorded locally
+
+The latest v1.13 remote-support source tests are recorded in
+[STATUS.md](../../STATUS.md). They exercise service stubs and do not change any
+Pending live result above. The approved v1.13 partial-failure policy is defined in
+[REMOTE_ACCESS.md](REMOTE_ACCESS.md); preserve working Tailscale/SSH when VNC fails.
 
 Final local command (24 passing checks):
 
@@ -85,9 +92,13 @@ Confirm every 5901 listener is loopback. Reboot and verify autostart/reconnectio
 Disable; verify remote services inactive/disabled and 5901 closed. Re-enable and
 repeat the desktop connection. Confirm pre-existing SSH was preserved.
 
-On a disposable fixture, inject an activation failure (e.g. deny browser enrollment
-or force VNC startup failure) and verify service/listener cleanup. Exercise the
-post-core default-No and failed-activation paths and record core success separately.
+On a disposable fixture, separately defer/deny enrollment and force VNC failure
+after Tailscale/SSH succeed. The latter must return partial failure, print VNC
+diagnostics before stopping only TigerVNC, and preserve working Tailscale/SSH and
+identity. Retry must repair VNC without re-enrollment. Verify both SSH unit baseline
+states on disable, including Ubuntu socket activation. Verify timeout/retry and
+authentication-URL omission from both logs without storing the URL in evidence.
+Exercise post-core default-No, partial and failed paths; record core success separately.
 Do not deliberately break the online demo or alter real school identities/data.
 
 Keep the v0.94 discussion/content gates in `LESSON3_V094_ACCEPTANCE.md` pending until

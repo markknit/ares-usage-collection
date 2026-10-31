@@ -183,6 +183,7 @@ install -m 0755 "$SELF_DIR/templates/prepare_remote_access.sh" "$STAGE/remote-ac
 install -m 0755 "$SELF_DIR/templates/ares_enable_remote_access.sh" "$STAGE/remote-access/ares_enable_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/ares_disable_remote_access.sh" "$STAGE/remote-access/ares_disable_remote_access.sh"
 install -m 0644 "$SELF_DIR/tools/remote_support_config.py" "$STAGE/remote-access/remote_support_config.py"
+install -m 0644 "$SELF_DIR/templates/remote_support_common.sh" "$STAGE/remote-access/remote_support_common.sh"
 install -m 0644 "$SELF_DIR/templates/index.htmlf" "$STAGE/lesson_plan/payload/index.htmlf"
 install -m 0644 "$SELF_DIR/templates/index.html" "$STAGE/lesson_plan/payload/index.html"
 mkdir -p "$STAGE/docs"
@@ -459,6 +460,7 @@ for required in \
   remote-access/ares_enable_remote_access.sh \
   remote-access/ares_disable_remote_access.sh \
   remote-access/remote_support_config.py \
+  remote-access/remote_support_common.sh \
   optional_remote_support.sh \
   tsavo/install.sh \
   tsavo/tsavo_content.py \

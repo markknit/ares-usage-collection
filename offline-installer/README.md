@@ -15,6 +15,10 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 
 ## v1.13 changes
 
+- Makes optional remote activation finite and enrollment output terminal-only,
+  preserves SSH service/socket baselines, and keeps working Tailscale/SSH after
+  a TigerVNC failure. See [remote support](docs/REMOTE_ACCESS.md) for status codes,
+  explicit hidden password prompts, retry and Pending lifecycle checks.
 - Integrates Tsavo Trust from the normalized external build-source folder, pinned
   by exact filenames, sizes and SHA-256 hashes. Six MP4s remain outside Git.
 - Adds transactional deployment, append-only tracking reconciliation and portal/

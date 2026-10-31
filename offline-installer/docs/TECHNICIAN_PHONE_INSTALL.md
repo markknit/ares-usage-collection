@@ -70,6 +70,12 @@ The field installer verifies the APK checksum before publishing it. Do not repla
 v1.13 includes the validated Tsavo Trust module. Provide the normalized external
 build-source payload and complete the [Tsavo acceptance checks](TSAVO_TRUST.md).
 The verified v1.12 artifact and evidence are retained unchanged.
+
+For optional remote support, the server needs outbound Internet; the technician
+can open the enrollment URL on a cellular phone off the ARES network. A finite
+timeout or deferral prints `sudo ares-enable-remote-access` for retry. A TigerVNC
+failure preserves working Tailscale/SSH and reports partial failure. See
+[REMOTE_ACCESS.md](REMOTE_ACCESS.md); never record enrollment URLs or passwords.
 For later authorized remote access, read `docs/REMOTE_ACCESS.md` before running
 `sudo ares-enable-remote-access`.
 

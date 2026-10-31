@@ -65,6 +65,12 @@ after core verification (default No). A prior registration is retained. It disab
 `x11vnc` service. Activate only for an authorized support session, either at that prompt or later
 with `sudo ares-enable-remote-access`; use standard OpenSSH over Tailscale, not Tailscale SSH.
 
+The server needs outbound Internet for enrollment. The technician may open its
+authentication URL on a phone using cellular data, off the ARES network. Enrollment
+has a finite timeout. If TigerVNC fails after Tailscale/SSH become available, the
+command preserves that command-line path and reports partial failure; retry with
+`sudo ares-enable-remote-access`. Do not record the authentication URL or password.
+
 The v1.13 package includes the validated Tsavo Trust module. See
 `offline-installer/docs/TSAVO_TRUST.md` for required source content and Pending field checks.
 

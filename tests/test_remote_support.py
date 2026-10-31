@@ -1,4 +1,7 @@
 from pathlib import Path
+import os
+import sys
+import tempfile
 import subprocess
 import unittest
 from test_profiles import BASH, BUILDER, load
@@ -8,9 +11,50 @@ urls = load("configure_lesson3_url")
 
 
 def shell(source, code):
-    return subprocess.run([BASH, "-c", 'source "$1"; ' + code, "test",
-                           (BUILDER / "templates" / source).as_posix()],
-                          capture_output=True, text=True)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        shim = root / "python3"
+        shim.write_text('#!/bin/bash\nexec "' + Path(sys.executable).as_posix() + '" "$@"\n', newline="\n")
+        shim.chmod(0o755)
+        prefix = 'export PATH="$(cygpath -u "$4"):$PATH"; ' if os.name == "nt" else 'export PATH="$4:$PATH"; '
+        result = subprocess.run([BASH, "-c", prefix + 'source "$2"; source "$1"; CONFIG_TOOL="$3"; STATE_DIR="$4"; ' + code,
+                                 "test", (BUILDER / "templates" / source).as_posix(),
+                                 (BUILDER / "templates/remote_support_common.sh").as_posix(),
+                                 (BUILDER / "tools/remote_support_config.py").as_posix(), root.as_posix()],
+                                capture_output=True, text=True)
+        result.artifacts = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+        return result
+
+
+SYSTEMD_FIXTURE = r'''
+CALLS="$STATE_DIR/calls"
+declare -A ACTIVE=([ssh.service]=no [ssh.socket]=yes [tailscaled.service]=yes [tigervncserver@:1.service]=no)
+declare -A ENABLED=([ssh.service]=disabled [ssh.socket]=enabled)
+declare -A PRESENT=([ssh.service]=yes [ssh.socket]=yes [tigervncserver@.service]=yes)
+systemctl() {
+  printf '%s\n' "$*" >> "$CALLS"
+  local action=$1 unit="${@: -1}" item
+  case "$action" in
+    cat) [[ "${PRESENT[$unit]:-no}" == yes ]] ;;
+    is-active) [[ "${ACTIVE[$unit]:-no}" == yes ]] ;;
+    is-enabled) printf '%s\n' "${ENABLED[$unit]:-disabled}"; [[ "${ENABLED[$unit]:-disabled}" == enabled* ]] ;;
+    enable|disable|start|stop|restart|mask)
+      for item in "${@:2}"; do
+        [[ "$item" != --* ]] || continue
+        case "$action" in
+          enable) ENABLED[$item]=enabled; [[ "$*" != *--runtime* ]] || ENABLED[$item]=enabled-runtime; [[ "$*" != *--now* ]] || ACTIVE[$item]=yes ;;
+          disable) [[ "${ENABLED[$item]:-disabled}" == static ]] || ENABLED[$item]=disabled; [[ "$*" != *--now* ]] || ACTIVE[$item]=no ;;
+          start|restart) ACTIVE[$item]=yes ;;
+          stop) ACTIVE[$item]=no ;;
+          mask) ENABLED[$item]=masked ;;
+        esac
+      done
+      return 0 ;;
+    status) echo VNC_STATUS; return 3 ;;
+    *) return 0 ;;
+  esac
+}
+'''
 
 
 class RemoteSupportTests(unittest.TestCase):
@@ -53,17 +97,256 @@ class RemoteSupportTests(unittest.TestCase):
             result = shell("ares_enable_remote_access.sh", "ss() { printf '%s\\n' '" + rows + "'; }; verify_vnc_listeners")
             self.assertEqual(result.returncode == 0, passes, result.stderr)
 
-    def test_failure_cleanup_stops_both_services_and_restores_owned_ssh(self):
-        result = shell("ares_enable_remote_access.sh", '''
-systemctl() { if [[ "$1" == is-active ]]; then return 3; fi; printf '%s\\n' "$*"; }
-STARTED=1; SSH_WAS_ACTIVE=no; SSH_WAS_ENABLED=no
+    def test_vnc_failure_preserves_command_line_and_diagnoses_before_stop(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+TARGET_HOME="$STATE_DIR/home"; mkdir -p "$TARGET_HOME/.vnc"
+echo VNC_CURRENT_LOG > "$TARGET_HOME/.vnc/fixture:1.log"
+journalctl() { echo VNC_JOURNAL; }
+runuser() { shift 3; "$@"; }
+print_ssh_instructions() { echo SSH_RETAINED; }
+STARTED=1; CLI_READY=1; VNC_PHASE=1; VNC_OWNED=1
 trap cleanup EXIT
 exit 42
 ''')
-        self.assertEqual(result.returncode, 42)
-        self.assertIn("disable --now tigervncserver@:1.service tailscaled.service", result.stdout)
-        self.assertIn("stop ssh.service", result.stdout)
-        self.assertIn("disable ssh.service", result.stdout)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        calls = result.artifacts["calls"].decode()
+        self.assertIn("disable --now tigervncserver@:1.service", calls)
+        self.assertNotIn("disable --now tailscaled.service", calls)
+        self.assertNotIn("stop ssh", calls)
+        self.assertIn("PARTIAL FAILURE", result.stdout)
+        self.assertIn("VNC_CURRENT_LOG", result.stdout)
+        self.assertIn("VNC_JOURNAL", result.stdout)
+        self.assertLess(calls.index("status"), calls.index("disable --now"))
+        self.assertIn("sudo ares-enable-remote-access", result.stdout)
+
+    def test_socket_activated_baseline_does_not_enable_service_and_restores_pair(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+ensure_ssh
+ACTIVE[ssh.service]=yes # Incoming socket-activated SSH started the service.
+restore_ssh_baseline "$STATE_DIR/ssh-before.conf"
+[[ "${ACTIVE[ssh.socket]}" == yes && "${ENABLED[ssh.socket]}" == enabled ]]
+[[ "${ACTIVE[ssh.service]}" == no && "${ENABLED[ssh.service]}" == disabled ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("enable --now ssh.service", result.artifacts["calls"].decode())
+        saved = result.artifacts["ssh-before.conf"].decode()
+        self.assertIn("SSH_SERVICE_ACTIVE=no", saved)
+        self.assertIn("SSH_SOCKET_ACTIVE=yes", saved)
+        self.assertIn("SSH_SOCKET_ENABLED=enabled", saved)
+
+    def test_activation_owned_ssh_socket_restored_and_original_baseline_not_overwritten(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+ACTIVE[ssh.socket]=no; ENABLED[ssh.socket]=disabled
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+ensure_ssh
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+restore_ssh_baseline "$STATE_DIR/ssh-before.conf"
+[[ "${ACTIVE[ssh.socket]}" == no && "${ENABLED[ssh.socket]}" == disabled ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("enable --now ssh.socket", result.artifacts["calls"].decode())
+        self.assertIn("SSH_SOCKET_ACTIVE=no", result.artifacts["ssh-before.conf"].decode())
+
+    def test_service_only_baseline_and_legacy_migration(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+PRESENT[ssh.socket]=no; ACTIVE[ssh.socket]=no
+ACTIVE[ssh.service]=yes; ENABLED[ssh.service]=enabled
+printf 'SSH_WAS_ACTIVE=no\nSSH_WAS_ENABLED=no\n' > "$STATE_DIR/ssh-before.conf"
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+restore_ssh_baseline "$STATE_DIR/ssh-before.conf"
+[[ "${ACTIVE[ssh.service]}" == no && "${ENABLED[ssh.service]}" == disabled ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("ssh-before.conf.v1", result.artifacts)
+
+    def test_runtime_enablement_kind_and_static_service_baseline_are_preserved(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+ENABLED[ssh.service]=static
+ENABLED[ssh.socket]=enabled-runtime
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+ENABLED[ssh.socket]=enabled
+ACTIVE[ssh.service]=yes
+restore_ssh_baseline "$STATE_DIR/ssh-before.conf"
+[[ "${ENABLED[ssh.socket]}" == enabled-runtime && "${ENABLED[ssh.service]}" == static ]]
+[[ "${ACTIVE[ssh.service]}" == no && "${ACTIVE[ssh.socket]}" == yes ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("enable --runtime ssh.socket", result.artifacts["calls"].decode())
+
+    def test_saved_ssh_baseline_is_data_and_does_not_execute_shell_text(self):
+        result = shell("ares_enable_remote_access.sh", '''
+printf 'SSH_STATE_VERSION=2\nSSH_SOCKET_ACTIVE=$(touch unexpected)\n' > "$STATE_DIR/ssh-before.conf"
+if load_ssh_baseline "$STATE_DIR/ssh-before.conf"; then exit 1; fi
+[[ ! -e unexpected ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_disable_restores_socket_baseline_and_retains_identity_files(self):
+        result = shell("ares_disable_remote_access.sh", SYSTEMD_FIXTURE + '''
+capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
+ACTIVE[ssh.service]=yes; ACTIVE[tigervncserver@:1.service]=yes
+ss() { :; }
+disable_remote_services
+[[ "${ACTIVE[tailscaled.service]}" == no && "${ACTIVE[tigervncserver@:1.service]}" == no ]]
+[[ "${ACTIVE[ssh.socket]}" == yes && "${ENABLED[ssh.socket]}" == enabled ]]
+[[ "${ACTIVE[ssh.service]}" == no && "${ENABLED[ssh.service]}" == disabled ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("ssh-before.conf", result.artifacts)
+        self.assertIn("identity", result.stdout)
+
+    def test_vnc_config_and_per_user_startup_are_generated_without_console_session_changes(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + r'''
+WORK="$STATE_DIR/work"; TARGET_HOME="$STATE_DIR/home"
+VNC_USERS_FILE="$STATE_DIR/etc/vncserver.users"
+mkdir -p "$WORK" "$TARGET_HOME/.vnc"
+printf 'ENCODED8' > "$TARGET_HOME/.vnc/passwd"
+ss() { :; }
+chown() { :; }
+tigervncpasswd() { :; }
+tigervncserver() { :; }
+runuser() { :; }
+journalctl() { :; }
+dbus-run-session() { :; }
+cinnamon-session-cinnamon2d() { :; }
+install() {
+  if [[ "$1" == -d ]]; then mkdir -p "${@: -1}"; else cp "${@: -2:1}" "${@: -1}"; fi
+}
+configure_vnc
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        value = result.artifacts["home/.vnc/tigervnc.conf"].decode()
+        self.assertIn('$AlwaysShared = "yes";', value)
+        self.assertNotIn("$alwaysShared", value)
+        self.assertIn('Xtigervnc-session', value)
+        startup = result.artifacts["home/.vnc/Xtigervnc-session"].decode()
+        self.assertIn("exec dbus-run-session -- cinnamon-session-cinnamon2d", startup)
+        self.assertNotIn("pkill", startup)
+        self.assertNotIn("killall", startup)
+        self.assertEqual(result.artifacts["home/.vnc/passwd"], b"ENCODED8")
+
+    def test_vnc_requires_three_consecutive_healthy_samples(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+HEALTH=0
+sleep() { :; }
+verify_vnc_listeners() { HEALTH=$((HEALTH + 1)); [[ "$HEALTH" -ne 2 ]]; }
+start_vnc
+[[ "$HEALTH" -eq 5 ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_conflicting_display_owner_is_not_stopped_by_partial_failure_cleanup(self):
+        result = shell("ares_enable_remote_access.sh", SYSTEMD_FIXTURE + '''
+WORK="$STATE_DIR/work"; TARGET_HOME="$STATE_DIR/home"; mkdir -p "$WORK"
+VNC_USERS_FILE="$STATE_DIR/users"; printf ':1=another-user\n' > "$VNC_USERS_FILE"
+journalctl() { :; }
+print_ssh_instructions() { :; }
+ACTIVE[tigervncserver@:1.service]=yes
+STARTED=1; CLI_READY=1; VNC_PHASE=1
+trap cleanup EXIT
+configure_vnc || exit 1
+''')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertNotIn("disable --now", result.artifacts["calls"].decode())
+        self.assertIn("ownership is unresolved", result.stderr)
+
+    def test_optional_partial_result_preserves_core_success(self):
+        result = shell("optional_remote_support.sh", '''
+function /usr/local/sbin/ares-enable-remote-access() { return 2; }
+run_optional_remote_support y
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Tailscale and SSH remain operational", result.stdout)
+        self.assertIn("core installation remains successful", result.stdout)
+
+    def test_password_prompts_matching_bounds_single_filtered_record_and_no_secret_output(self):
+        for values, succeeds in (("Abc123!\nAbc123!\n", True),
+                                  ("abcdef\nabcdef\n", True),
+                                  ("abcdefgh\nabcdefgh\n", True),
+                                  ("short\nshort\n" * 3, False),
+                                  ("123456789\n123456789\n" * 3, False),
+                                  ("Abc123!\nDifferent\n" * 3, False)):
+            escaped = values.replace("\n", "\\n")
+            code = r'''
+WORK="$STATE_DIR/work"; TARGET_HOME="$STATE_DIR/home"; mkdir -p "$WORK" "$TARGET_HOME"
+exec 3>"$STATE_DIR/terminal"
+runuser() {
+  [[ "${@: -2}" == 'tigervncpasswd -f' ]] || return 1
+  local first second; IFS= read -r first
+  if IFS= read -r second; then return 1; fi
+  printf 'ENCODED8'
+}
+install() { cp "${@: -2:1}" "${@: -1}"; }
+''' + "exec 4<<<$'" + escaped + "'\ncreate_vnc_password \"$STATE_DIR/password\""
+            result = shell("ares_enable_remote_access.sh", code)
+            self.assertEqual(result.returncode == 0, succeeds, result.stderr)
+            self.assertNotIn("Abc123!", result.stdout + result.stderr)
+            self.assertNotIn(b"Abc123!", result.artifacts["terminal"])
+            self.assertIn(b"Re-enter TigerVNC password to confirm", result.artifacts["terminal"])
+            if succeeds:
+                self.assertEqual(result.artifacts["password"], b"ENCODED8")
+            else:
+                self.assertNotIn("password", result.artifacts)
+
+    def test_tailscale_enrollment_url_uses_unlogged_terminal_and_timeout_is_finite(self):
+        code = r'''
+exec 3>"$STATE_DIR/terminal"; exec 4<<<'y'
+exec 5>&1 6>&2
+exec > >(python3 -u "$CONFIG_TOOL" redact | tee "$STATE_DIR/activation.log") 2>&1
+logger=$!
+timeout() { echo "$*" >> "$STATE_DIR/timeouts"; while [[ "$1" != tailscale ]]; do shift; done; "$@"; }
+tailscale_connected() { [[ -f "$STATE_DIR/connected" ]]; }
+tailscale() {
+  case "$1" in up) echo 'https://login.tailscale.com/a/TEST_ONLY'; touch "$STATE_DIR/connected" ;; set) return 0 ;; esac
+}
+enroll_tailscale test-school
+printf 'Diagnostic https://login.tailscale.com/a/DIAGNOSTIC_ONLY\n'
+exec 1>&5 2>&6
+wait "$logger"
+'''
+        result = shell("ares_enable_remote_access.sh", code)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("TEST_ONLY", result.stdout + result.stderr)
+        self.assertIn(b"TEST_ONLY", result.artifacts["terminal"])
+        self.assertNotIn(b"TEST_ONLY", result.artifacts["activation.log"])
+        self.assertNotIn(b"DIAGNOSTIC_ONLY", result.artifacts["activation.log"])
+        self.assertIn(b"[URL omitted]", result.artifacts["activation.log"])
+        self.assertIn(b"125s tailscale up", result.artifacts["timeouts"])
+        self.assertIn(b"--timeout=120s", result.artifacts["timeouts"])
+        self.assertIn("cellular data", result.stdout)
+
+    def test_deferred_offline_and_connected_retry_paths_do_not_reenroll_or_erase_identity(self):
+        for mode in ("deferred", "offline", "connected"):
+            code = r'''
+exec 3>"$STATE_DIR/terminal"; exec 4<<<'y'
+timeout() { while [[ "$1" != tailscale ]]; do shift; done; "$@"; }
+tailscale() { echo "$*" >> "$STATE_DIR/tailscale-calls"; [[ "$1" != up ]]; }
+''' + ('tailscale_connected() { return 0; }\n' if mode == "connected" else 'tailscale_connected() { return 1; }\n')
+            if mode == "deferred":
+                code += "exec 4<<<'N'\n"
+            code += "enroll_tailscale test-school"
+            result = shell("ares_enable_remote_access.sh", code)
+            self.assertEqual(result.returncode, 0 if mode == "connected" else 3, result.stderr)
+            calls = result.artifacts.get("tailscale-calls", b"").decode()
+            self.assertNotIn("logout", calls)
+            self.assertNotIn("down", calls)
+            if mode != "offline":
+                self.assertNotIn("up ", calls)
+            if mode != "connected":
+                self.assertIn("sudo ares-enable-remote-access", result.stdout)
+
+    def test_url_redaction_and_connected_status_checks(self):
+        for state, ok in (({"BackendState": "Running", "Self": {"Online": True}}, True),
+                          ({"BackendState": "Running", "Self": {"Online": False}}, False),
+                          ({"BackendState": "NeedsLogin"}, False)):
+            import json
+            result = subprocess.run([sys.executable, "-B", str(BUILDER / "tools/remote_support_config.py"), "connected"],
+                                    input=json.dumps(state), capture_output=True, text=True)
+            self.assertEqual(result.returncode == 0, ok)
+        result = subprocess.run([sys.executable, "-B", str(BUILDER / "tools/remote_support_config.py"), "redact"],
+                                input="Diagnostic https://login.tailscale.com/a/TEST_ONLY retained\n", capture_output=True, text=True)
+        self.assertEqual(result.stdout, "Diagnostic [URL omitted] retained\n")
 
     def test_optional_decline_and_failure_preserve_core_success(self):
         for reply in ("", "N", "y"):

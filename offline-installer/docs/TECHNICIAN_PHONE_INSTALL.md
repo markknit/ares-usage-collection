@@ -47,7 +47,7 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
    approved 95-plan/806-lesson corpus before continuing.
 8. Confirm the final installer summary reports success.
 9. Sign in as a disposable teacher and confirm Lesson3 **Discuss** is visible. Complete the focused
-   checks in `docs/LESSON3_V094_ACCEPTANCE.md` before approving v1.12 for wider rollout.
+   checks in `docs/LESSON3_V094_ACCEPTANCE.md` before approving v1.13 for wider rollout.
 10. Remote components are prepared dormant before optional activation. Answer No at the
     default-No prompt during routine installation; answer Yes only for an authorized support
     session. A prior registration is retained. The base-image `x11vnc` service is disabled.
@@ -67,7 +67,9 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
 
 The field installer verifies the APK checksum before publishing it. Do not replace the APK on the school server manually.
 
-The Tsavo Trust module is not included in v1.12 and must use its separately reviewed installer.
+v1.13 includes the validated Tsavo Trust module. Provide the normalized external
+build-source payload and complete the [Tsavo acceptance checks](TSAVO_TRUST.md).
+The verified v1.12 artifact and evidence are retained unchanged.
 For later authorized remote access, read `docs/REMOTE_ACCESS.md` before running
 `sudo ares-enable-remote-access`.
 

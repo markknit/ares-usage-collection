@@ -1,6 +1,6 @@
 # Lesson3 v0.94 Offline Acceptance Checklist
 
-Use this checklist on one clean, disposable Ubuntu 24.04 ARES server before approving the v1.12
+Use this checklist on one clean, disposable Ubuntu 24.04 ARES server before approving the v1.13
 field package for rollout. Keep the validated v1.10 package unchanged as the fallback until every
 required check below passes.
 
@@ -12,7 +12,7 @@ installation log path. Do not record administrator or teacher passwords.
 ## 1. Offline installation
 
 1. Disconnect the target server from the Internet.
-2. Extract `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`.
+2. Extract `ARES_Q4_Offline_v0.94_amd64_v1.13.zip`.
 3. Run `sudo bash preflight.sh ARES-S00XX` and require `0 failures`.
 4. Run `sudo bash install_offline.sh ARES-S00XX`.
 5. Create the first Site Administrator when prompted and complete the guided corpus import.
@@ -71,7 +71,7 @@ can retain earlier text until those backups expire.
 
 ## 5. Optional ZIP-import check
 
-The normal v1.12 installer deliberately retains the proven two-batch JSON corpus import. To test the
+The normal v1.13 installer deliberately retains the proven two-batch JSON corpus import. To test the
 new v0.94 administrator ZIP upload without changing content, create a ZIP containing copies of
 already-installed corpus JSON files and upload it under **Manage -> Lesson plans**. Require the
 report to classify unchanged files as skipped and to create no additional plans or lessons.
@@ -82,6 +82,6 @@ uploads through an Nginx reverse proxy, configure at least `client_max_body_size
 
 ## Approval rule
 
-Approve v1.12 for rollout only when every required check passes and the recorded evidence is
+Approve v1.13 for rollout only when every required check passes and the recorded evidence is
 reviewed. A successful connected build alone is not acceptance. If any v0.94 check fails, retain
 v1.10/v0.93 for rollout while the failure is investigated.

@@ -110,11 +110,15 @@ run_step "6) Install dormant remote-access components" \
 run_step "7) Create Lesson3 administrator and install the packaged corpus" \
   install_lesson3_corpus_guided
 
-run_step "8) Post-install verification" bash -c '
+run_step "8) Install validated Tsavo Trust module and tracking mapping" \
+  bash "$SCRIPT_DIR/tsavo/install.sh" --host "$ARES_ALIAS"
+
+run_step "9) Post-install verification" bash -c '
   set -e
   nginx -t
   systemctl is-active --quiet nginx
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/ >/dev/null
+  python3 "$0/tsavo/tsavo_install.py" --verify --host "$ARES_ALIAS"
   curl -fsS --max-time 8 http://127.0.0.1:3001/login >/dev/null
   grep -qx "$LESSON3_VERSION" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
   python3 "$0/lesson3/configure_url.py" check /mnt/sda3/var/www/lesson3-download/lesson3-deploy/.env "$LESSON3_URL" "$LESSON3_SERVER_URL"

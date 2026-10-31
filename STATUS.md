@@ -7,7 +7,8 @@ Last updated: 2026-10-30
 - Repository: `C:/dev/ares-usage-collection`.
 - Branch: `production-baseline-cleanup`.
 - Implementation tip reviewed: `973708935eacac62a210e7d065779090170733bf`.
-- Approved Lesson3 release: v0.94; revised bundle: v1.12.
+- Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
+- Verified production artifact retained: v1.12 (identity and evidence below).
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
 - This continuity record does not establish live deployment or field acceptance.
 
@@ -23,6 +24,7 @@ Last updated: 2026-10-30
 | Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
+| TsavoTrust v1.13 integration | Implemented and software validated; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned external eight-file input, corrected page, transactional deployment, append-only mapping and HTTP range verification. 45 tests passed, one native POSIX-link test skipped; full v1.13 field build and live acceptance remain Pending. |
 | Field rollout approval | Pending | Production ZIP verification is complete; all live installation, profile and Lesson3 acceptance checks remain Pending. Retain the documented fallback until evidence is reviewed. |
 
 ## Production v1.12 artifact
@@ -49,6 +51,11 @@ Last updated: 2026-10-30
 
 ## Known Issues / Lessons Learned
 
+- TsavoTrust media belongs in the normalized external build source, not Git or
+  Git LFS. Validate exact pinned paths/sizes/hashes before changing build outputs.
+  Use UTF-8 explicitly when reading checksum filenames on Windows: one approved
+  filename contains a curly apostrophe. Keep backup names hidden so portal scans
+  do not discover duplicate cards. Root checksums must include nested manifests.
 - Record manual component results separately from packaged acceptance. A successful
   manual TigerVNC test does not verify the packaged display, Tailscale transport or
   service lifecycle. Keep those gates Pending until their own evidence is reviewed.
@@ -69,6 +76,47 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - TsavoTrust integration for v1.13
+
+- Retained Lesson3 v0.94 and bumped only the bundle revision to v1.13. Added a
+  reviewed script-relative installer, pinned source manifest, standard-library
+  validation and external-source packaging. No MP4s or Git LFS were added.
+- Verified the read-only live key-map export SHA-256
+  `f560bb4a0f70da2bee029a7c86a6630aefe18180b89ea2d0c619a237ab80eab1`.
+  Its conventions and user-confirmed portal-link evidence support the TsavoTrust
+  key and `www2/modules` link. Reconciliation preserves every existing byte and
+  appends only `module:TsavoTrust,Tsavo Trust,`; no wholesale map replacement.
+- Added validation before mutation, staged deployment on the destination
+  filesystem, hidden backups, safe replacement of existing entries, exception/
+  handled-signal rollback, installed-content checks and loopback portal/range
+  verification. Missing, changed or conflicting inputs fail closed.
+- Software suite:
+  `python -B -m unittest test_tsavo_content test_tsavo_install test_profiles test_remote_support test_bundle_profiles test_offline_installer.OfflineInstallerSourceTests -v`
+  with `PYTHONPATH=tests`: 46 tests run, 45 passed and one native POSIX-symlink
+  test skipped. Windows transaction tests substitute only link creation/inspection;
+  real copy, rename, backup and rollback operations execute. Three existing
+  Linux/root corpus integration tests were not run on Windows. Ubuntu CI is
+  configured for them and the native symlink test; no fresh CI result is claimed.
+- Both fixture-profile scaffolds package successfully. Tests cover invalid input
+  without replacing prior output, nested-manifest/root tampering, content errors,
+  tracking conflicts, staging/publication/HTTP failure rollback and HTTP ranges.
+  Shell syntax passed for all 18 scripts. A temporary normalized copy of the real
+  payload passed all eight pins and six MP4 inspections, page correction and staged
+  validation. The actual live-map comparison preserves the original bytes.
+- Rehashed the verified v1.12 ZIP: its SHA-256 remains
+  `fef897456108b70664fae280e4d3e4de354be23d3e0acbe4dc313dc1b458cd4a`.
+  Its evidence files are unchanged. Remote-support code and checksum-bypass
+  behavior were not changed; root nested-checksum coverage is the requested v1.13 fix.
+
+Still open:
+
+- Full production/test v1.13 build and independent artifact verification.
+- Disposable Ubuntu native-link deployment, repeat/failure recovery and power-loss
+  handling; actual portal/video playback, seeking and end-to-end tracking reports.
+- All unperformed live installation, Lesson3, profile, packaged remote-support and
+  rollout approval checks remain Pending. Stop after the dedicated Tsavo commit;
+  no push or next implementation step is authorized by this checkpoint.
 
 ### 2026-10-30 - Remote-access field evidence
 

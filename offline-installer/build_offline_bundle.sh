@@ -9,7 +9,7 @@ source "$SELF_DIR/templates/ares_config.sh" "$SELF_DIR/package.conf"
 PLATFORM="linux/amd64"
 SCAFFOLD_ONLY=0
 APK_PATH=""
-BUNDLE_REVISION="v1.12"
+BUNDLE_REVISION="v1.13"
 APK_URL=""
 APK_SHA256=""
 APK_MANIFEST_URL="https://raw.githubusercontent.com/markknit/ares-usage-collection/main/config/approved_apk.json"
@@ -72,6 +72,9 @@ fi
 [[ -n "$SOURCE" && -d "$SOURCE" ]] || die "--source must name the extracted ARES Q4 source directory"
 [[ -n "$OUTPUT" ]] || die "--output is required"
 SOURCE="$(cd "$SOURCE" && pwd)"
+# Reject incomplete, nested or changed media before touching prior build outputs.
+python3 "$SELF_DIR/tools/tsavo_content.py" "$SOURCE/TsavoTrust" \
+  "$SELF_DIR/manifests/tsavo-trust-source.json" --inspect-media
 mkdir -p "$OUTPUT"
 OUTPUT="$(cd "$OUTPUT" && pwd)"
 
@@ -109,6 +112,8 @@ rsync -a --chmod=Du+w,Fu+w \
   --exclude='setup-ares-tailscale-vnc-v2.sh' \
   --exclude='install_offline_no_sha_checks.sh' \
   --exclude='tsavo_trust_module_install.sh' \
+  --exclude='TsavoTrust' \
+  --exclude='tsavo' \
   "$SOURCE/" "$STAGE/"
 chmod -R u+rwX "$STAGE"
 
@@ -122,6 +127,7 @@ for generated_path in \
   "$STAGE/lesson3/corpus" \
   "$STAGE/tracking" \
   "$STAGE/teacher-app" \
+  "$STAGE/tsavo" \
   "$STAGE/remote-access"; do
   if [[ -e "$generated_path" ]]; then
     chmod -R u+rwX "$generated_path" || die "could not make stale generated payload removable: $generated_path"
@@ -161,6 +167,12 @@ mkdir -p "$STAGE/remote-access/tigervnc" "$STAGE/remote-access/tailscale"
 install -m 0755 "$SELF_DIR/templates/install_offline.sh" "$STAGE/install_offline.sh"
 install -m 0644 "$SELF_DIR/templates/optional_remote_support.sh" "$STAGE/optional_remote_support.sh"
 install -m 0755 "$SELF_DIR/templates/preflight.sh" "$STAGE/preflight.sh"
+mkdir -p "$STAGE/tsavo"
+python3 "$SELF_DIR/tools/tsavo_content.py" "$SOURCE/TsavoTrust" \
+  "$SELF_DIR/manifests/tsavo-trust-source.json" --prepare "$STAGE/tsavo/payload"
+install -m 0755 "$SELF_DIR/templates/install_tsavo_trust.sh" "$STAGE/tsavo/install.sh"
+install -m 0644 "$SELF_DIR/tools/tsavo_content.py" "$STAGE/tsavo/tsavo_content.py"
+install -m 0644 "$SELF_DIR/tools/tsavo_install.py" "$STAGE/tsavo/tsavo_install.py"
 install -m 0755 "$SELF_DIR/templates/lesson3_offline.sh" "$STAGE/lesson3/install_lesson3_offline.sh"
 install -m 0755 "$SELF_DIR/templates/install_lesson3_corpus.sh" "$STAGE/lesson3/corpus/install_lesson3_corpus.sh"
 install -m 0755 "$SELF_DIR/templates/install_lesson_plan_tracking.sh" "$STAGE/tracking/install_lesson_plan_tracking.sh"
@@ -181,6 +193,7 @@ install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
 install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
 install -m 0644 "$SELF_DIR/docs/PROFILE_ACCEPTANCE.md" "$STAGE/docs/PROFILE_ACCEPTANCE.md"
+install -m 0644 "$SELF_DIR/docs/TSAVO_TRUST.md" "$STAGE/docs/TSAVO_TRUST.md"
 mkdir -p "$STAGE/docs/pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Teacher_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Teacher_Guide.pdf"
@@ -447,6 +460,12 @@ for required in \
   remote-access/ares_disable_remote_access.sh \
   remote-access/remote_support_config.py \
   optional_remote_support.sh \
+  tsavo/install.sh \
+  tsavo/tsavo_content.py \
+  tsavo/tsavo_install.py \
+  tsavo/MANIFEST.json \
+  tsavo/payload/index.htmlf \
+  docs/TSAVO_TRUST.md \
   docs/TECHNICIAN_PHONE_INSTALL.md \
   docs/TEACHER_PHONE_GUIDE.md \
   docs/LESSON3_CORPUS_INSTALL.md \
@@ -474,6 +493,10 @@ if (( ! SCAFFOLD_ONLY )); then
 fi
 
 python3 "$SELF_DIR/tools/render_profile.py" --root "$STAGE" --profile "$ARES_PROFILE"
+# Tsavo content has no host literals; the pinned rendered content must survive
+# profile rendering unchanged. Seal all module files including its manifest.
+python3 "$STAGE/tsavo/tsavo_content.py" "$STAGE/tsavo/payload" "$STAGE/tsavo/MANIFEST.json"
+(cd "$STAGE/tsavo"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
 if (( ! SCAFFOLD_ONLY )); then
   python3 "$SELF_DIR/tools/render_rollout_guides.py" --source-dir "$STAGE/docs" --output-dir "$STAGE/docs/pdf"
   cp "$STAGE/docs/pdf/ARES_Sync_Teacher_Guide.pdf" "$STAGE/ARES_Sync_Rollout_Package/guides/"
@@ -512,13 +535,13 @@ Field command: sudo bash install_offline.sh ARES-S00XX
 Lesson3 corpus: guided installation within install_offline.sh after first Site Administrator creation
 Lesson3 discussions: enabled by default; complete docs/LESSON3_V094_ACCEPTANCE.md before rollout
 Later remote-access activation: sudo ares-enable-remote-access
-Tsavo Trust module: not included; use the separately reviewed Tsavo installer
+Tsavo Trust module: validated external build-source payload, six pinned offline videos, module:TsavoTrust
 TXT
 
 log "generating SHA256SUMS"
 (
   cd "$STAGE"
-  find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+  find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
 )
 
 log "syntax-checking shell scripts"

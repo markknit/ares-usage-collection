@@ -2,6 +2,9 @@
 
 Updated: 2026-10-30. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
 Implementation commits: `785825f`, `3dccba4`, and `608cb7e` (Lesson3 v0.94 / bundle v1.12).
+Current source targets bundle v1.13 with Lesson3 v0.94; v1.12 artifact evidence
+is retained unchanged. See [Tsavo Trust](TSAVO_TRUST.md) for external-source
+requirements, mapping reconciliation, backup/restore behavior and pending tests.
 Live acceptance status: **Pending for every check in both profiles**, including
 the target procedure and referenced Lesson3 UI/content checks below.
 No live Ubuntu server or client connection is supplied to this checkout yet.
@@ -29,6 +32,9 @@ for both profiles.
 | Disable/re-enable | Pending | Pending | Service states, closed 5901 after disable, successful reconnection and reboot autostart |
 | Activation failure cleanup | Pending | Pending | Inject failure on disposable target, verify remote services stopped and no 5901 listener |
 | Core success when declined/failed | Pending | Pending | Real install exit status/logs for default-No and failed activation |
+| TsavoTrust offline install and repeat | Pending | Pending | Installed eight-file hashes, unchanged prior mapping rows, exactly one new Tsavo key and correct portal link |
+| TsavoTrust portal, videos and tracking | Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |
+| TsavoTrust failure restoration | Pending | Pending | Disposable-target copy/publication/HTTP failure, restored prior module/link/map and reviewed recovery evidence |
 
 ## Software evidence recorded locally
 

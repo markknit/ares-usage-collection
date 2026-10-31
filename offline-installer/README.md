@@ -1,4 +1,4 @@
-# ARES Q4 Offline Installer Builder v1.12
+# ARES Q4 Offline Installer Builder v1.13
 
 This kit converts the approved ARES Q4 update folder into a field package that can be installed at a school with **no Internet connection**.
 
@@ -6,11 +6,22 @@ The builder now seals a production (`ares.local`, default) or permanent test
 (`ares-test.local`) profile. See [profiles](docs/PROFILES.md), the
 [reconciliation record](docs/RECONCILIATION.md), and the pending
 [two-profile acceptance matrix](docs/PROFILE_ACCEPTANCE.md). Live target/client
-acceptance has not been completed by the source changes. Tsavo and the historical
+acceptance has not been completed by the source changes. v1.13 includes validated
+external-source TsavoTrust content; the legacy Tsavo installer and historical
 checksum-bypass wrapper are excluded. Remote support uses standard OpenSSH over
 Tailscale with Tailscale SSH explicitly disabled and a default-No activation prompt
 after successful core installation. The connected build machine also requires
 Python ReportLab to regenerate profile-specific printed rollout guides.
+
+## v1.13 changes
+
+- Integrates Tsavo Trust from the normalized external build-source folder, pinned
+  by exact filenames, sizes and SHA-256 hashes. Six MP4s remain outside Git.
+- Adds transactional deployment, append-only tracking reconciliation and portal/
+  HTTP range checks. See [Tsavo Trust](docs/TSAVO_TRUST.md) for the eight-file layout,
+  backup/restore behavior and pending live acceptance gates.
+- Root SHA256SUMS now covers nested checksum manifests while excluding only itself.
+- Retains Lesson3 v0.94 and the verified v1.12 ZIP/evidence unchanged.
 
 ## v1.12 changes
 
@@ -97,10 +108,11 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 - approved Lesson3 JSON corpus plus fresh-database installer and rollback
 - dormant Tailscale and TigerVNC packages for later activation
 - safe school-code reassignment command for provisional installations
+- validated Tsavo Trust module, six offline videos and its tracking mapping
 
 ## Intentionally excluded
 
-- Tsavo Trust module (use its separately reviewed installer)
+- legacy Tsavo Trust copy/link installer (replaced by the reviewed v1.13 module)
 - Xpra
 - automatic Tailscale registration or remote-access activation
 
@@ -112,6 +124,10 @@ the normal command-line tools (`curl`, `git`, `rsync`, `gzip`, `sha256sum`, `tar
 packages for Intel ARES school servers.
 
 ## Normal build
+
+First provide exactly the normalized `TsavoTrust/` folder described in
+[TSAVO_TRUST.md](docs/TSAVO_TRUST.md) within the external source. The builder fails
+before replacing output if content is missing, nested, unexpected or unpinned.
 
 ```bash
 sudo bash build_offline_bundle.sh \
@@ -142,7 +158,7 @@ or:
 Extract the completed field ZIP on the ARES server and run:
 
 ```bash
-cd ARES_Q4_Offline_v0.94_amd64_v1.12
+cd ARES_Q4_Offline_v0.94_amd64_v1.13
 sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```

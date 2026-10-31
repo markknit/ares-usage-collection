@@ -60,6 +60,11 @@ for f in \
   "$SCRIPT_DIR/lesson_plan/payload/generate_teacher_index.js" \
   "$SCRIPT_DIR/lesson_plan/payload/LESSON3_USER_GUIDE.pdf" \
   "$SCRIPT_DIR/tracking/install_lesson_plan_tracking.sh" \
+  "$SCRIPT_DIR/tsavo/install.sh" \
+  "$SCRIPT_DIR/tsavo/tsavo_install.py" \
+  "$SCRIPT_DIR/tsavo/tsavo_content.py" \
+  "$SCRIPT_DIR/tsavo/MANIFEST.json" \
+  "$SCRIPT_DIR/tsavo/SHA256SUMS" \
   "$SCRIPT_DIR/lesson3/release/lesson3-online-deploy.tar.gz" \
   "$SCRIPT_DIR/lesson3/release/lesson3-online-deploy.tar.gz.sha256" \
   "$SCRIPT_DIR/lesson3/images/lesson3-${LESSON3_VERSION}-amd64-images.tar.gz" \
@@ -80,6 +85,13 @@ for f in \
   "$SCRIPT_DIR/remote-access/tailscale/SHA256SUMS"; do
     [[ -f "$f" ]] && pass "package file present: ${f#$SCRIPT_DIR/}" || fail "package file missing: ${f#$SCRIPT_DIR/}"
 done
+
+if (cd "$SCRIPT_DIR/tsavo" && sha256sum -c SHA256SUMS >/dev/null) \
+    && python3 "$SCRIPT_DIR/tsavo/tsavo_install.py" --check; then
+  pass "TsavoTrust pinned payload, mapping, destinations and staging space verified"
+else
+  fail "TsavoTrust payload or installation prerequisites failed"
+fi
 
 if [[ -f "$SCRIPT_DIR/lesson3/corpus/SHA256SUMS" ]]; then
   if (cd "$SCRIPT_DIR/lesson3/corpus" && sha256sum -c SHA256SUMS >/dev/null); then

@@ -64,4 +64,5 @@ an existing VNC password is reused, and the machine hostname is confirmed again.
 Verify on the server: `systemctl is-active tailscaled.service`,
 `systemctl is-active 'tigervncserver@:1.service'`, and `ss -ltnp`.
 Complete the live checks in `PROFILE_ACCEPTANCE.md` for both profiles before
-field acceptance. Tsavo is a separate future extension and is not called by core.
+field acceptance. v1.13 TsavoTrust integration is documented in
+[TSAVO_TRUST.md](TSAVO_TRUST.md); remote-support behavior is unchanged by that step.

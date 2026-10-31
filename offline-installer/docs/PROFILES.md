@@ -55,5 +55,9 @@ Build-machine Python requires ReportLab; the field installer needs no PDF toolin
 See `LOCAL_ALIAS_AUDIT.md` for every tracked text occurrence and `PROFILE_ACCEPTANCE.md`
 for remaining physical/client/target gates.
 
-Tsavo is excluded from core installation and from inherited source copying. Its
-absent installer cannot fail core installation. No checksum-bypass wrapper is copied.
+v1.13 installs validated TsavoTrust content from the normalized external build
+source for both profiles. Its reviewed installer uses relative module URLs and
+the selected profile Host header; the old installer is excluded. See
+[Tsavo Trust](TSAVO_TRUST.md). Missing or invalid required Tsavo content fails the
+build/preflight rather than silently omitting the module. No checksum-bypass
+wrapper is copied. Earlier v1.12 evidence remains historical and unchanged.

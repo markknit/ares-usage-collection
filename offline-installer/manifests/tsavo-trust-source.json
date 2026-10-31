@@ -1,0 +1,14 @@
+{
+  "format": "ares-tsavo-trust-content-v1",
+  "source_layout": "External build source / TsavoTrust; Videos directly beneath TsavoTrust",
+  "files": [
+    {"path": "index.htmlf", "bytes": 2249, "sha256": "cc9b0f9af4350c524ad4d55d0b51eb38fc25e1a5f721f8091dd9c31289099f38"},
+    {"path": "tsavo_trust_logo.jpg", "bytes": 82888, "sha256": "b3994b1d27842e270e97f11bf3d5b206bb8d29a442052c9bd76131e94f632881"},
+    {"path": "Videos/2025 Tt Community Program.mp4", "bytes": 52874291, "sha256": "5084266920b7226e6584f00aec6f17d2e0fd55cf9c2b044d5f133caee32d321c"},
+    {"path": "Videos/How Kenya\u2019S Last Living Super Tuskers Are Escaping Poachers.mp4", "bytes": 14958719, "sha256": "b05d0c400a9c640af8c2d09ce8c32c2b237645114486c3713b26fe898273ebfa"},
+    {"path": "Videos/The Tsavo Trust.mp4", "bytes": 106996527, "sha256": "dfc538ee0ae08bb8d66af9588d9081503ab29efb19859f1615b1f7bcb09e31b4"},
+    {"path": "Videos/Tsavo Trust 2025 Organisational Film.mp4", "bytes": 144742174, "sha256": "5a931445b58b6b795bdc4aef8c1c0bf5a59ac834a9d7f80caf147e3ea07a892f"},
+    {"path": "Videos/Tsavo Trust Protecting The Big Tuskers   Cinematic Short Film.mp4", "bytes": 16467783, "sha256": "cd3487825c576c98df8b3c076f3df8d55a2a29c98a94a28b68f1cea59d8849d8"},
+    {"path": "Videos/Tt Rhino Clip.mp4", "bytes": 47211031, "sha256": "d5b229e2b3740d0721c0c7da7c89d2125c41c6e395e6bbf9b677e6d2202e9188"}
+  ]
+}

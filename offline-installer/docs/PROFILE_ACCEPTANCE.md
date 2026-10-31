@@ -1,11 +1,20 @@
 # Two-profile acceptance record
 
-Date: 2026-10-29. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
+Updated: 2026-10-30. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
 Implementation commits: `785825f`, `3dccba4`, and `608cb7e` (Lesson3 v0.94 / bundle v1.12).
 Live acceptance status: **Pending for every check in both profiles**, including
 the target procedure and referenced Lesson3 UI/content checks below.
 No live Ubuntu server or client connection is supplied to this checkout yet.
 Do not infer field success from mocked service checks or fixture scaffolds.
+
+## Field evidence recorded separately
+
+[2026-10-30 v1.12 remote-access field evidence](evidence/2026-10-30-v1.12-remote-access-field-test.md)
+records a successful user-reported manual TigerVNC component test. Packaged
+remote-support acceptance remains **Pending**. The manual result does not satisfy
+packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable
+or activation failure cleanup. Every live acceptance row below remains Pending
+for both profiles.
 
 | Required check | Production | Permanent test | Evidence required |
 |---|---|---|---|

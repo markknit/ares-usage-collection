@@ -17,6 +17,7 @@ Last updated: 2026-10-30
 |---|---|---|
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | Implemented; live acceptance pending | `3dccba4` records consolidated activation, failure cleanup and the optional post-core prompt. Verified with `git show --stat 3dccba4`. Real service, tunnel and desktop checks remain pending. |
+| Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
 | Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
@@ -48,6 +49,9 @@ Last updated: 2026-10-30
 
 ## Known Issues / Lessons Learned
 
+- Record manual component results separately from packaged acceptance. A successful
+  manual TigerVNC test does not verify the packaged display, Tailscale transport or
+  service lifecycle. Keep those gates Pending until their own evidence is reviewed.
 - Android release builds may rename compiled XML (the approved APK uses
   `res/8G.xml`). Discover network-security policies by parsed structural strings
   beneath `res/`, retaining profile alias, DEX endpoint and application identity
@@ -65,6 +69,22 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - Remote-access field evidence
+
+- Added [the v1.12 remote-access evidence record](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md)
+  and linked it from `offline-installer/docs/PROFILE_ACCEPTANCE.md` and this file.
+- Recorded the user-reported manual TigerVNC component test as successful without
+  claiming a new runtime test or packaged remote-support acceptance. No raw field
+  transcript was supplied with the request. No authentication URLs, passwords,
+  credentials or unredacted Tailscale IP addresses are included.
+
+Still open:
+
+- Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart,
+  disable/re-enable and activation failure cleanup remain Pending.
+- All other live installation, profile, Lesson3 and rollout approval gates
+  remain Pending.
 
 ### 2026-10-30 - Production v1.12 artifact verification record
 

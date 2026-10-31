@@ -1,12 +1,12 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-10-30
+Last updated: 2026-10-31
 
 ## Current checkout
 
 - Repository: `C:/dev/ares-usage-collection`.
 - Branch: `production-baseline-cleanup`.
-- Implementation baseline for this step: `762f25e1f3e334e9506a3ba9bd8d06925ec48b43`.
+- Implementation baseline for this step: `350690ffea893d3563d58c9505d8c2669c63cab8`.
 - Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
 - Verified production artifact retained: v1.12 (identity and evidence below).
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
@@ -16,7 +16,9 @@ Last updated: 2026-10-30
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Explicit root-checksum recovery | Implemented and software validated; Linux/live acceptance Pending | [Authorized recovery](offline-installer/docs/RECOVERY_INSTALL.md): actual terminal and exact confirmation, root-only exception, independent component validation and metadata receipts. Normal installer unchanged. 72 Windows tests ran: 70 passed, two native tests skipped; 20 shell syntax checks passed. No final v1.13 field ZIP built. |
+| Explicit root-checksum recovery | Native fixtures passed; live acceptance Pending | [Linux fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md): component and receipt fixtures plus native PTY confirmation passed. Complete PTY recovery passed only as supplemental inline operator evidence; committed Linux/root workflow regression remains Pending. Normal installer unchanged; no final v1.13 field ZIP built. |
+| v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See linked Linux fixture evidence above. |
+| Complete recovery-through-PTY CI regression | Pending | Commit a reproducible Linux/root fixture joining real PTY confirmation to root-mismatch recovery and component-tamper rejection, with temporary host roots/logs/receipts. Supplemental inline results do not establish committed CI coverage. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
@@ -52,6 +54,10 @@ Last updated: 2026-10-30
 
 ## Known Issues / Lessons Learned
 
+- Separate committed native PTY confirmation coverage from complete recovery
+  orchestration: the latter passed on 2026-10-31 as an inline operator fixture
+  only. Preserve it as supplemental evidence and keep the committed Linux/root
+  regression task Pending. Native fixture success is not live field acceptance.
 - Recovery is an explicit authorized exception for a deliberately modified trusted
   package, never a remedy for unexplained corruption or failed component checks.
   Keep the normal installer byte-identical and public preflight verified. Recovery
@@ -88,6 +94,28 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-31 - Native Linux fixture validation evidence
+
+- Recorded Ubuntu 24.04.2 LTS x86_64 validation on tsavo3 for
+  `350690ffea893d3563d58c9505d8c2669c63cab8`: 24 shell checks, 87 unprivileged
+  Python tests, three root corpus-status tests, native portal/PHP fixtures and
+  POSIX symlink behavior passed; repository remained clean. See
+  [evidence record](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md).
+- Independently recomputed external archive SHA-256
+  `022ab1eb15c71c5b6968f5fcd09c141daadf64fc0163e8e47913942df31a09e0`
+  and checked all four archived log hashes against the supplied summary. Read
+  evidence without extracting it; did not rerun tests or commit raw logs/archive.
+- Supplemental real-PTY operator fixture rejected wrong confirmation, permitted
+  exact-confirmation root-mismatch recovery and blocked component tampering.
+  Complete workflow coverage was inline, not a committed reproducible test;
+  adding Linux/root PTY regression coverage to CI remains Pending.
+- Full v1.13 build and independent artifact verification, graphical installation,
+  fresh-server clean install, real TigerVNC password generation, packaged `:1`,
+  enrolled Tailscale repair, Tailscale-path SSH/VNC, reboot/autostart,
+  disable/re-enable, partial-failure cleanup, browser playback and tracking
+  attribution all remain Pending. No live profile gate passed. Preserved v1.12
+  evidence and existing untracked files; documentation only, no build or push.
 
 ### 2026-10-30 - Explicit root-checksum recovery installer
 

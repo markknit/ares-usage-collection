@@ -1,14 +1,33 @@
 # Two-profile acceptance record
 
-Updated: 2026-10-30. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
+Updated: 2026-10-31. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
 Implementation commits: `785825f`, `3dccba4`, and `608cb7e` (Lesson3 v0.94 / bundle v1.12).
 Current source targets bundle v1.13 with Lesson3 v0.94; v1.12 artifact evidence
 is retained unchanged. See [Tsavo Trust](TSAVO_TRUST.md) for external-source
 requirements, mapping reconciliation, backup/restore behavior and pending tests.
 Live acceptance status: **Pending for every check in both profiles**, including
 the target procedure and referenced Lesson3 UI/content checks below.
-No live Ubuntu server or client connection is supplied to this checkout yet.
+Native fixtures ran on tsavo3; no live installation or client acceptance is established.
 Do not infer field success from mocked service checks or fixture scaffolds.
+
+## Native Linux fixture evidence
+
+[2026-10-31 v1.13 Linux fixture validation](evidence/2026-10-31-v1.13-linux-fixture-validation.md)
+records commit `350690ffea893d3563d58c9505d8c2669c63cab8` on Ubuntu 24.04.2 LTS
+x86_64: 24 shell checks, 87 unprivileged Python tests, three root corpus-status
+tests, native portal/PHP fixtures and POSIX symlinks passed; repository remained
+clean. Archive SHA-256 and all four log hashes were checked for this record.
+
+Complete recovery through a real PTY passed as a **supplemental inline operator
+fixture**, not a committed reproducible test. **Pending CI task:** commit Linux/root
+PTY coverage of the complete temporary-root recovery workflow. Existing committed
+PTY confirmation coverage alone does not satisfy that task.
+
+Full v1.13 build/independent artifact verification, graphical/fresh-server install,
+real TigerVNC password generation, packaged `:1`, enrolled Tailscale repair,
+Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable, partial-failure cleanup,
+browser playback and tracking attribution all remain **Pending**. No live row is
+promoted by the fixture evidence.
 
 ## Field evidence recorded separately
 
@@ -56,7 +75,9 @@ python -B -m unittest test_profiles test_remote_support test_bundle_profiles tes
 Python used: bundled Codex runtime Python 3.12; Bash: Git for Windows.
 The three existing corpus-status integration tests require Linux/root and are
 configured in the Ubuntu CI workflow; they were not counted as local passes.
-CI workflows have been updated locally but have not been published or executed.
+At the time of this historical v1.12 software record, updated CI workflows had
+not been published or executed. Current v1.13 native fixture evidence is above;
+it does not establish a hosted CI run.
 
 - Both Android debug profiles build with Gradle 8.13 offline using the installed SDK.
 - Both compiled DEX endpoint sets pass profile validation.

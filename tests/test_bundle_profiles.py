@@ -65,6 +65,9 @@ shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*exc
                 stage = next(path for path in output.iterdir() if path.is_dir())
                 self.assertTrue((stage / "NOT_FIELD_READY.txt").exists())
                 self.assertTrue((stage / "remote-access/remote_support_common.sh").is_file())
+                self.assertTrue((stage / "install_offline_no_root_sha.sh").is_file())
+                self.assertTrue((stage / "package_integrity.py").is_file())
+                self.assertTrue((stage / "recovery_installer.py").is_file())
                 self.assertIn("v1.13", stage.name)
                 self.assertFalse((stage / "TsavoTrust").exists())
                 self.assertFalse((stage / "tsavo/unreviewed.txt").exists())
@@ -80,6 +83,12 @@ shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*exc
                     digest, name = line.split(maxsplit=1)
                     self.assertEqual(digest, hashlib.sha256((stage / name.lstrip("*")).read_bytes()).hexdigest(), name)
                 self.assertIn("./tsavo/SHA256SUMS", (stage / "SHA256SUMS").read_text(encoding="utf-8"))
+                names = [line.split(maxsplit=1)[1].lstrip("*") for line in (stage / "SHA256SUMS").read_text(encoding="utf-8").splitlines()]
+                self.assertIn("./install_offline_no_root_sha.sh", names)
+                self.assertIn("./lesson_plan/payload/SHA256SUMS", names)
+                self.assertNotIn("./SHA256SUMS", names)
+                self.assertEqual(set(names), {"./" + p.relative_to(stage).as_posix() for p in stage.rglob("*")
+                                             if p.is_file() and p != stage / "SHA256SUMS"})
                 # Root verification must detect changing a nested manifest itself.
                 nested = stage / "tsavo/SHA256SUMS"
                 original = nested.read_bytes()

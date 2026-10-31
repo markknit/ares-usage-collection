@@ -33,6 +33,7 @@ for both profiles.
 | Activation partial failure and retry | Pending | Pending | Fail TigerVNC after Tailscale/SSH succeed; capture diagnostics before VNC stop, working command-line path, preserved identity and enrollment-free VNC retry |
 | SSH service/socket baseline restoration | Pending | Pending | Ubuntu 24.04 active/enabled ssh.socket and inactive/disabled ssh.service; saved pair restored by disable without unnecessary service enablement |
 | Enrollment timeout and secret-free logs | Pending | Pending | Offline/deferred/timeout retry command, connected identity reuse, console-only authentication URL and absence from activation/installer logs |
+| Authorized root-checksum recovery | Pending | Pending | Native TTY confirmation, intentional root mismatch with valid components, standard rejection, retained component/host failures, distinct metadata receipts and warnings |
 | Core success when declined/failed | Pending | Pending | Real install exit status/logs for default-No and failed activation |
 | TsavoTrust offline install and repeat | Pending | Pending | Installed eight-file hashes, unchanged prior mapping rows, exactly one new Tsavo key and correct portal link |
 | TsavoTrust portal, videos and tracking | Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |

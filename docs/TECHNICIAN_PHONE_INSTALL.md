@@ -76,6 +76,12 @@ The v1.13 package includes the validated Tsavo Trust module. See
 
 If any check fails, stop. Do not enroll a teacher's phone until the server problem is understood and the update passes. Keep the terminal output and backup path for ARES technical support; do not improvise by deleting server or phone data.
 
+Only an authorized, deliberately modified package from a trusted source may use
+the separate recovery procedure in `offline-installer/docs/RECOVERY_INSTALL.md`.
+It requires typing `INSTALL UNVERIFIED PACKAGE` at a terminal and skips only root
+SHA256SUMS verification. It is not a remedy for unexplained corruption, missing
+files or failed component hashes, and its result is not fully verified.
+
 ## 2. Generate the one-time installation key
 
 1. On your own trusted device, open the protected ARES staff enrollment portal.

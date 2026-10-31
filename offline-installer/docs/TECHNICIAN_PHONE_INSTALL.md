@@ -76,6 +76,12 @@ can open the enrollment URL on a cellular phone off the ARES network. A finite
 timeout or deferral prints `sudo ares-enable-remote-access` for retry. A TigerVNC
 failure preserves working Tailscale/SSH and reports partial failure. See
 [REMOTE_ACCESS.md](REMOTE_ACCESS.md); never record enrollment URLs or passwords.
+
+The normal installation command remains `install_offline.sh`. For an authorized,
+deliberately modified trusted package only, see [RECOVERY_INSTALL.md](RECOVERY_INSTALL.md).
+The separate TTY-confirmed procedure skips root SHA256SUMS verification, retains
+all component checks and records a not-fully-verified recovery receipt. Never use
+it for unexplained corruption, missing content or failed component hashes.
 For later authorized remote access, read `docs/REMOTE_ACCESS.md` before running
 `sudo ares-enable-remote-access`.
 

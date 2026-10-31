@@ -165,6 +165,9 @@ install -m 0644 "$SELF_DIR/tools/configure_lesson3_url.py" "$STAGE/lesson3/confi
 install -m 0644 "$SELF_DIR/tools/configure_nginx.py" "$STAGE/lesson_plan/configure_nginx.py"
 mkdir -p "$STAGE/remote-access/tigervnc" "$STAGE/remote-access/tailscale"
 install -m 0755 "$SELF_DIR/templates/install_offline.sh" "$STAGE/install_offline.sh"
+install -m 0755 "$SELF_DIR/templates/install_offline_no_root_sha.sh" "$STAGE/install_offline_no_root_sha.sh"
+install -m 0644 "$SELF_DIR/tools/recovery_installer.py" "$STAGE/recovery_installer.py"
+install -m 0644 "$SELF_DIR/tools/package_integrity.py" "$STAGE/package_integrity.py"
 install -m 0644 "$SELF_DIR/templates/optional_remote_support.sh" "$STAGE/optional_remote_support.sh"
 install -m 0755 "$SELF_DIR/templates/preflight.sh" "$STAGE/preflight.sh"
 mkdir -p "$STAGE/tsavo"
@@ -194,6 +197,7 @@ install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
 install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
 install -m 0644 "$SELF_DIR/docs/PROFILE_ACCEPTANCE.md" "$STAGE/docs/PROFILE_ACCEPTANCE.md"
+install -m 0644 "$SELF_DIR/docs/RECOVERY_INSTALL.md" "$STAGE/docs/RECOVERY_INSTALL.md"
 install -m 0644 "$SELF_DIR/docs/TSAVO_TRUST.md" "$STAGE/docs/TSAVO_TRUST.md"
 mkdir -p "$STAGE/docs/pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf"
@@ -282,6 +286,13 @@ print(f"APK validated: {p.name} ({p.stat().st_size} bytes)")
 PYAPK
   install -m 0644 "$APK_WORK/ares-sync.apk" "$STAGE/teacher-app/ares-sync.apk"
   (cd "$STAGE/teacher-app" && sha256sum ares-sync.apk > ares-sync.apk.sha256)
+  python3 - "$STAGE/teacher-app/APPROVAL.json" "$APPROVED_SHA" "$ARES_PROFILE" <<'PYAPPROVAL'
+import json, pathlib, sys
+path, digest, profile = sys.argv[1:]
+pathlib.Path(path).write_text(json.dumps({"sha256": digest, "profile": profile,
+    "app_id": "org.areseducation.sync" + (".test" if profile == "test" else "")}) + "\n", encoding="utf-8")
+PYAPPROVAL
+  install -m 0644 "$SELF_DIR/tools/render_profile.py" "$STAGE/teacher-app/verify_profile.py"
   {
     echo "Source: $APK_SOURCE_DESC"
     echo "Bundled filename: ares-sync.apk"
@@ -462,6 +473,10 @@ for required in \
   remote-access/remote_support_config.py \
   remote-access/remote_support_common.sh \
   optional_remote_support.sh \
+  install_offline_no_root_sha.sh \
+  recovery_installer.py \
+  package_integrity.py \
+  docs/RECOVERY_INSTALL.md \
   tsavo/install.sh \
   tsavo/tsavo_content.py \
   tsavo/tsavo_install.py \
@@ -495,6 +510,11 @@ if (( ! SCAFFOLD_ONLY )); then
 fi
 
 python3 "$SELF_DIR/tools/render_profile.py" --root "$STAGE" --profile "$ARES_PROFILE"
+(cd "$STAGE/teacher-app"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+(cd "$STAGE/lesson_plan/payload"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+if (( ! SCAFFOLD_ONLY )); then
+  (cd "$STAGE/lesson3/images"; sha256sum IMAGE_REFS.txt "lesson3-${LESSON3_VERSION}-amd64-images.tar.gz" > SHA256SUMS)
+fi
 # Tsavo content has no host literals; the pinned rendered content must survive
 # profile rendering unchanged. Seal all module files including its manifest.
 python3 "$STAGE/tsavo/tsavo_content.py" "$STAGE/tsavo/payload" "$STAGE/tsavo/MANIFEST.json"

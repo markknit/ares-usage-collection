@@ -15,6 +15,12 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 
 ## v1.13 changes
 
+- Adds an [authorized root-checksum recovery procedure](docs/RECOVERY_INSTALL.md).
+  The normal `install_offline.sh` entry point remains unchanged and verified.
+  Recovery is a separate, interactive break-glass path, skips only the root
+  manifest check and never overrides component failures or field acceptance gates.
+- Adds independent image/payload manifests and shared component validation so
+  recovery retains APK, release, image, corpus, Tsavo and remote-payload checks.
 - Makes optional remote activation finite and enrollment output terminal-only,
   preserves SSH service/socket baselines, and keeps working Tailscale/SSH after
   a TigerVNC failure. See [remote support](docs/REMOTE_ACCESS.md) for status codes,

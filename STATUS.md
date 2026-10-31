@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 
 - Repository: `C:/dev/ares-usage-collection`.
 - Branch: `production-baseline-cleanup`.
-- Implementation baseline for this step: `32634eb108312581177c5c45b2d5adf0fa740c06`.
+- Implementation baseline for this step: `762f25e1f3e334e9506a3ba9bd8d06925ec48b43`.
 - Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
 - Verified production artifact retained: v1.12 (identity and evidence below).
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
@@ -16,6 +16,7 @@ Last updated: 2026-10-30
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
+| Explicit root-checksum recovery | Implemented and software validated; Linux/live acceptance Pending | [Authorized recovery](offline-installer/docs/RECOVERY_INSTALL.md): actual terminal and exact confirmation, root-only exception, independent component validation and metadata receipts. Normal installer unchanged. 72 Windows tests ran: 70 passed, two native tests skipped; 20 shell syntax checks passed. No final v1.13 field ZIP built. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
@@ -51,6 +52,11 @@ Last updated: 2026-10-30
 
 ## Known Issues / Lessons Learned
 
+- Recovery is an explicit authorized exception for a deliberately modified trusted
+  package, never a remedy for unexplained corruption or failed component checks.
+  Keep the normal installer byte-identical and public preflight verified. Recovery
+  receipts must record intentional root omission and never claim full verification;
+  standard receipts describe verified preflight, not completed installation.
 - Remote command-line readiness and desktop readiness are separate outcomes.
   After Tailscale/SSH succeed, a VNC failure must diagnose and stop only the owned
   VNC unit, return partial failure and retain the working command-line path. Send
@@ -82,6 +88,35 @@ Last updated: 2026-10-30
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-30 - Explicit root-checksum recovery installer
+
+- Added `install_offline_no_root_sha.sh` and a script-relative controller. Actual
+  terminal input and exactly `INSTALL UNVERIFIED PACKAGE` are required before
+  installation. No yes option or normal-installer/environment bypass was added.
+  The controller reuses the unchanged normal workflow with one private preflight
+  dispatch. Only root manifest content verification is skipped; its file must
+  still exist. Warnings identify the result as NOT FULLY VERIFIED before and after.
+- Shared preflight validates approved APK identity/profile, Lesson3 release,
+  images and corpus, TsavoTrust, Tailscale, TigerVNC, required files and LFS pointers.
+  Builder output now includes independent teacher-app, image and Lesson Plan
+  manifests and the packaged APK verifier/approval record. Root SHA256SUMS covers
+  recovery code and nested manifests while excluding only itself.
+- Metadata-only recovery audit/receipts record UTC time, available operator,
+  intentional root omission and outcome without interactive secrets. Standard
+  receipts record verified preflight only; recovery completion never means full
+  package verification or field acceptance.
+- Windows validation: 72 tests ran, 70 passed, two native tests skipped (PTY and
+  POSIX link). Covered both profiles, builder manifest inventory, component
+  tampering/malformed payloads/missing files, root mismatch and confirmation,
+  receipts, TsavoTrust and remote-support regressions. All 20 shell syntax checks
+  passed. Linux-only corpus-status (three) and school-server integration (nine)
+  tests were not run; actual dpkg metadata, root execution, host installation,
+  receipt permissions and native PTY/link behavior remain Pending locally.
+- Preserved `install_offline.sh` byte-for-byte, v1.12 ZIP/evidence and existing
+  untracked files. All production/test live acceptance, packaged remote-support
+  lifecycle, full v1.13 build/independent verification and field approval remain
+  Pending. No final v1.13 ZIP built and no push performed for this step.
 
 ### 2026-10-30 - Optional remote-support corrections for v1.13
 

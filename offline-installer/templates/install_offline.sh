@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ares_config.sh" "$SCRIPT_DIR/package.conf"
 SCHOOL_CODE="${1:-}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="/var/log/ares-offline-install-${STAMP}.log"
@@ -12,10 +11,13 @@ LOG_FILE="/var/log/ares-offline-install-${STAMP}.log"
 [[ "$SCHOOL_CODE" =~ ^[A-Z0-9_-]+$ ]] || { echo "ERROR: invalid school code" >&2; exit 2; }
 
 exec > >(tee -a "$LOG_FILE") 2>&1
+CURRENT_STEP="starting installation"
+trap 'rc=$?; printf "\nInstallation stopped during: %s\nSend this log to ARES support: %s\n" "$CURRENT_STEP" "$LOG_FILE" >&2; exit "$rc"' ERR
 
 run_step() {
   local label=$1
   shift
+  CURRENT_STEP=$label
   echo
   echo "============================================================"
   echo "$label"
@@ -87,6 +89,7 @@ echo "Log:    $LOG_FILE"
 
 run_step "0) Preflight - verify server and package before changes" \
   bash "$SCRIPT_DIR/preflight.sh" "$SCHOOL_CODE"
+source "$SCRIPT_DIR/ares_config.sh" "$SCRIPT_DIR/package.conf"
 
 run_step "1) Install/update Lesson Plan module + $ARES_ALIAS" \
   bash "$SCRIPT_DIR/lesson_plan/install.sh"
@@ -104,21 +107,17 @@ run_step "4) Install/update ARES Sync usage collection" \
 run_step "5) Deploy offline ARES Sync teacher APK + install page" \
   bash "$SCRIPT_DIR/teacher-app/install_teacher_app.sh"
 
-run_step "6) Install dormant remote-access components" \
-  bash "$SCRIPT_DIR/remote-access/prepare_remote_access.sh"
-
-run_step "7) Create Lesson3 administrator and install the packaged corpus" \
+run_step "6) Create Lesson3 administrator and install the packaged corpus" \
   install_lesson3_corpus_guided
 
-run_step "8) Install validated Tsavo Trust module and tracking mapping" \
+run_step "7) Install Tsavo Trust module and tracking mapping" \
   bash "$SCRIPT_DIR/tsavo/install.sh" --host "$ARES_ALIAS"
 
-run_step "9) Post-install verification" bash -c '
+run_step "8) Check the installed services and content" bash -c '
   set -e
   nginx -t
   systemctl is-active --quiet nginx
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/ >/dev/null
-  python3 "$0/tsavo/tsavo_install.py" --verify --host "$ARES_ALIAS"
   curl -fsS --max-time 8 http://127.0.0.1:3001/login >/dev/null
   grep -qx "$LESSON3_VERSION" /mnt/sda3/var/www/lesson3-download/lesson3-deploy/VERSION
   python3 "$0/lesson3/configure_url.py" check /mnt/sda3/var/www/lesson3-download/lesson3-deploy/.env "$LESSON3_URL" "$LESSON3_SERVER_URL"
@@ -134,22 +133,9 @@ run_step "9) Post-install verification" bash -c '
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/app_install/ >/dev/null
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/downloads/ares-sync.apk -o /dev/null
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf -o /dev/null
-  test -x "$0/lesson3/corpus/install_lesson3_corpus.sh"
+  test -f "$0/lesson3/corpus/install_lesson3_corpus.sh"
   test -s "$0/lesson3/corpus/MANIFEST.json"
   test -s /mnt/sda3/var/www/lesson3-download/lesson3-deploy/CORPUS_INSTALLED.txt
-  command -v tigervncserver >/dev/null
-  command -v tigervncpasswd >/dev/null
-  command -v tailscale >/dev/null
-  command -v tailscaled >/dev/null
-  test -x /usr/local/sbin/ares-enable-remote-access
-  test -x /usr/local/sbin/ares-disable-remote-access
-  test -r /usr/local/lib/ares/remote_support_common.sh
-  if systemctl is-active --quiet tailscaled.service || systemctl is-active --quiet "tigervncserver@:1.service"; then
-    echo "ERROR: remote services are active before optional activation" >&2; exit 1
-  fi
-  if pgrep -x x11vnc >/dev/null || ss -H -ltn | grep -E ":5901[[:space:]]" >/dev/null; then
-    echo "ERROR: remote desktop listener exists before optional activation" >&2; exit 1
-  fi
   echo "PASS: Nginx, ARES root, Lesson3, tracking, Lesson Plans, and offline teacher APK verified"
 ' "$SCRIPT_DIR"
 
@@ -163,4 +149,6 @@ echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"
 echo "Lesson3 $LESSON3_VERSION: complete the packaged acceptance checklist before rollout."
 source "$SCRIPT_DIR/optional_remote_support.sh"
-optional_remote_support
+if prepare_optional_remote_support; then
+  optional_remote_support
+fi

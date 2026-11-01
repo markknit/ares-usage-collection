@@ -111,6 +111,8 @@ log "copying ARES source package"
 rsync -a --chmod=Du+w,Fu+w \
   --exclude='setup-ares-tailscale-vnc-v2.sh' \
   --exclude='install_offline_no_sha_checks.sh' \
+  --exclude='install_offline_no_root_sha.sh' \
+  --exclude='recovery_installer.py' \
   --exclude='tsavo_trust_module_install.sh' \
   --exclude='TsavoTrust' \
   --exclude='tsavo' \
@@ -135,6 +137,7 @@ for generated_path in \
   fi
 done
 rm -f -- "$STAGE/MANIFEST.txt" "$STAGE/SHA256SUMS" "$STAGE/NOT_FIELD_READY.txt"
+rm -f -- "$STAGE/docs/RECOVERY_INSTALL.md" "$STAGE/install_offline2.sh"
 
 # The Q4 source archive predates the reviewed school-code reassignment command.
 # Always replace its rollout directory with the vetted copy shipped with this
@@ -165,8 +168,6 @@ install -m 0644 "$SELF_DIR/tools/configure_lesson3_url.py" "$STAGE/lesson3/confi
 install -m 0644 "$SELF_DIR/tools/configure_nginx.py" "$STAGE/lesson_plan/configure_nginx.py"
 mkdir -p "$STAGE/remote-access/tigervnc" "$STAGE/remote-access/tailscale"
 install -m 0755 "$SELF_DIR/templates/install_offline.sh" "$STAGE/install_offline.sh"
-install -m 0755 "$SELF_DIR/templates/install_offline_no_root_sha.sh" "$STAGE/install_offline_no_root_sha.sh"
-install -m 0644 "$SELF_DIR/tools/recovery_installer.py" "$STAGE/recovery_installer.py"
 install -m 0644 "$SELF_DIR/tools/package_integrity.py" "$STAGE/package_integrity.py"
 install -m 0644 "$SELF_DIR/templates/optional_remote_support.sh" "$STAGE/optional_remote_support.sh"
 install -m 0755 "$SELF_DIR/templates/preflight.sh" "$STAGE/preflight.sh"
@@ -197,7 +198,6 @@ install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
 install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
 install -m 0644 "$SELF_DIR/docs/PROFILE_ACCEPTANCE.md" "$STAGE/docs/PROFILE_ACCEPTANCE.md"
-install -m 0644 "$SELF_DIR/docs/RECOVERY_INSTALL.md" "$STAGE/docs/RECOVERY_INSTALL.md"
 install -m 0644 "$SELF_DIR/docs/TSAVO_TRUST.md" "$STAGE/docs/TSAVO_TRUST.md"
 mkdir -p "$STAGE/docs/pdf"
 install -m 0644 "$SELF_DIR/docs/pdf/ARES_Sync_Technician_Guide.pdf" "$STAGE/docs/pdf/ARES_Sync_Technician_Guide.pdf"
@@ -473,10 +473,7 @@ for required in \
   remote-access/remote_support_config.py \
   remote-access/remote_support_common.sh \
   optional_remote_support.sh \
-  install_offline_no_root_sha.sh \
-  recovery_installer.py \
   package_integrity.py \
-  docs/RECOVERY_INSTALL.md \
   tsavo/install.sh \
   tsavo/tsavo_content.py \
   tsavo/tsavo_install.py \
@@ -551,7 +548,7 @@ Profile: $ARES_PROFILE ($ARES_ALIAS)
 Teacher APK: bundled profile-matching APK with SHA-256 verification
 Teacher install URL after deployment: $ARES_URL/app_install/
 Lesson3 User Guide after deployment: $ARES_URL/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf
-Remote access: Tailscale $TAILSCALE_VERSION and TigerVNC $TIGERVNC_VERSION installed dormant
+Remote access: Tailscale $TAILSCALE_VERSION and TigerVNC $TIGERVNC_VERSION bundled; preparation is optional and non-blocking
 Source directory: $SOURCE
 Field command: sudo bash install_offline.sh ARES-S00XX
 Lesson3 corpus: guided installation within install_offline.sh after first Site Administrator creation
@@ -581,5 +578,12 @@ with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) 
         if p.is_file():
             z.write(p, p.relative_to(base))
 PYZIP
-log "complete: $ZIPFILE"
-if (( SCAFFOLD_ONLY )); then log "NOTE: scaffold-only output is not field-ready"; fi
+log "created candidate ZIP: $ZIPFILE"
+if (( SCAFFOLD_ONLY )); then
+  log "NOTE: scaffold-only output is not field-ready"
+else
+  log "independently verifying the ZIP in a fresh extraction"
+  python3 -B "$SELF_DIR/verify_offline_bundle.py" "$ZIPFILE" \
+    --profile "$ARES_PROFILE" --apk-sha256 "$APPROVED_SHA"
+  log "verified release candidate: $ZIPFILE (live installation acceptance remains Pending)"
+fi

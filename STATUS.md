@@ -4,9 +4,12 @@ Last updated: 2026-10-31
 
 ## Current checkout
 
-- Repository: `C:/dev/ares-usage-collection`.
-- Branch: `production-baseline-cleanup`.
-- Implementation baseline for this step: `350690ffea893d3563d58c9505d8c2669c63cab8`.
+- Repository: `C:/Users/MRKni/Documents/ChatGPT/ares-usage-collection` (separate local clone).
+- Branch: `simplify-offline-install`.
+- Implementation baseline for this step: `728741b611d35ef9af1d69f7efcebd0bdda1bca7`.
+- The C1-qualified tsavo3 checkout, normalized source and sealed evidence remain
+  at the old baseline. Build this simplified source from a separate checkout;
+  do not run the earlier C2 commands expecting the old behavior.
 - Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
 - Verified production artifact retained: v1.12 (identity and evidence below).
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
@@ -16,9 +19,10 @@ Last updated: 2026-10-31
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Explicit root-checksum recovery | Native fixtures passed; live acceptance Pending | [Linux fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md): component and receipt fixtures plus native PTY confirmation passed. Complete PTY recovery passed only as supplemental inline operator evidence; committed Linux/root workflow regression remains Pending. Normal installer unchanged; no final v1.13 field ZIP built. |
+| Simplified offline installation | Implemented; software validation recorded below; field build Pending | One master command, automatic complete-package check, no bypass installer/receipt system, non-blocking optional remote preparation after core verification, automatic fresh-ZIP release verification. |
+| Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See linked Linux fixture evidence above. |
-| Complete recovery-through-PTY CI regression | Pending | Commit a reproducible Linux/root fixture joining real PTY confirmation to root-mismatch recovery and component-tamper rejection, with temporary host roots/logs/receipts. Supplemental inline results do not establish committed CI coverage. |
+| Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
@@ -28,7 +32,7 @@ Last updated: 2026-10-31
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Implemented and software validated; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned external eight-file input, corrected page, transactional deployment, append-only mapping and HTTP range verification. 45 tests passed, one native POSIX-link test skipped; full v1.13 field build and live acceptance remain Pending. |
-| Field rollout approval | Pending | Production ZIP verification is complete; all live installation, profile and Lesson3 acceptance checks remain Pending. Retain the documented fallback until evidence is reviewed. |
+| Field rollout approval | Pending | Only the historical v1.12 ZIP is verified. The simplified v1.13 field build and live offline acceptance remain Pending. Remote-support acceptance applies when enabling that optional feature. |
 
 ## Production v1.12 artifact
 
@@ -54,6 +58,15 @@ Last updated: 2026-10-31
 
 ## Known Issues / Lessons Learned
 
+- The project owner approved a simpler offline deployment model on 2026-10-31:
+  keep automatic corruption checks and functional checks, remove repeated manual
+  qualification and the bypass path, and prevent optional remote prerequisites
+  from blocking core installation. Earlier byte-identical-installer/recovery
+  instructions below and in historical session logs describe the superseded design.
+- Detailed component checks run on a fresh ZIP extraction automatically at build
+  completion. Field preflight performs one complete-package inventory/hash check.
+  Standalone component utilities retain their own local checks; corpus status
+  checks no longer rehash the same files before and after import.
 - Separate committed native PTY confirmation coverage from complete recovery
   orchestration: the latter passed on 2026-10-31 as an inline operator fixture
   only. Preserve it as supplemental evidence and keep the committed Linux/root
@@ -94,6 +107,40 @@ Last updated: 2026-10-31
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-31 - Simplify offline installation for technicians
+
+- Created this separate clone/branch from `728741b`; preserved the original local
+  checkout, tsavo3 C1 source/evidence and v1.12 artifact. No host installer ran.
+- The technician runs `sudo bash install_offline.sh ARES-S00XX`, follows the existing
+  Lesson3 administrator prompts, and checks the final message/local browser pages.
+  Removed the separate preflight command and recovery-mode instructions from the
+  technician guide. Full builds regenerate the printed guides from these sources.
+- Removed the root-checksum bypass controller, wrapper and metadata receipt system.
+  Keep one automatic root hash/inventory check; move detailed component validation
+  to an automatic build-side verifier using a fresh ZIP extraction. Retained local
+  checks in standalone utilities and Tsavo copy/rollback/HTTP verification.
+- Added `offline-installer/run_tsavo3_build.sh` as the single C1 continuation:
+  reuse the existing source seal, build in a fresh hidden area, automatically
+  verify the ZIP and 133 approved inherited files, record final classification,
+  and promote only after all checks pass. An existing output is never replaced.
+- Moved remote preparation after successful core installation. Missing Ubuntu/
+  desktop/SSH prerequisites, an occupied VNC port, or preparation failure produces
+  an optional-support warning without failing the completed core installation.
+  Existing active remote support is left in place when the port is occupied.
+- Windows fixture validation: 72 tests run, 71 passed, one native POSIX-link test
+  skipped. Tests cover real package rejection before host stages, core failure,
+  remote-preparation failure preserving success, both-profile packaging and fresh
+  ZIP verification. Host-changing stages, Debian metadata and Windows rsync/link
+  operations are substituted fixtures, not real Ubuntu/field acceptance.
+- Follow-up workflow/release and script-relative Tsavo tests passed (seven tests);
+  all 20 remaining shell scripts passed syntax checks. The Tsavo launcher disables
+  Python bytecode writes so repeat installation does not create unlisted cache
+  files in the sealed package. Configuration is read only after the package check.
+- Updated Ubuntu CI to run the new workflow/release checks. Native Linux/root CI,
+  the full production build and offline installation/client acceptance of this
+  simplified source remain Pending. Production and permanent-test live rows were
+  not marked passed. No verified artifact has been promoted.
 
 ### 2026-10-31 - Native Linux fixture validation evidence
 

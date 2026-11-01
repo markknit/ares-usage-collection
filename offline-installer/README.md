@@ -15,12 +15,14 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 
 ## v1.13 changes
 
-- Adds an [authorized root-checksum recovery procedure](docs/RECOVERY_INSTALL.md).
-  The normal `install_offline.sh` entry point remains unchanged and verified.
-  Recovery is a separate, interactive break-glass path, skips only the root
-  manifest check and never overrides component failures or field acceptance gates.
-- Adds independent image/payload manifests and shared component validation so
-  recovery retains APK, release, image, corpus, Tsavo and remote-payload checks.
+- One technician command runs the package check, installation and functional checks.
+  No manual checksum commands or checksum-bypass recovery choices are needed.
+- The builder independently extracts and verifies its completed ZIP automatically.
+  Detailed APK/profile, release/images, corpus, Tsavo and script checks run there.
+  Component manifests remain available for release inspection and standalone utilities.
+- Remote-support preparation runs after successful core installation. Missing
+  desktop/SSH prerequisites or preparation failure report a warning and preserve
+  core success. Routine offline installations decline optional activation.
 - Makes optional remote activation finite and enrollment output terminal-only,
   preserves SSH service/socket baselines, and keeps working Tailscale/SSH after
   a TigerVNC failure. See [remote support](docs/REMOTE_ACCESS.md) for status codes,
@@ -135,6 +137,20 @@ packages for Intel ARES school servers.
 
 ## Normal build
 
+For the already sealed tsavo3 C1 checkpoint, run from the new simplified-source
+checkout:
+
+```bash
+bash offline-installer/run_tsavo3_build.sh
+```
+
+This machine-specific continuation preserves the old checkout and sealed source,
+checks continuity, builds into a fresh hidden area, performs independent ZIP and
+inherited-inventory verification, then promotes to `ARES_Q4_Update_offline_v1.13`
+only after all checks pass. It refuses existing candidate/output paths, retains
+failure logs and never runs an installer or prunes Docker. Do not reuse the old
+C2 command block pinned to `728741b` for the simplified behavior.
+
 First provide exactly the normalized `TsavoTrust/` folder described in
 [TSAVO_TRUST.md](docs/TSAVO_TRUST.md) within the external source. The builder fails
 before replacing output if content is missing, nested, unexpected or unpinned.
@@ -169,11 +185,14 @@ Extract the completed field ZIP on the ARES server and run:
 
 ```bash
 cd ARES_Q4_Offline_v0.94_amd64_v1.13
-sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```
 
-Do not proceed if preflight reports `NOT READY`.
+Replace `ARES-S00XX` with the school's code. The installer checks the complete
+package and server automatically before making installation changes. There is
+no need to run preflight separately. If the package check fails, copy the complete
+ZIP again and extract it into a new folder. For other failures, send ARES support
+the installation log path printed on screen.
 
 The installer creates Lesson3, then pauses when the first Site Administrator must be created:
 
@@ -185,8 +204,10 @@ The same `install_offline.sh` process then creates a rollback snapshot, imports 
 batches, and verifies the final 95 plans / 806 lessons. It runs only against an empty Lesson3
 content database and will not silently revise or overwrite lesson plans already present at a school.
 
-The installation prepares dormant Tailscale and TigerVNC, then offers optional
-activation after all core checks pass. It does not erase a previous registration.
+After core checks pass, the installation attempts to prepare dormant Tailscale
+and TigerVNC, then offers activation if preparation succeeds. Preparation or
+activation failure does not fail the completed offline installation. A prior
+registration is retained.
 See `docs/REMOTE_ACCESS.md` before later running `sudo ares-enable-remote-access`.
 
 After successful installation, a teacher connected to ARES/ARES2 can install the app locally from:
@@ -221,6 +242,22 @@ corpus installer to install the taxonomy and content through Lesson3's supported
 rollback protection.
 
 For the update and acceptance procedure, see `docs/LESSON3_CORPUS_INSTALL.md`.
+
+## Release verification (build staff)
+
+The normal builder runs this automatically after creating the ZIP:
+
+```bash
+python3 verify_offline_bundle.py /path/to/ARES_Q4_Offline_v0.94_amd64_v1.13.zip
+```
+
+It uses a fresh extraction on the build disk and checks ZIP structure/CRC, complete
+root inventory/checksums, component manifests, reviewed scripts, release/profile,
+APK, image archives, 95 plans/806 lessons and the eight pinned Tsavo files/media.
+It runs no installer or services. A failure stops the build; retain the candidate
+for diagnosis and do not distribute it. Once it passes, identify the ZIP by its
+printed hash and perform the offline installation and client checks on a disposable
+server. Live installation and field acceptance remain Pending until performed.
 
 ## Scaffold mode
 

@@ -43,11 +43,10 @@ Run the normal offline installation first:
 
 ```bash
 cd ARES_Q4_Offline_v0.94_amd64_v1.13
-sudo bash preflight.sh ARES-S00XX
 sudo bash install_offline.sh ARES-S00XX
 ```
 
-The installer pauses at the required content step:
+Package and prerequisite checks run automatically. The installer pauses at the required content step:
 
 1. Open `http://ares.local:3001/login` and create the first Site Administrator.
 2. Return to the still-running installer and type `READY`.

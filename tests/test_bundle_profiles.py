@@ -36,7 +36,8 @@ class BundleProfileTests(unittest.TestCase):
                 path = payload / name
                 path.parent.mkdir(exist_ok=True)
                 path.write_text("http://ares.local/fixture\n", encoding="utf-8")
-            for name in ("install_offline_no_sha_checks.sh", "tsavo_trust_module_install.sh"):
+            for name in ("install_offline_no_sha_checks.sh", "tsavo_trust_module_install.sh",
+                         "install_offline_no_root_sha.sh", "recovery_installer.py", "install_offline2.sh"):
                 (source / name).write_text("exit 99\n")
             shim = root / "bin"
             shim.mkdir()
@@ -65,9 +66,9 @@ shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*exc
                 stage = next(path for path in output.iterdir() if path.is_dir())
                 self.assertTrue((stage / "NOT_FIELD_READY.txt").exists())
                 self.assertTrue((stage / "remote-access/remote_support_common.sh").is_file())
-                self.assertTrue((stage / "install_offline_no_root_sha.sh").is_file())
+                self.assertFalse((stage / "install_offline_no_root_sha.sh").exists())
                 self.assertTrue((stage / "package_integrity.py").is_file())
-                self.assertTrue((stage / "recovery_installer.py").is_file())
+                self.assertFalse((stage / "recovery_installer.py").exists())
                 self.assertIn("v1.13", stage.name)
                 self.assertFalse((stage / "TsavoTrust").exists())
                 self.assertFalse((stage / "tsavo/unreviewed.txt").exists())
@@ -77,14 +78,15 @@ shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*exc
                 if profile == "test":
                     self.assertNotIn("ares.local", (stage / "lesson_plan/payload/index.htmlf").read_text(encoding="utf-8"))
                 self.assertIn(alias, (stage / "teacher-app/install-page.html").read_text(encoding="utf-8"))
-                for name in ("install_offline_no_sha_checks.sh", "tsavo_trust_module_install.sh"):
+                for name in ("install_offline_no_sha_checks.sh", "tsavo_trust_module_install.sh",
+                             "install_offline_no_root_sha.sh", "recovery_installer.py", "install_offline2.sh"):
                     self.assertFalse((stage / name).exists())
                 for line in (stage / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
                     digest, name = line.split(maxsplit=1)
                     self.assertEqual(digest, hashlib.sha256((stage / name.lstrip("*")).read_bytes()).hexdigest(), name)
                 self.assertIn("./tsavo/SHA256SUMS", (stage / "SHA256SUMS").read_text(encoding="utf-8"))
                 names = [line.split(maxsplit=1)[1].lstrip("*") for line in (stage / "SHA256SUMS").read_text(encoding="utf-8").splitlines()]
-                self.assertIn("./install_offline_no_root_sha.sh", names)
+                self.assertNotIn("./install_offline_no_root_sha.sh", names)
                 self.assertIn("./lesson_plan/payload/SHA256SUMS", names)
                 self.assertNotIn("./SHA256SUMS", names)
                 self.assertEqual(set(names), {"./" + p.relative_to(stage).as_posix() for p in stage.rglob("*")

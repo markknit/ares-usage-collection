@@ -13,8 +13,8 @@ installation log path. Do not record administrator or teacher passwords.
 
 1. Disconnect the target server from the Internet.
 2. Extract `ARES_Q4_Offline_v0.94_amd64_v1.13.zip`.
-3. Run `sudo bash preflight.sh ARES-S00XX` and require `0 failures`.
-4. Run `sudo bash install_offline.sh ARES-S00XX`.
+3. Run `sudo bash install_offline.sh ARES-S00XX`.
+4. Require its automatic package/server checks to pass before installation continues.
 5. Create the first Site Administrator when prompted and complete the guided corpus import.
 6. Require the final installer success message and the verified counts of 95 lesson plans and 806
    lessons.

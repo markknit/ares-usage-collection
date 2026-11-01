@@ -46,8 +46,12 @@ for path in "$FILES_DIR" "$MANIFEST" "$TAXONOMY" "$CHECKSUMS" "$COMPOSE_FILE"; d
   [[ -e "$path" ]] || die "required path is missing: $path"
 done
 
-log "verifying packaged corpus checksums and manifest"
-(cd "$SCRIPT_DIR" && sha256sum -c "$(basename "$CHECKSUMS")")
+# Status is read-only and is called before and after import. Check payload bytes
+# only when importing; the master installer has already checked the full package.
+if [[ "$MODE" == install ]]; then
+  log "verifying packaged corpus checksums and manifest"
+  (cd "$SCRIPT_DIR" && sha256sum -c "$(basename "$CHECKSUMS")")
+fi
 
 readarray -t manifest_values < <(python3 - "$MANIFEST" "$FILES_DIR" "$EXPECTED_CORPUS_COMMIT" <<'PY'
 import json, pathlib, sys

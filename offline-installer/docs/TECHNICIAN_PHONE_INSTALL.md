@@ -22,68 +22,45 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
 - Confirm the school server's existing usage report works and that you have administrator access.
 - Confirm the canonical school name and `ARES-S00XX` ID.
 - Obtain or be able to generate the teacher's one-time installation key from the protected ARES staff enrollment system.
-- Confirm the field package passes its checksum/preflight checks before changing the server.
+- Use the normal master command below; it checks the package and prerequisites automatically.
 
-## 1. Install or update the school server
+## 1. Install and verify the school server
 
-1. Copy the complete offline field ZIP to the server and extract it.
-2. Change into the extracted `ARES_Q4_Offline_...` directory.
-3. Run:
-
-   ```bash
-   sudo bash preflight.sh ARES-S00XX
-   ```
-
-4. Do not proceed unless preflight reports `READY TO INSTALL`.
-5. Run:
+1. Copy the complete offline field ZIP to the server and extract it into a new folder.
+2. Open a terminal in the extracted `ARES_Q4_Offline_...` directory and run:
 
    ```bash
    sudo bash install_offline.sh ARES-S00XX
    ```
 
-6. When the installer pauses, open `http://ares.local:3001/login`, create the first Lesson3 Site
-   Administrator, return to the terminal, and type `READY`.
-7. Enter the Site Administrator credentials when prompted. The installer imports and verifies the
-   approved 95-plan/806-lesson corpus before continuing.
-8. Confirm the final installer summary reports success.
-9. Sign in as a disposable teacher and confirm Lesson3 **Discuss** is visible. Complete the focused
-   checks in `docs/LESSON3_V094_ACCEPTANCE.md` before approving v1.13 for wider rollout.
-10. Remote components are prepared dormant before optional activation. Answer No at the
-    default-No prompt during routine installation; answer Yes only for an authorized support
-    session. A prior registration is retained. The base-image `x11vnc` service is disabled.
-11. If this server used a provisional code, run `sudo ares-set-school-code ARES-S00XX` after the
-    final ID is assigned and before enrolling any teacher phone.
-12. Confirm the local teacher-install page responds:
+   Replace `ARES-S00XX` with the school's final or approved provisional code.
+   The installer checks the package and server automatically. No separate
+   preflight or manual checksum command is needed.
+3. When prompted, open `http://ares.local:3001/login`, create the first Lesson3
+   Site Administrator, and store the credentials. Return to the terminal, type
+   `READY`, then enter the administrator email and password when asked.
+4. Wait for `ARES Q4 offline installation completed successfully`. The installer
+   imports and verifies 95 lesson plans and 806 lessons and installs Tsavo Trust.
+5. If asked to activate remote support, press Enter for No during an offline
+   installation. A warning about unavailable remote support does not invalidate
+   a successful core installation. Save the installation log path printed on screen.
+6. From another device on the school network, open `http://ares.local`, check
+   Lesson Plans and the Lesson3 login, and open Tsavo Trust and play a video.
+   Confirm `http://ares.local/app_install/` opens before setting up teacher phones.
 
-   ```bash
-   curl -I -H 'Host: ares.local' http://127.0.0.1/app_install/
-   ```
+If the package check fails, copy the complete ZIP again and extract it into a new
+folder. For any other installation failure, stop and send ARES support the printed
+installation log. Do not run individual component installers to work around it.
 
-13. Confirm the APK is present and downloadable:
+Remote-support preparation is attempted after the core installation succeeds.
+It may require additional server prerequisites; its failure leaves the completed
+offline installation usable. ARES support can arrange preparation and activation
+later. Activation needs outbound Internet on the server. See `docs/REMOTE_ACCESS.md`.
 
-   ```bash
-   curl -I -H 'Host: ares.local' http://127.0.0.1/downloads/ares-sync.apk
-   ```
-
-The field installer verifies the APK checksum before publishing it. Do not replace the APK on the school server manually.
-
-v1.13 includes the validated Tsavo Trust module. Provide the normalized external
-build-source payload and complete the [Tsavo acceptance checks](TSAVO_TRUST.md).
-The verified v1.12 artifact and evidence are retained unchanged.
-
-For optional remote support, the server needs outbound Internet; the technician
-can open the enrollment URL on a cellular phone off the ARES network. A finite
-timeout or deferral prints `sudo ares-enable-remote-access` for retry. A TigerVNC
-failure preserves working Tailscale/SSH and reports partial failure. See
-[REMOTE_ACCESS.md](REMOTE_ACCESS.md); never record enrollment URLs or passwords.
-
-The normal installation command remains `install_offline.sh`. For an authorized,
-deliberately modified trusted package only, see [RECOVERY_INSTALL.md](RECOVERY_INSTALL.md).
-The separate TTY-confirmed procedure skips root SHA256SUMS verification, retains
-all component checks and records a not-fully-verified recovery receipt. Never use
-it for unexplained corruption, missing content or failed component hashes.
-For later authorized remote access, read `docs/REMOTE_ACCESS.md` before running
-`sudo ares-enable-remote-access`.
+Initial release acceptance is handled by ARES build/support staff using
+`docs/PROFILE_ACCEPTANCE.md` and `docs/LESSON3_V094_ACCEPTANCE.md`. Technicians do
+not repeat the build qualification procedure at each school. A warning alone is
+not evidence of failure; an installation error or failed browser check needs support.
 
 ## 2. Generate the one-time installation key
 

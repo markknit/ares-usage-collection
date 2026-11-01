@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 # Source and call after the core installer has passed all verification.
+prepare_optional_remote_support() {
+  echo
+  echo "Preparing optional remote support (not needed for offline use)."
+  # Run as a separate Bash process so failures stop preparation, while the
+  # conditional caller preserves the already completed core installation.
+  if bash "$SCRIPT_DIR/remote-access/prepare_remote_access.sh"; then
+    echo "Remote support prepared; activation is optional."
+    return 0
+  fi
+  echo "WARNING: remote support could not be prepared."
+  echo "ARES installation is complete and can be used offline."
+  echo "For remote support, send the installation log to ARES support."
+  return 1
+}
+
 run_optional_remote_support() {
   local reply="${1:-N}" result=deferred rc
     case "$reply" in

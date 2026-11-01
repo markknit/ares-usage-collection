@@ -18,10 +18,10 @@ x86_64: 24 shell checks, 87 unprivileged Python tests, three root corpus-status
 tests, native portal/PHP fixtures and POSIX symlinks passed; repository remained
 clean. Archive SHA-256 and all four log hashes were checked for this record.
 
-Complete recovery through a real PTY passed as a **supplemental inline operator
-fixture**, not a committed reproducible test. **Pending CI task:** commit Linux/root
-PTY coverage of the complete temporary-root recovery workflow. Existing committed
-PTY confirmation coverage alone does not satisfy that task.
+The earlier recovery-through-PTY evidence is historical. The simplified source
+removes the checksum-bypass installer; further recovery-mode CI work is retired.
+Current regression coverage targets normal package rejection and optional-support
+failure without losing core success.
 
 Full v1.13 build/independent artifact verification, graphical/fresh-server install,
 real TigerVNC password generation, packaged `:1`, enrolled Tailscale repair,
@@ -38,7 +38,10 @@ packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enab
 or activation failure cleanup. Every live acceptance row below remains Pending
 for both profiles.
 
-| Required check | Production | Permanent test | Evidence required |
+Core offline checks gate the offline release. Remote-access rows apply only
+when enabling that optional feature; they do not gate ordinary offline use.
+
+| Check | Production | Permanent test | Evidence required |
 |---|---|---|---|
 | Clean offline install | Pending | Pending | ZIP SHA-256, disconnected Internet, preflight and install logs |
 | 95 plans / 806 lessons | Pending | Pending | Installer status and actual database counts |
@@ -52,8 +55,7 @@ for both profiles.
 | Activation partial failure and retry | Pending | Pending | Fail TigerVNC after Tailscale/SSH succeed; capture diagnostics before VNC stop, working command-line path, preserved identity and enrollment-free VNC retry |
 | SSH service/socket baseline restoration | Pending | Pending | Ubuntu 24.04 active/enabled ssh.socket and inactive/disabled ssh.service; saved pair restored by disable without unnecessary service enablement |
 | Enrollment timeout and secret-free logs | Pending | Pending | Offline/deferred/timeout retry command, connected identity reuse, console-only authentication URL and absence from activation/installer logs |
-| Authorized root-checksum recovery | Pending | Pending | Native TTY confirmation, intentional root mismatch with valid components, standard rejection, retained component/host failures, distinct metadata receipts and warnings |
-| Core success when declined/failed | Pending | Pending | Real install exit status/logs for default-No and failed activation |
+| Core success when optional support is unavailable | Pending | Pending | Real install exit status/logs for missing remote prerequisites, failed preparation, default-No and failed activation |
 | TsavoTrust offline install and repeat | Pending | Pending | Installed eight-file hashes, unchanged prior mapping rows, exactly one new Tsavo key and correct portal link |
 | TsavoTrust portal, videos and tracking | Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |
 | TsavoTrust failure restoration | Pending | Pending | Disposable-target copy/publication/HTTP failure, restored prior module/link/map and reviewed recovery evidence |
@@ -101,7 +103,7 @@ They contain fixture assets and the NOT_FIELD_READY marker, not a deployable pay
 
 Use a clean disposable Ubuntu 24.04 base image and an approved profile-matching APK.
 Keep the online demo untouched. Record package identity and checksums before use.
-Run preflight, then install with Internet disconnected. Create the first Lesson3
+Run the master installer with Internet disconnected; it runs preflight itself. Create the first Lesson3
 administrator and require actual verified 95/806 counts. Decline optional support
 on the first run. Reboot, resolve the alias from a separate device, and open the
 teacher install page, Lesson Plans links and Lesson3 login on the selected alias.

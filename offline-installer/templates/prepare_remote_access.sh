@@ -14,9 +14,17 @@ die() { printf 'ares-remote-access: ERROR: %s\n' "$*" >&2; exit 1; }
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || die "run as root"
 [[ "$(uname -m)" == "x86_64" ]] || die "only x86_64 ARES servers are supported"
+source /etc/os-release
+[[ "${ID:-}" == ubuntu && "${VERSION_ID:-}" == 24.04 ]] \
+  || die "optional remote-support packages require Ubuntu 24.04"
+command -v cinnamon-session-cinnamon2d >/dev/null \
+  || die "optional remote desktop requires Cinnamon 2D"
 for cmd in awk dpkg dpkg-query find grep install mktemp pgrep rm sha256sum ss systemctl tar; do
   command -v "$cmd" >/dev/null 2>&1 || die "required command not found: $cmd"
 done
+if ss -ltn | awk '{print $4}' | grep -E '(^|:)5901$' >/dev/null; then
+  die "port 5901 is already in use; leave the existing remote desktop unchanged"
+fi
 
 [[ -f "$TIGERVNC_DIR/SHA256SUMS" ]] || die "TigerVNC checksum manifest is missing"
 [[ -f "$TAILSCALE_DIR/SHA256SUMS" ]] || die "Tailscale checksum manifest is missing"

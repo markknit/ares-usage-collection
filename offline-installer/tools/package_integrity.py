@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
-"""Component integrity and non-secret preflight receipts, shared by both paths."""
+"""One field-package check, plus detailed build-side release validation."""
 import argparse
-from datetime import datetime, timezone
-import getpass
 import hashlib
 import importlib.util
 import json
-import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import tarfile
-import tempfile
-import uuid
 
 CORPUS_COMMIT = "e07c243da77ad4554a2f404ae7790ef6e9d3e1b0"
 DEBS = {"libfile-readbackwards-perl": "1.06-2", "tigervnc-common": "1.13.1+dfsg-2build2",
@@ -59,6 +54,27 @@ def checksums(directory, name="SHA256SUMS", required=()):
     return found
 
 
+def verify_package(root):
+    """Check the complete extracted package once, before installation changes."""
+    root = Path(root)
+    if (root / "NOT_FIELD_READY.txt").exists():
+        raise ValueError("This is a development scaffold. Obtain the complete offline installer.")
+    actual = set()
+    for path in root.rglob("*"):
+        name = path.relative_to(root).as_posix()
+        if path.is_symlink() or not (path.is_file() or path.is_dir()):
+            raise ValueError("Unexpected package entry: " + name)
+        if path.is_file() and name != "SHA256SUMS":
+            actual.add(name)
+            with path.open("rb") as stream:
+                if stream.read(128).startswith(b"version https://git-lfs.github.com/spec/v1"):
+                    raise ValueError("Incomplete package file: " + name)
+    covered = checksums(root)
+    if covered != actual:
+        raise ValueError("Package inventory differs from its checksum list")
+    print("PASS: complete installation package checked")
+
+
 def archive(path):
     result = tarfile.open(path, "r:gz")
     try:
@@ -75,7 +91,7 @@ def archive(path):
 def verify_components(root, profile, version):
     root = Path(root)
     if (root / "NOT_FIELD_READY.txt").exists():
-        raise ValueError("Scaffolds are not installable, including through recovery")
+        raise ValueError("Scaffolds are not installable")
     for path in root.rglob("*"):
         if path.is_file():
             with path.open("rb") as stream:
@@ -199,35 +215,6 @@ def verify_components(root, profile, version):
     print("PASS: APK, Lesson3 release/images/corpus, TsavoTrust, Tailscale and TigerVNC component checks")
 
 
-def operator_identity():
-    try:
-        name = os.environ.get("SUDO_USER") or getpass.getuser()
-    except (OSError, KeyError):
-        name = "unknown"
-    return name if re.fullmatch(r"[\w.@\\-]{1,128}", name) else "unknown"
-
-
-def receipt(directory, mode, phase, result=None, path=None):
-    directory = Path(directory)
-    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    data = {"format": "ares-offline-integrity-receipt-v1", "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-            "operator": operator_identity(), "mode": mode, "phase": phase, "exit_code": result,
-            "root_sha256": "verified" if mode == "verified" else "intentionally_skipped",
-            "fully_verified": False, "installation_complete": phase == "installation_completed"}
-    path = Path(path) if path else directory / (mode + "-" + uuid.uuid4().hex + ".json")
-    descriptor, temporary = tempfile.mkstemp(prefix=".receipt-", dir=directory)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-            json.dump(data, stream, indent=2)
-            stream.write("\n")
-        os.chmod(temporary, 0o600)
-        os.replace(temporary, path)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
-    return path
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -235,10 +222,14 @@ if __name__ == "__main__":
     verify.add_argument("root", type=Path)
     verify.add_argument("profile", choices=("production", "test"))
     verify.add_argument("version")
-    record = sub.add_parser("receipt")
-    record.add_argument("mode", choices=("verified", "recovery"))
+    package = sub.add_parser("package")
+    package.add_argument("root", type=Path)
     args = parser.parse_args()
     if args.command == "components":
         verify_components(args.root, args.profile, args.version)
     else:
-        print("Integrity receipt:", receipt(Path("/var/lib/ares/offline-installer/receipts"), args.mode, "preflight_passed"))
+        try:
+            verify_package(args.root)
+        except (ValueError, OSError) as error:
+            parser.exit(1, "Package check failed: " + str(error) + "\n"
+                        "Copy the complete ZIP again and extract it into a new folder.\n")

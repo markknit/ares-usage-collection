@@ -2,9 +2,9 @@ name: Offline installer profiles
 
 on:
   push:
-    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_recovery_installer.py', '.github/workflows/offline-installer.yml']
+    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', '.github/workflows/offline-installer.yml']
   pull_request:
-    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_recovery_installer.py', '.github/workflows/offline-installer.yml']
+    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', '.github/workflows/offline-installer.yml']
 
 jobs:
   test:
@@ -21,4 +21,4 @@ jobs:
       - name: Test source, corpus status, profiles, packaging and activation helpers
         env:
           PYTHONPATH: tests
-        run: sudo --preserve-env=PYTHONPATH python3 -B -m unittest -v test_offline_installer test_profiles test_remote_support test_bundle_profiles test_tsavo_content test_tsavo_install test_package_integrity test_recovery_installer
+        run: sudo --preserve-env=PYTHONPATH python3 -B -m unittest -v test_offline_installer test_profiles test_remote_support test_bundle_profiles test_tsavo_content test_tsavo_install test_package_integrity test_simple_installer test_verify_bundle

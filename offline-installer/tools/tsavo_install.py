@@ -207,10 +207,11 @@ def main():
             parser.error("run as root")
         if args.root.resolve() == Path("/") and not args.host:
             parser.error("--host is required for deployment verification")
-        # Serialize deploys after validation, then validate again under the lock.
-        preflight(package, args.root)
+        # Validate content once under the deployment lock. Only destination-parent
+        # checks are needed before opening that lock.
         import fcntl
         target, _, _ = paths(args.root)
+        check_parents(target, args.root)
         with (target.parent / ".tsavo-install.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             def interrupted(signum, frame):

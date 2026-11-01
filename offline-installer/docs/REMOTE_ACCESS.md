@@ -1,9 +1,17 @@
 # Optional remote support: OpenSSH over Tailscale, localhost TigerVNC
 
-Core installation still installs the pinned offline Tailscale/TigerVNC payloads
-and leaves them dormant. Optional activation follows core verification and
-defaults to No. Deferral, failure or partial activation does not undo core success.
+After core installation and verification succeed, the installer attempts to
+prepare the pinned offline Tailscale/TigerVNC payloads and leave them dormant.
+Missing remote-support prerequisites or preparation failure give a warning and
+do not fail the completed core installation. Optional activation is offered only
+after successful preparation and defaults to No. Deferral, failure or partial
+activation does not undo core success.
 Existing Tailscale identity is never logged out, reset or deleted by these commands.
+
+If preparation was deferred, ARES support can diagnose its log and retry from the
+extracted package with `sudo bash remote-access/prepare_remote_access.sh`. This
+requires Ubuntu 24.04, OpenSSH, Cinnamon 2D and an available port 5901. These are
+remote-support requirements, not prerequisites for core offline installation.
 
 The v1.13 source uses the canonical activation/disable scripts and the shared
 `remote_support_common.sh` helper installed under `/usr/local/lib/ares`.

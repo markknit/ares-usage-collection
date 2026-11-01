@@ -164,18 +164,37 @@ class PackageIntegrityTests(unittest.TestCase):
             with self.assertRaises((ValueError, KeyError)):
                 integrity.verify_components(root, "production", "v0.94")
 
-    def test_standard_and_recovery_receipts_are_distinct_and_nonsecret(self):
+    def test_whole_package_rejects_changed_missing_and_unlisted_files(self):
         with tempfile.TemporaryDirectory() as temp:
-            normal = integrity.receipt(Path(temp), "verified", "preflight_passed")
-            recovery = integrity.receipt(Path(temp), "recovery", "installation_completed", 0)
-            first, second = json.loads(normal.read_text()), json.loads(recovery.read_text())
-            self.assertEqual(first["root_sha256"], "verified")
-            self.assertEqual(second["root_sha256"], "intentionally_skipped")
-            self.assertFalse(first["installation_complete"])
-            self.assertTrue(second["installation_complete"])
-            self.assertFalse(second["fully_verified"])
-            self.assertIn("timestamp_utc", second)
-            self.assertIn("operator", second)
+            root = Path(temp)
+            path = write(root, "payload/video.mp4", b"fixture")
+            manifest(root)
+            integrity.verify_package(root)
+            path.write_bytes(b"changed")
+            with self.assertRaises(ValueError):
+                integrity.verify_package(root)
+            path.unlink()
+            with self.assertRaises(ValueError):
+                integrity.verify_package(root)
+            path.write_bytes(b"fixture")
+            extra = write(root, "extra.sh", "unexpected")
+            with self.assertRaisesRegex(ValueError, "inventory"):
+                integrity.verify_package(root)
+            extra.unlink()
+            integrity.verify_package(root)
+
+    def test_whole_package_rejects_scaffolds_and_lfs_pointers(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = write(root, "NOT_FIELD_READY.txt", "fixture")
+            manifest(root)
+            with self.assertRaisesRegex(ValueError, "scaffold"):
+                integrity.verify_package(root)
+            path.unlink()
+            write(root, "payload.bin", "version https://git-lfs.github.com/spec/v1\n")
+            manifest(root)
+            with self.assertRaisesRegex(ValueError, "Incomplete"):
+                integrity.verify_package(root)
 
 
 if __name__ == "__main__":

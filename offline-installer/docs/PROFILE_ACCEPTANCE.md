@@ -23,8 +23,11 @@ removes the checksum-bypass installer; further recovery-mode CI work is retired.
 Current regression coverage targets normal package rejection and optional-support
 failure without losing core success.
 
-Full v1.13 build/independent artifact verification, graphical/fresh-server install,
-real TigerVNC password generation, packaged `:1`, enrolled Tailscale repair,
+The production v1.13 build, independent artifact verification and promotion
+passed according to the supplied tsavo3 output; see the
+[production artifact record](evidence/2026-10-31-v1.13-production-artifact.md).
+Permanent-test artifact build, graphical/fresh-server install, real TigerVNC
+password generation, packaged `:1`, enrolled Tailscale repair,
 Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable, partial-failure cleanup,
 browser playback and tracking attribution all remain **Pending**. No live row is
 promoted by the fixture evidence.

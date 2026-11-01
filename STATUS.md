@@ -11,7 +11,8 @@ Last updated: 2026-10-31
   at the old baseline. Build this simplified source from a separate checkout;
   do not run the earlier C2 commands expecting the old behavior.
 - Approved Lesson3 release: v0.94; current source bundle revision: v1.13.
-- Verified production artifact retained: v1.12 (identity and evidence below).
+- Production v1.13 built, independently verified and promoted on tsavo3; identity
+  and operator-reported evidence below. Historical v1.12 retained unchanged.
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
 - This continuity record does not establish live deployment or field acceptance.
 
@@ -19,10 +20,10 @@ Last updated: 2026-10-31
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Implemented; software validation recorded below; field build Pending | One master command, automatic complete-package check, no bypass installer/receipt system, non-blocking optional remote preparation after core verification, automatic fresh-ZIP release verification. |
-| Simplified-r3 production candidate | ZIP/component verification passed; inherited comparison stopped; not promoted | User reports 313 ZIP files verified and SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. Corrected inherited text comparison and ZIP reuse await resume. Live installation remains Pending. |
+| Simplified offline installation | Implemented; production artifact verified; live installation Pending | One master command, automatic package check, no bypass mode, non-blocking optional remote preparation. Final source `487dea0`: all 82 Ubuntu tests passed. |
+| Simplified-r3 production artifact | Build, independent verification and promotion passed | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
-| v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See linked Linux fixture evidence above. |
+| v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
@@ -32,8 +33,23 @@ Last updated: 2026-10-31
 | Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
-| TsavoTrust v1.13 integration | Implemented and software validated; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned external eight-file input, corrected page, transactional deployment, append-only mapping and HTTP range verification. 45 tests passed, one native POSIX-link test skipped; full v1.13 field build and live acceptance remain Pending. |
-| Field rollout approval | Pending | The simplified v1.13 candidate passed ZIP/component verification but has not passed the final inherited comparison or been promoted. Live offline acceptance remains Pending. Remote-support acceptance applies when enabling that optional feature. |
+| TsavoTrust v1.13 integration | Production payload packaged and verified; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned eight-file payload and media included in the verified production ZIP. Actual installation, portal/video playback and report attribution remain Pending. |
+| Field rollout approval | Pending live offline acceptance | The production artifact is verified and promoted. Next is an offline installation/client test on a disposable server. Remote-support acceptance applies when enabling that optional feature. |
+
+## Production v1.13 artifact
+
+- Filename: `ARES_Q4_Offline_v0.94_amd64_v1.13.zip`.
+- ZIP SHA-256:
+  `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`.
+- Location:
+  `/mnt/sda3/home/ares/Downloads/ARES_Q4_Update_offline_v1.13/ARES_Q4_Offline_v0.94_amd64_v1.13.zip`.
+- Final qualification source: `487dea05b7bf5a8ba1d2863b8e37884adb537612`;
+  assembly/repackaging identities are recorded separately in the
+  [artifact evidence](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md).
+- Operator-supplied tsavo3 output confirms all independent checks passed:
+  313 ZIP files, 133 approved inherited files, one newline-normalized comparison,
+  unchanged final ZIP bytes and successful promotion. Not rechecked locally by
+  this documentation update. No installer ran; field acceptance remains Pending.
 
 ## Production v1.12 artifact
 
@@ -59,6 +75,14 @@ Last updated: 2026-10-31
 
 ## Known Issues / Lessons Learned
 
+- Docker saved-image TARs can use internal links for shared layers. Resolve them
+  within archive metadata rather than rejecting every link; retain regular-file,
+  image identity and platform checks. Real archive metadata and regression
+  fixtures cover this layout.
+- Compare inherited text using the same newline convention as its sealed approval
+  record; preserve and record the raw ZIP bytes. Read the final ZIP directly,
+  report all discrepancies together and reuse a verified unchanged ZIP during
+  resume instead of repackaging it for a build-side comparison correction.
 - The project owner approved a simpler offline deployment model on 2026-10-31:
   keep automatic corruption checks and functional checks, remove repeated manual
   qualification and the bypass path, and prevent optional remote prerequisites
@@ -68,15 +92,10 @@ Last updated: 2026-10-31
   completion. Field preflight performs one complete-package inventory/hash check.
   Standalone component utilities retain their own local checks; corpus status
   checks no longer rehash the same files before and after import.
-- Separate committed native PTY confirmation coverage from complete recovery
-  orchestration: the latter passed on 2026-10-31 as an inline operator fixture
-  only. Preserve it as supplemental evidence and keep the committed Linux/root
-  regression task Pending. Native fixture success is not live field acceptance.
-- Recovery is an explicit authorized exception for a deliberately modified trusted
-  package, never a remedy for unexplained corruption or failed component checks.
-  Keep the normal installer byte-identical and public preflight verified. Recovery
-  receipts must record intentional root omission and never claim full verification;
-  standard receipts describe verified preflight, not completed installation.
+- The retired checksum-bypass feature's native PTY results are historical, with
+  complete orchestration covered only by an inline operator fixture. Preserve
+  that evidence, but do not resume its old CI task or apply its bypass/receipt
+  instructions to the simplified installer. Replace an incomplete package instead.
 - Remote command-line readiness and desktop readiness are separate outcomes.
   After Tailscale/SSH succeed, a VNC failure must diagnose and stop only the owned
   VNC unit, return partial failure and retain the working command-line path. Send
@@ -108,6 +127,27 @@ Last updated: 2026-10-31
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-31 - Production v1.13 verified and promoted
+
+- Recorded the operator's successful final tsavo3 resume at source `487dea0`:
+  whole-package, APK/profile, release/images/corpus, TsavoTrust, remote-payload,
+  fresh-ZIP and inherited-file checks passed. There are 313 ZIP files and all
+  133 approved inherited files; one text file used normalized-newline comparison.
+- The existing ZIP was reused unchanged, retaining SHA-256
+  `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`,
+  and promoted to `ARES_Q4_Update_offline_v1.13`. Added an artifact record linking
+  its identity, assembly/correction/qualification commits and retained evidence.
+- Final qualification source passed all 82 Ubuntu fixture tests; no further
+  software tests or artifact rebuilds were needed for this documentation update.
+- No live installer ran. Preserved prior evidence and v1.12 identity; the
+  production-baseline branch remains separate from the simplification branch.
+
+Still open:
+
+- Offline installation and client/phone/content checks on a disposable server.
+- Live field acceptance and rollout approval; optional remote acceptance when used.
+- Permanent-test artifact build/acceptance remains separate from this production run.
 
 ### 2026-10-31 - Align inherited text comparison with its sealed newline convention
 

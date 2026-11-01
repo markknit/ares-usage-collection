@@ -14,27 +14,29 @@ Last updated: 2026-11-01
 - Production v1.13 built, independently verified and promoted on tsavo3; identity
   and operator-reported evidence below. Historical v1.12 retained unchanged.
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
-- This continuity record does not establish live deployment or field acceptance.
+- The corrected extracted test copy completed installation on tsavo3 on
+  2026-11-01, according to the supplied operator transcript. Corrected release
+  packaging and client/phone/reboot acceptance remain Pending.
 
 ## Active Threads
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Test installation reached step 7; storage-alias correction awaiting host rerun | User-supplied tsavo3 log confirms healthy Lesson3 and 95 plans / 806 lessons imported. Fix `f93cb51` passed all 86 Ubuntu tests. Original ZIP needs correction before field rollout. |
-| Simplified-r3 production artifact | Build, independent verification and promotion passed | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran. |
+| Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
+| Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
-| Optional OpenSSH / TigerVNC support | v1.13 corrections implemented and software validated; live acceptance Pending | [Remote support](offline-installer/docs/REMOTE_ACCESS.md): bounded terminal-only enrollment, paired SSH baseline, explicit password prompts and per-user startup. VNC partial failure preserves working Tailscale/SSH. Full Windows suite: 59 passed, one native-link test skipped. |
+| Optional OpenSSH / TigerVNC support | Offline preparation and declined activation passed; enabled acceptance Pending | Run `20261101_111100` prepared bundled packages/binaries and accepted `n` without failing core installation. Preparation disabled legacy `x11vnc.service`; existing VNC access needs verification. Activation, client connections and lifecycle checks remain Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
-| Production profile live acceptance | Pending - all checks | Every production column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Requires an actual Ubuntu target, matching approved APK, phone and separate client evidence. |
+| Production profile live acceptance | Host installation/counts passed for corrected test copy; remaining acceptance Pending | [Acceptance record](offline-installer/docs/PROFILE_ACCEPTANCE.md) distinguishes operator-supplied server results from corrected-ZIP clean installation, client/phone/browser and reboot checks still required. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
-| TsavoTrust v1.13 integration | Production payload packaged and verified; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned eight-file payload and media included in the verified production ZIP. Actual installation, portal/video playback and report attribution remain Pending. |
-| Field rollout approval | Pending corrected artifact and live acceptance | Original ZIP retains the storage-alias defect found on tsavo3. Corrected test installation, independently verified release and client/phone checks are required before rollout. Remote-support acceptance applies when enabling that optional feature. |
+| TsavoTrust v1.13 integration | Corrected host installation and HTTP verification passed; browser/tracking acceptance Pending | Run `20261101_111100` passed content/link/mapping, portal/logo and all video byte-range checks. Actual browser playback/seeking, report attribution, repeat/failure recovery and remaining acceptance are Pending. |
+| Field rollout approval | Pending corrected artifact and remaining live acceptance | Corrected test-copy installation passed. Original ZIP retains the storage-alias defect; independently verified corrected release and client/phone/reboot checks remain required. Enabled remote-support acceptance is separate. |
 
 ## Production v1.13 artifact
 
@@ -49,7 +51,8 @@ Last updated: 2026-11-01
 - Operator-supplied tsavo3 output confirms all independent checks passed:
   313 ZIP files, 133 approved inherited files, one newline-normalized comparison,
   unchanged final ZIP bytes and successful promotion. Not rechecked locally by
-  this documentation update. No installer ran; field acceptance remains Pending.
+  the build-record documentation update. No installer ran during the build;
+  later corrected test-copy installation is recorded separately above.
 
 ## Production v1.12 artifact
 
@@ -75,6 +78,11 @@ Last updated: 2026-11-01
 
 ## Known Issues / Lessons Learned
 
+- Declining optional remote activation does not mean preparation left older
+  support services unchanged: the successful tsavo3 transcript explicitly shows
+  `x11vnc.service` being disabled. Record that change and verify existing VNC
+  access separately; core installation success does not establish support access
+  or firewall persistence after reboot.
 - ARES can expose its mounted disk through the `/mnt/sda3` symlink. Resolve that
   configured anchor before Tsavo destination checks, while rejecting symlinked
   parents below it and preventing alternate test roots from escaping. The original
@@ -132,6 +140,35 @@ Last updated: 2026-11-01
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-01 - Corrected test-copy installation completed on tsavo3
+
+- Read the supplied terminal transcript referencing
+  `/var/log/ares-offline-install-20261101_111100.log`; attachment SHA-256 is recorded
+  in the [evidence note](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md).
+  The actual test-server master completed all core stages after the extracted
+  helper/manifests received the storage-alias correction. No new host commands
+  or software tests were run by this documentation update.
+- Package and Tsavo checks passed. Lesson3 was healthy and its installed corpus
+  database counts were confirmed without re-import. Usage-export smoke test:
+  18,703 bytes. Tsavo installation, content/link/mapping, portal/logo and video
+  byte ranges passed; final Nginx/ARES/Lesson3/APK checks passed. Existing duplicate
+  MIME warnings did not prevent Nginx validation or installer completion.
+- Optional preparation succeeded and activation was declined with `n`; core
+  success was retained. Recorded that preparation disabled legacy x11vnc, so
+  remote-access preservation is not inferred from the successful core result.
+- Updated acceptance rows to reflect actual server evidence. Preserved the
+  distinction between this corrected existing-server extraction and the original
+  ZIP, which still contains the old helper. No corrected ZIP was built or
+  independently verified, and no field rollout was approved.
+
+Still open:
+
+- Client browser/video/PDF and phone collection/tracking tests.
+- Existing support access and reboot/autostart/firewall persistence.
+- Corrected release ZIP and independent verification before field rollout.
+- Remaining repeat/failure/feature checks and separate permanent-test/optional
+  enabled remote-support acceptance.
 
 ### 2026-11-01 - tsavo3 test installation and storage-alias correction
 

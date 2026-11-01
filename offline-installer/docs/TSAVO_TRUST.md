@@ -92,6 +92,12 @@ Generate checksums after rendering; never bypass them. No v1.12 manifest is edit
 
 ### Storage-alias correction on the tsavo3 test installation
 
+The subsequent run `20261101_111100` completed the corrected test-copy installation,
+including Tsavo content/link/mapping and portal/logo/video-range verification.
+See the [successful host-run evidence](evidence/2026-11-01-v1.13-tsavo3-install.md).
+The correction below is historical support procedure; do not apply it again to
+the already corrected extraction. A corrected release ZIP is still outstanding.
+
 The 2026-11-01 installation log reached step 7 after Lesson3 became healthy and
 the corpus importer reported 95 plans / 806 lessons. The older deployment helper
 then rejected `/mnt/sda3` as a destination parent, before staging or publishing

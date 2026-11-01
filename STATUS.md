@@ -137,10 +137,16 @@ Last updated: 2026-10-31
   all 20 remaining shell scripts passed syntax checks. The Tsavo launcher disables
   Python bytecode writes so repeat installation does not create unlisted cache
   files in the sealed package. Configuration is read only after the package check.
-- Updated Ubuntu CI to run the new workflow/release checks. Native Linux/root CI,
-  the full production build and offline installation/client acceptance of this
-  simplified source remain Pending. Production and permanent-test live rows were
-  not marked passed. No verified artifact has been promoted.
+- Ubuntu CI passed all 75 tests with no skips for implementation commit
+  `52b3b52ac269dba39f70b71d9b00c95dc38fe92c`, including native corpus-status and
+  POSIX-link fixtures plus shell syntax. See
+  [GitHub Actions run 41269118078](https://github.com/markknit/ares-usage-collection/actions/runs/41269118078).
+  This is software/fixture evidence, not a live installation or the full
+  production build. The new tsavo3 continuation has not been executed.
+- Published `simplify-offline-install` separately. Confirmed the qualified
+  `production-baseline-cleanup` branch still points to `728741b`; no merge was
+  performed. Full production build and offline installation/client acceptance
+  remain Pending. No verified artifact has been promoted.
 
 ### 2026-10-31 - Native Linux fixture validation evidence
 

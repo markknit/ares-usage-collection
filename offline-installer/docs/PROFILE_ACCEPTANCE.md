@@ -7,8 +7,19 @@ is retained unchanged. See [Tsavo Trust](TSAVO_TRUST.md) for external-source
 requirements, mapping reconciliation, backup/restore behavior and pending tests.
 Live acceptance status: **Pending for every check in both profiles**, including
 the target procedure and referenced Lesson3 UI/content checks below.
-Native fixtures ran on tsavo3; no live installation or client acceptance is established.
+Native fixtures ran on tsavo3; complete installation and client acceptance remain Pending.
 Do not infer field success from mocked service checks or fixture scaffolds.
+
+2026-11-01 test-server progress: the supplied tsavo3 installation log
+`ares-offline-install-20261101_105039.log` reports healthy Lesson3, completed
+usage-export smoke test and teacher APK deployment, and successful corpus import
+with 95 plans / 806 lessons. Installation then stopped at Tsavo destination-parent
+validation on the `/mnt/sda3` storage alias. Source fix `f93cb51` passed all
+[86 Ubuntu tests](https://github.com/markknit/ares-usage-collection/actions/runs/41339985198).
+The [offline test-copy correction](TSAVO_TRUST.md#storage-alias-correction-on-the-tsavo3-test-installation)
+and full host rerun remain outstanding. The original ZIP retains this defect;
+corrected release verification, complete installation and client/phone/browser
+acceptance are still required. This partial log does not approve field rollout.
 
 ## Native Linux fixture evidence
 

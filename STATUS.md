@@ -20,7 +20,7 @@ Last updated: 2026-11-01
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Test installation reached step 7; storage-alias correction awaiting host rerun | User-supplied tsavo3 log confirms healthy Lesson3 and 95 plans / 806 lessons imported. Tsavo helper rejected `/mnt/sda3`; corrected source resolves the storage anchor. Original ZIP needs correction before field rollout. |
+| Simplified offline installation | Test installation reached step 7; storage-alias correction awaiting host rerun | User-supplied tsavo3 log confirms healthy Lesson3 and 95 plans / 806 lessons imported. Fix `f93cb51` passed all 86 Ubuntu tests. Original ZIP needs correction before field rollout. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -153,7 +153,10 @@ Last updated: 2026-11-01
   source/content/workflow/ZIP-fixture suite: 27 passed, two native-link checks
   skipped. Documented offline correction tested, including unchanged-package
   verification, exact three-file updates, backups and rejection of unrelated
-  package damage. Native Ubuntu CI pending.
+  package damage. Published source `f93cb51d4aeb236936c52660013edcd541bab85e`
+  passed all 86 native Ubuntu tests, including actual storage symlinks and
+  below-anchor rejection, plus shell syntax checks:
+  https://github.com/markknit/ares-usage-collection/actions/runs/41339985198.
 - Documented an offline, exact-version correction for only the extracted test
   helper and two containing manifests, with backups outside the package. The ZIP
   and v1.12 remain unchanged. Host rerun and corrected release qualification are

@@ -15,7 +15,7 @@ from test_package_integrity import manifest
 
 
 class BuildResumeTests(unittest.TestCase):
-    def exercise(self, fail_verification):
+    def exercise(self, fail_verification, *, reuse_zip=False, changed_text=False):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             builder = base / "builder"
@@ -61,32 +61,51 @@ if os.environ['RESUME_FAIL'] == '1':
             run.mkdir(parents=True)
             (run / "builder-commit.txt").write_text("ed5052a128152166bc3bdb08a051cb21875944c9\n")
             approved = {}
-            for name in ["lesson3_uninstall.sh", *(f"payload-{i}.txt" for i in range(132))]:
+            actual_bytes = {}
+            for name in ["lesson3_uninstall.sh", *(f"payload-{i}.txt" for i in range(131)),
+                         "lesson_plan/payload/PDF/index.html"]:
                 data = b"fixture inherited bytes\n"
-                (stage / name).write_bytes(data)
-                approved[name] = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+                if name.endswith("index.html"):
+                    data = b'<a href="http://ares.local/original">Plans</a>\r\n<p>Offline</p>\r\n'
+                canonical = data.replace(b"\r\n", b"\n") if name.endswith(".html") else data
+                approved[name] = {"bytes": len(canonical), "sha256": hashlib.sha256(canonical).hexdigest()}
+                if changed_text and name.endswith("index.html"):
+                    data = data.replace(b"original", b"modified")
+                path = stage / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+                actual_bytes[name] = data
             (evidence / "approved-inherited.json").write_text(json.dumps(approved))
             (evidence / "inheritance_policy.py").write_text(
                 'def final_forbidden(name): return False\n'
                 'def generated(name): return name in {"SHA256SUMS", "package_integrity.py"}\n')
-            (stage / "package_integrity.py").write_bytes(b"# original helper fixture\n")
+            (stage / "package_integrity.py").write_bytes(
+                (builder / "tools/package_integrity.py").read_bytes() if reuse_zip else b"# original helper fixture\n")
             manifest(stage)
             candidate = work / "output" / (bundle + ".zip")
             with zipfile.ZipFile(candidate, "w") as archive:
-                for item in stage.iterdir():
-                    archive.write(item, item.relative_to(stage.parent))
-            original_digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+                for item in stage.rglob("*"):
+                    if item.is_file():
+                        archive.write(item, item.relative_to(stage.parent))
+            candidate_digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+            original_digest = candidate_digest
+            if reuse_zip:
+                (work / "original-candidate.zip").write_bytes(b"preserved earlier candidate fixture")
+                original_digest = hashlib.sha256((work / "original-candidate.zip").read_bytes()).hexdigest()
             env = dict(os.environ, RESUME_FAIL="1" if fail_verification else "0")
             result = subprocess.run([BASH, str(builder / "run.sh"), "--resume"],
                                     capture_output=True, text=True, env=env)
             self.assertNotIn("UNEXPECTED_BUILDER", result.stdout + result.stderr)
             self.assertEqual(hashlib.sha256((work / "original-candidate.zip").read_bytes()).hexdigest(), original_digest)
             final = base / "ARES_Q4_Update_offline_v1.13"
-            if fail_verification:
+            if fail_verification or changed_text:
                 self.assertNotEqual(result.returncode, 0)
                 self.assertFalse(final.exists())
                 self.assertTrue((work / "BUILD_INCOMPLETE").exists())
-                self.assertIn("FIXTURE_VERIFICATION_FAILED", result.stdout)
+                if fail_verification:
+                    self.assertIn("FIXTURE_VERIFICATION_FAILED", result.stdout)
+                else:
+                    self.assertIn("Inherited content differs: lesson_plan/payload/PDF/index.html", result.stdout)
                 self.assertEqual(result.stderr.count("Build stopped."), 1)
             else:
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -94,8 +113,13 @@ if os.environ['RESUME_FAIL'] == '1':
                 self.assertFalse((work / "BUILD_INCOMPLETE").exists())
                 self.assertEqual((final / bundle / "package_integrity.py").read_bytes(),
                                  (builder / "tools/package_integrity.py").read_bytes())
-                for name, value in approved.items():
-                    self.assertEqual(hashlib.sha256((final / bundle / name).read_bytes()).hexdigest(), value["sha256"])
+                for name, value in actual_bytes.items():
+                    self.assertEqual((final / bundle / name).read_bytes(), value)
+                if reuse_zip:
+                    self.assertEqual(hashlib.sha256((final / (bundle + ".zip")).read_bytes()).hexdigest(), candidate_digest)
+                classification = json.loads((work / "final-content-classification.json").read_text())
+                html = next(row for row in classification if row["path"].endswith("PDF/index.html"))
+                self.assertEqual(html["comparison"], "normalized-newlines")
                 self.assertTrue((run / "resume-verification.log").is_file())
                 self.assertFalse((run / "build.log").exists())
 
@@ -104,6 +128,12 @@ if os.environ['RESUME_FAIL'] == '1':
 
     def test_failed_resume_verification_keeps_candidate_and_never_promotes(self):
         self.exercise(True)
+
+    def test_sealed_canonical_text_accepts_crlf_and_reuses_verified_zip_bytes(self):
+        self.exercise(False, reuse_zip=True)
+
+    def test_actual_inherited_text_change_still_blocks_promotion(self):
+        self.exercise(False, reuse_zip=True, changed_text=True)
 
 
 if __name__ == "__main__":

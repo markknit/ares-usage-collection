@@ -87,6 +87,10 @@ trap 'if (( BASH_SUBSHELL == 0 )); then echo "Build stopped. Retain candidate fi
     # Validate the retained staging tree before updating the one reviewed helper.
     python3 -B "$SELF_DIR/tools/package_integrity.py" package "$STAGE"
     git -C "$SELF_DIR" rev-parse HEAD > "$RUN/resume-commit.txt"
+    if cmp -s "$SELF_DIR/tools/package_integrity.py" "$STAGE/package_integrity.py" \
+        && [[ -s "$WORK/output/$BUNDLE.zip" ]]; then
+      echo "Reusing existing candidate ZIP; integrity helper is unchanged."
+    else
     if [[ ! -e "$WORK/original-candidate.zip" ]]; then
       [[ -s "$WORK/output/$BUNDLE.zip" ]]
       cp -p "$STAGE/SHA256SUMS" "$WORK/original-SHA256SUMS"
@@ -108,6 +112,7 @@ with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED, allowZip64=Tru
             archive.write(path, path.relative_to(stage.parent))
 print("Repackaged existing payload with corrected archive checker")
 PY
+    fi
     python3 -B "$SELF_DIR/verify_offline_bundle.py" "$WORK/output/$BUNDLE.zip" \
       --profile production --apk-sha256 "$APK_SHA"
   else
@@ -116,15 +121,17 @@ PY
   fi
 
   # The builder has independently extracted and verified the ZIP. Check the
-  # retained files against the sealed B2 allowlist as the final promotion gate.
-  python3 -B - "$WORK/output/$BUNDLE" "$EVIDENCE" \
+  # ZIP files against the sealed B2 allowlist as the final promotion gate.
+  python3 -B - "$WORK/output/$BUNDLE.zip" "$EVIDENCE" \
     "$WORK/final-content-classification.json" <<'PY'
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
+import zipfile
 
-root, evidence, output = map(Path, sys.argv[1:])
+package, evidence, output = map(Path, sys.argv[1:])
 sys.path.insert(0, str(evidence))
 from inheritance_policy import final_forbidden, generated
 
@@ -132,24 +139,47 @@ approved = json.loads((evidence / "approved-inherited.json").read_text(encoding=
 assert len(approved) == 133 and "lesson3_uninstall.sh" in approved
 inherited = set()
 classification = []
-for path in sorted(root.rglob("*")):
-    if not path.is_file():
-        continue
-    name = path.relative_to(root).as_posix()
-    assert not final_forbidden(name), "Forbidden legacy file: " + name
-    category = "regenerated" if generated(name) else "inherited"
-    if category == "inherited":
-        assert name in approved, "Unreviewed inherited file: " + name
-        assert path.stat().st_size == approved[name]["bytes"], name
-        value = hashlib.sha256(path.read_bytes()).hexdigest()
-        assert value == approved[name]["sha256"], "Inherited file changed: " + name
-        inherited.add(name)
-    classification.append({"path": name, "category": category})
-assert inherited == approved.keys(), "Approved inherited files are missing"
+issues = []
+normalized = 0
+with zipfile.ZipFile(package) as archive:
+    for entry in sorted(archive.infolist(), key=lambda item: item.filename):
+        if entry.is_dir():
+            continue
+        # The independent verifier already enforces one safe bundle root.
+        name = entry.filename.split("/", 1)[1]
+        if final_forbidden(name):
+            issues.append("Forbidden legacy file: " + name)
+        category = "regenerated" if generated(name) else "inherited"
+        record = {"path": name, "category": category}
+        if category == "inherited":
+            if name not in approved:
+                issues.append("Unreviewed inherited file: " + name)
+            else:
+                raw = archive.read(entry)
+                data = raw
+                suffix = Path(name).suffix.lower()
+                # B2 sealed normalized text. Match that newline convention only;
+                # preserve whitespace, content and the already-rendered alias.
+                if suffix in {".html", ".htmlf", ".js", ".json", ".md"}:
+                    data = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+                elif Path(name).suffix == ".sh":
+                    data = re.sub(rb"\r(?=\n|$)", b"", raw)
+                value = hashlib.sha256(data).hexdigest()
+                if len(data) != approved[name]["bytes"] or value != approved[name]["sha256"]:
+                    issues.append(f"Inherited content differs: {name} (raw {len(raw)}, normalized {len(data)}, approved {approved[name]['bytes']} bytes)")
+                inherited.add(name)
+                normalized += data != raw
+                record.update(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(),
+                              comparison="normalized-newlines" if data != raw else "exact-bytes")
+        classification.append(record)
+issues.extend("Approved inherited file missing: " + name for name in sorted(approved.keys() - inherited))
+if issues:
+    raise SystemExit("Inherited-file verification failed:\n  " + "\n  ".join(issues))
 with output.open("w" if output.exists() else "x", encoding="utf-8") as stream:
     json.dump(classification, stream, indent=2, ensure_ascii=False)
     stream.write("\n")
 print("PASS: 133 approved inherited files retained; final inventory classified")
+print(f"Text files compared with the sealed newline convention: {normalized}")
 PY
 
   sha256sum "$WORK/final-content-classification.json" > "$RUN/qualification.sha256"

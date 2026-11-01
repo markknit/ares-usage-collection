@@ -20,7 +20,7 @@ Last updated: 2026-10-31
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Simplified offline installation | Implemented; software validation recorded below; field build Pending | One master command, automatic complete-package check, no bypass installer/receipt system, non-blocking optional remote preparation after core verification, automatic fresh-ZIP release verification. |
-| Simplified-r3 production candidate | ZIP created; verification stopped; not promoted | Supplied tsavo3 transcript reaches fresh-ZIP verification. The old TAR checker rejects Docker shared-layer links. Correction and `run_tsavo3_build.sh --resume` reuse the existing payload; live installation remains Pending. |
+| Simplified-r3 production candidate | ZIP/component verification passed; inherited comparison stopped; not promoted | User reports 313 ZIP files verified and SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. Corrected inherited text comparison and ZIP reuse await resume. Live installation remains Pending. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See linked Linux fixture evidence above. |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
@@ -33,7 +33,7 @@ Last updated: 2026-10-31
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Implemented and software validated; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned external eight-file input, corrected page, transactional deployment, append-only mapping and HTTP range verification. 45 tests passed, one native POSIX-link test skipped; full v1.13 field build and live acceptance remain Pending. |
-| Field rollout approval | Pending | Only the historical v1.12 ZIP is verified. The simplified v1.13 field build and live offline acceptance remain Pending. Remote-support acceptance applies when enabling that optional feature. |
+| Field rollout approval | Pending | The simplified v1.13 candidate passed ZIP/component verification but has not passed the final inherited comparison or been promoted. Live offline acceptance remains Pending. Remote-support acceptance applies when enabling that optional feature. |
 
 ## Production v1.12 artifact
 
@@ -108,6 +108,30 @@ Last updated: 2026-10-31
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-31 - Align inherited text comparison with its sealed newline convention
+
+- User reports the resumed candidate passed whole-package, component and fresh-ZIP
+  checks (313 files). Candidate SHA-256:
+  `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`.
+  The last inherited-file step then stopped at the raw-size assertion for
+  `lesson_plan/payload/PDF/index.html`. It was not promoted or installed.
+- Found an inconsistent comparison: B2 records normalized inherited text, while
+  the final check compared raw output size/hash. Read-only inspection of the
+  retained v1.11 source and v1.12 ZIP shows this HTML file has 1,057 CRLF endings:
+  52,822 raw bytes versus 51,765 with LF endings. No source/artifact bytes changed.
+- Compare inherited files directly from the verified ZIP, normalizing only the
+  approved text/shell newline conventions. Do not normalize aliases or other
+  content; binary comparisons remain exact. Collect all discrepancies in one
+  report, and record actual inherited-file hashes plus the comparison used.
+- Resume now preserves the existing ZIP bytes when its integrity helper is
+  already current. This fix changes neither the staged HTML nor the helper, so
+  the retained verified candidate can be reused without repackaging. All release
+  checks and the inherited gate still precede promotion.
+- Four disposable resume workflow tests passed, including CRLF approval matching,
+  unchanged ZIP bytes, preservation of raw HTML bytes, content-change rejection,
+  and no promotion after a failed check. All 20 shell syntax checks passed.
+  Final inherited qualification and field acceptance remain Pending on tsavo3.
 
 ### 2026-10-31 - Correct Docker saved-image link verification
 

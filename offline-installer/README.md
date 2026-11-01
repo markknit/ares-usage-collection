@@ -164,6 +164,12 @@ payload. It performs no downloads, Docker pulls or image saves. All independent
 checks and the inherited-file gate must pass before promotion; the original
 normalized source, original build log and v1.12 artifact remain unchanged.
 
+When the staged integrity helper is already current, resume reuses the existing
+ZIP without changing its bytes. The inherited-file comparison reads that ZIP
+directly and uses the same normalized newline convention as the B2 text approval
+record. Other text changes and binary changes still fail; the report records
+actual inherited-file hashes and identifies newline-normalized comparisons.
+
 First provide exactly the normalized `TsavoTrust/` folder described in
 [TSAVO_TRUST.md](docs/TSAVO_TRUST.md) within the external source. The builder fails
 before replacing output if content is missing, nested, unexpected or unpinned.

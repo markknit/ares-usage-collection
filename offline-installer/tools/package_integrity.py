@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path, PurePosixPath
+import posixpath
 import re
 import subprocess
 import tarfile
@@ -75,13 +76,44 @@ def verify_package(root):
     print("PASS: complete installation package checked")
 
 
-def archive(path):
+def archive_file_member(source, name):
+    """Resolve a saved-image file/link using only archive metadata, never disk paths."""
+    members = {PurePosixPath(item.name).as_posix(): item for item in source.getmembers()}
+    seen = set()
+    while True:
+        relative = PurePosixPath(name)
+        if relative.is_absolute() or ".." in relative.parts or "\\" in name:
+            raise ValueError("Invalid archive file path: " + name)
+        name = relative.as_posix()
+        if name in seen:
+            raise ValueError("Cyclic archive link: " + name)
+        seen.add(name)
+        if name not in members:
+            raise ValueError("Missing archive file/link target: " + name)
+        item = members[name]
+        if item.isfile():
+            return item
+        if not (item.issym() or item.islnk()):
+            raise ValueError("Archive entry is not a file: " + name)
+        if PurePosixPath(item.linkname).is_absolute() or "\\" in item.linkname:
+            raise ValueError("Invalid archive link target: " + item.linkname)
+        # Symlinks are relative to their parent; hard links are archive-relative.
+        target = posixpath.join(posixpath.dirname(name), item.linkname) if item.issym() else item.linkname
+        name = posixpath.normpath(target)
+
+
+def archive(path, *, allow_image_links=False):
     result = tarfile.open(path, "r:gz")
     try:
         for item in result.getmembers():
             relative = PurePosixPath(item.name)
-            if relative.is_absolute() or ".." in relative.parts or not (item.isdir() or item.isfile()):
-                raise ValueError("Unsafe or malformed payload archive: " + path.name)
+            supported = item.isdir() or item.isfile() or (allow_image_links and (item.issym() or item.islnk()))
+            if relative.is_absolute() or ".." in relative.parts or not supported:
+                raise ValueError(f"Unsupported payload archive entry in {path.name}: {item.name!r} (type {item.type!r})")
+        if allow_image_links:
+            for item in result.getmembers():
+                if item.issym() or item.islnk():
+                    archive_file_member(result, item.name)
     except BaseException:
         result.close()
         raise
@@ -132,13 +164,15 @@ def verify_components(root, profile, version):
         raise ValueError("Malformed Lesson3 image references")
     if {row[0] for row in refs} != images or any(row[1] != row[0].split("@", 1)[0] for row in refs):
         raise ValueError("Lesson3 image references do not match release")
-    with archive(image_dir / image_name) as saved:
-        manifest = saved.extractfile("manifest.json")
+    # Docker save can deduplicate shared layers with internal relative links.
+    # Resolve those links inside the TAR; no image contents are extracted here.
+    with archive(image_dir / image_name, allow_image_links=True) as saved:
+        manifest = saved.extractfile(archive_file_member(saved, "manifest.json"))
         if manifest is None:
             raise ValueError("Docker image archive manifest missing")
         tags = {}
         for item in json.load(manifest):
-            config = saved.extractfile(item["Config"])
+            config = saved.extractfile(archive_file_member(saved, item["Config"]))
             if config is None:
                 raise ValueError("Docker image configuration missing")
             config_bytes = config.read()
@@ -147,8 +181,7 @@ def verify_components(root, profile, version):
                 raise ValueError("Docker image platform does not match linux/amd64")
             identity = "sha256:" + hashlib.sha256(config_bytes).hexdigest()
             for layer in item["Layers"]:
-                if not saved.getmember(layer).isfile():
-                    raise ValueError("Docker image layer missing")
+                archive_file_member(saved, layer)
             for tag in item.get("RepoTags") or []:
                 tags[tag] = identity
         if any(tags.get(row[1]) != row[2] for row in refs):

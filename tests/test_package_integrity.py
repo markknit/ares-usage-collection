@@ -113,6 +113,68 @@ def deb_query(cmd, **kwargs):
 
 
 class PackageIntegrityTests(unittest.TestCase):
+    def test_docker_shared_layers_accept_internal_symlinks_and_hard_links(self):
+        for kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temp:
+                root = package(Path(temp))
+                images = root / "lesson3/images"
+                path = images / "lesson3-v0.94-amd64-images.tar.gz"
+                # Preserve the fixture's manifest, config identity and layer bytes;
+                # change only how Docker save represents the shared layer.
+                with tarfile.open(path, "r:gz") as original:
+                    files = {m.name: original.extractfile(m).read() for m in original.getmembers()}
+                data = json.loads(files["manifest.json"])
+                data[0]["Layers"] = ["image/layer.tar"]
+                files["manifest.json"] = json.dumps(data).encode()
+                files["blobs/shared.tar"] = files.pop("layer.tar")
+                # Reopen uncompressed members through a new gzipped TAR so this
+                # models real TAR links, not filesystem link privileges.
+                with tarfile.open(path, "w:gz") as saved:
+                    for name, value in files.items():
+                        info = tarfile.TarInfo(name)
+                        info.size = len(value)
+                        saved.addfile(info, io.BytesIO(value))
+                    link = tarfile.TarInfo("image/layer.tar")
+                    link.type = kind
+                    link.linkname = "../blobs/shared.tar" if kind == tarfile.SYMTYPE else "blobs/shared.tar"
+                    saved.addfile(link)
+                manifest(images)
+                with patch.object(integrity.subprocess, "run", side_effect=deb_query):
+                    integrity.verify_components(root, "production", "v0.94")
+
+    def test_image_links_reject_escape_missing_cycle_and_special_entries(self):
+        for target in ("../../outside", "/outside", "missing.tar", "image/layer.tar"):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as temp:
+                path = Path(temp) / "images.tar.gz"
+                with tarfile.open(path, "w:gz") as saved:
+                    link = tarfile.TarInfo("image/layer.tar")
+                    link.type = tarfile.LNKTYPE
+                    link.linkname = target
+                    saved.addfile(link)
+                with self.assertRaises(ValueError):
+                    integrity.archive(path, allow_image_links=True)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "images.tar.gz"
+            with tarfile.open(path, "w:gz") as saved:
+                entry = tarfile.TarInfo("device")
+                entry.type = tarfile.CHRTYPE
+                saved.addfile(entry)
+            with self.assertRaises(ValueError):
+                integrity.archive(path, allow_image_links=True)
+
+    def test_other_payload_archives_still_reject_links(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "release.tar.gz"
+            archive(path, {"target": b"fixture"})
+            # A valid Docker-style link is still unexpected in release payloads.
+            with tarfile.open(path, "w:gz") as saved:
+                link = tarfile.TarInfo("link")
+                link.type = tarfile.SYMTYPE
+                link.linkname = "target"
+                saved.addfile(link)
+            with self.assertRaises(ValueError):
+                integrity.archive(path)
+
     def test_both_profiles_validate_independent_components(self):
         for profile in ("production", "test"):
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temp:

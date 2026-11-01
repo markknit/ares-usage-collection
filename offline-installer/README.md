@@ -151,6 +151,19 @@ only after all checks pass. It refuses existing candidate/output paths, retains
 failure logs and never runs an installer or prunes Docker. Do not reuse the old
 C2 command block pinned to `728741b` for the simplified behavior.
 
+If the simplified-r3 run created its ZIP but stopped at the saved-image archive
+check, update this separate checkout to the shared-layer link correction and run:
+
+```bash
+bash offline-installer/run_tsavo3_build.sh --resume
+```
+
+Resume retains the original candidate ZIP and root manifest, checks the existing
+staging tree, updates only the integrity helper, and reseals/repackages the same
+payload. It performs no downloads, Docker pulls or image saves. All independent
+checks and the inherited-file gate must pass before promotion; the original
+normalized source, original build log and v1.12 artifact remain unchanged.
+
 First provide exactly the normalized `TsavoTrust/` folder described in
 [TSAVO_TRUST.md](docs/TSAVO_TRUST.md) within the external source. The builder fails
 before replacing output if content is missing, nested, unexpected or unpinned.

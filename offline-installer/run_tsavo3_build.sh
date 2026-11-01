@@ -15,10 +15,24 @@ RUN="$EVIDENCE/phase-c2-simplified-r3"
 BUNDLE=ARES_Q4_Offline_v0.94_amd64_v1.13
 APK="$NORMALIZED/teacher-app/ares-sync.apk"
 APK_SHA=16e5eef24b56dde1db3fbd0e5be542c5853f329841ae056bc1dd7afb6bf773a8
+RESUME=0
+case "${1:-}" in
+  "") ;;
+  --resume) RESUME=1 ;;
+  *) echo "Usage: bash run_tsavo3_build.sh [--resume]" >&2; exit 2 ;;
+esac
+(( $# <= 1 )) || { echo "Unexpected extra arguments" >&2; exit 2; }
 
 [[ "$(hostname -s)" == tsavo3 && "$(uname -m)" == x86_64 ]] \
   || { echo "Run this continuation on tsavo3 (Ubuntu x86_64)." >&2; exit 1; }
 test -z "$(git -C "$SELF_DIR" status --porcelain --untracked-files=all)"
+if (( RESUME )); then
+  [[ -d "$WORK/output/$BUNDLE" && -d "$RUN" && -f "$WORK/BUILD_INCOMPLETE" ]]
+  [[ ! -e "$OUT" && ! -L "$OUT" ]]
+  [[ "$(cat "$RUN/builder-commit.txt")" == ed5052a128152166bc3bdb08a051cb21875944c9 ]] \
+    || { echo "This resume is for the recorded simplified-r3 candidate only." >&2; exit 1; }
+  LOG="$RUN/resume-verification.log"
+else
 for path in "$WORK" "$RUN" "$OUT"; do
   [[ ! -e "$path" && ! -L "$path" ]] || { echo "Path already exists; retain it and obtain build support: $path" >&2; exit 1; }
 done
@@ -58,15 +72,48 @@ PY
 
 mkdir "$WORK"
 mkdir "$WORK/tmp" "$WORK/output" "$RUN"
-export TMPDIR="$WORK/tmp" PYTHONDONTWRITEBYTECODE=1
 printf 'Not yet verified or promoted.\n' > "$WORK/BUILD_INCOMPLETE"
 git -C "$SELF_DIR" rev-parse HEAD > "$RUN/builder-commit.txt"
 date -u +%FT%TZ > "$RUN/started-utc.txt"
-trap 'echo "Build stopped. Retain candidate files and send ARES support the log under: $RUN" >&2' ERR
+LOG="$RUN/build.log"
+fi
+export TMPDIR="$WORK/tmp" PYTHONDONTWRITEBYTECODE=1
+trap 'if (( BASH_SUBSHELL == 0 )); then echo "Build stopped. Retain candidate files and send ARES support the log under: $RUN" >&2; fi' ERR
 
 {
-  bash "$SELF_DIR/build_offline_bundle.sh" --source "$NORMALIZED" \
-    --output "$WORK/output" --profile production --apk "$APK"
+  if (( RESUME )); then
+    echo "Resuming existing payload; no downloads, Docker pulls or image saves."
+    STAGE="$WORK/output/$BUNDLE"
+    # Validate the retained staging tree before updating the one reviewed helper.
+    python3 -B "$SELF_DIR/tools/package_integrity.py" package "$STAGE"
+    git -C "$SELF_DIR" rev-parse HEAD > "$RUN/resume-commit.txt"
+    if [[ ! -e "$WORK/original-candidate.zip" ]]; then
+      [[ -s "$WORK/output/$BUNDLE.zip" ]]
+      cp -p "$STAGE/SHA256SUMS" "$WORK/original-SHA256SUMS"
+      cp -p "$STAGE/package_integrity.py" "$WORK/original-package_integrity.py"
+      mv -n -- "$WORK/output/$BUNDLE.zip" "$WORK/original-candidate.zip"
+      sha256sum "$WORK/original-candidate.zip" > "$RUN/original-candidate.sha256"
+    fi
+    install -m 0644 "$SELF_DIR/tools/package_integrity.py" "$STAGE/package_integrity.py"
+    (cd "$STAGE"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+    python3 -B - "$STAGE" "$WORK/output/$BUNDLE.zip" <<'PY'
+from pathlib import Path
+import sys
+import zipfile
+
+stage, output = map(Path, sys.argv[1:])
+with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
+    for path in sorted(stage.rglob("*")):
+        if path.is_file():
+            archive.write(path, path.relative_to(stage.parent))
+print("Repackaged existing payload with corrected archive checker")
+PY
+    python3 -B "$SELF_DIR/verify_offline_bundle.py" "$WORK/output/$BUNDLE.zip" \
+      --profile production --apk-sha256 "$APK_SHA"
+  else
+    bash "$SELF_DIR/build_offline_bundle.sh" --source "$NORMALIZED" \
+      --output "$WORK/output" --profile production --apk "$APK"
+  fi
 
   # The builder has independently extracted and verified the ZIP. Check the
   # retained files against the sealed B2 allowlist as the final promotion gate.
@@ -99,7 +146,7 @@ for path in sorted(root.rglob("*")):
         inherited.add(name)
     classification.append({"path": name, "category": category})
 assert inherited == approved.keys(), "Approved inherited files are missing"
-with output.open("x", encoding="utf-8") as stream:
+with output.open("w" if output.exists() else "x", encoding="utf-8") as stream:
     json.dump(classification, stream, indent=2, ensure_ascii=False)
     stream.write("\n")
 print("PASS: 133 approved inherited files retained; final inventory classified")
@@ -117,4 +164,4 @@ PY
   echo "Verified artifact: $OUT/$BUNDLE.zip"
   cat "$RUN/release.sha256"
   echo "No installer was run. Live installation and field acceptance remain Pending."
-} 2>&1 | tee "$RUN/build.log"
+} 2>&1 | tee -a "$LOG"

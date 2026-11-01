@@ -20,6 +20,7 @@ Last updated: 2026-10-31
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Simplified offline installation | Implemented; software validation recorded below; field build Pending | One master command, automatic complete-package check, no bypass installer/receipt system, non-blocking optional remote preparation after core verification, automatic fresh-ZIP release verification. |
+| Simplified-r3 production candidate | ZIP created; verification stopped; not promoted | Supplied tsavo3 transcript reaches fresh-ZIP verification. The old TAR checker rejects Docker shared-layer links. Correction and `run_tsavo3_build.sh --resume` reuse the existing payload; live installation remains Pending. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See linked Linux fixture evidence above. |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
@@ -107,6 +108,36 @@ Last updated: 2026-10-31
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-10-31 - Correct Docker saved-image link verification
+
+- The supplied tsavo3 terminal transcript confirms that the simplified-r3 builder
+  completed its downloads, image save and candidate ZIP creation, then stopped in
+  independent verification with `Unsafe or malformed payload archive` for the
+  saved-image TAR. Root package integrity passed. The candidate was not promoted
+  and no live installer ran.
+- Reproduced the strict-checker rejection by read-only inspection of the retained
+  v1.12 ZIP's image TAR: it contains two valid relative symlinks to a shared layer.
+  No v1.12 bytes were changed. The prior tiny fixtures used regular layer files
+  and did not cover this real Docker-save representation.
+- Allow internal symbolic/hard links only in Docker saved-image archives. Resolve
+  them from TAR metadata to existing regular members, retaining config identity,
+  platform, tag and layer checks. Other payloads retain their existing type checks.
+  Diagnostics now identify an unsupported member rather than only its archive.
+- Added an explicit `--resume` path for the failed ed5052a simplified-r3 candidate:
+  check the retained stage, preserve the old ZIP/manifest/helper, update the one
+  integrity helper, reseal/repackage the same payload and rerun independent and
+  inherited-file verification before promotion. No payload downloads, Docker
+  pulls, image saves, source normalization or host installation are performed.
+  Fixed the duplicate generic error message from parent/subshell traps.
+- Local validation: all 11 component/release tests and all 20 shell syntax checks
+  passed, including TAR symlink/hard-link fixtures and missing/cyclic/escaping
+  targets. The corrected link resolver also resolves the real v1.12 shared-layer
+  links to regular members using archive metadata only. Both disposable resume
+  workflow tests passed: original ZIP retention, no builder invocation, unchanged
+  inherited bytes, success-only promotion and no promotion after verification
+  failure. Full v1.13 verification
+  and field acceptance remain Pending until the retained candidate is resumed.
 
 ### 2026-10-31 - Simplify offline installation for technicians
 

@@ -63,7 +63,9 @@ The deployment never changes Nginx, mDNS, hostnames, school identity or APK prof
 Core installation runs packaged `tsavo/install.sh --host "$ARES_ALIAS"`, using
 script-relative Python helpers and the generated content manifest. Preflight
 checks source hashes, inventory, parent directories, mapping conflicts and free
-space. Symlinked parents and special-file destinations are refused.
+space. The configured `/mnt/sda3` storage anchor is resolved to its mounted-disk
+path before checking destinations. Symlinked parents below that anchor and
+special-file destinations are refused; alternate test roots remain confined.
 
 Deployment is serialized. It stages content on the destination filesystem, checks
 the staged copy, applies directory/file modes 0755/0644 and ownership ares:www-data,
@@ -87,6 +89,81 @@ Failures prevent a successful installation result and trigger module rollback.
 The package's `tsavo/SHA256SUMS` covers module helpers, manifest and payload.
 Root `SHA256SUMS` covers all nested checksum manifests and excludes only itself.
 Generate checksums after rendering; never bypass them. No v1.12 manifest is edited.
+
+### Storage-alias correction on the tsavo3 test installation
+
+The 2026-11-01 installation log reached step 7 after Lesson3 became healthy and
+the corpus importer reported 95 plans / 806 lessons. The older deployment helper
+then rejected `/mnt/sda3` as a destination parent, before staging or publishing
+Tsavo content. Its package path resolves through the mounted disk UUID. This is
+an installer path-handling defect, separate from the earlier Docker/firewall
+repair. That log does not establish browser, phone, tracking or field acceptance.
+
+The following offline support correction changes only the extracted test copy's
+Tsavo deployment helper and its two containing checksum manifests. It verifies
+the existing package, requires the exact affected helper, backs up those three
+files outside the package, and updates only their affected checksum entries.
+It does not change the ZIP, media, v1.12, Lesson3 configuration or database.
+The original verified ZIP retains this known defect and needs a corrected,
+independently verified release before field rollout.
+
+Run in the normal tsavo3 terminal, then rerun the normal master installer. Its
+installed corpus status avoids another import or administrator-creation step.
+
+```bash
+sudo python3 -B <<'FIX'
+from pathlib import Path
+import hashlib, shutil, subprocess, tempfile
+
+root = Path('/mnt/sda3/home/ares/Downloads/ARES_Q4_Update_offline_v1.13/ARES_Q4_Offline_v0.94_amd64_v1.13')
+helper = root / 'tsavo/tsavo_install.py'
+old = helper.read_bytes()
+if hashlib.sha256(old).hexdigest() != 'b85d06fcf50aad71198773b03eabfe6e8e0799fbf8bad5b70eaa34c4a3616142':
+    raise SystemExit('STOP: unexpected helper version; no files changed.')
+subprocess.run(['python3', '-B', str(root / 'package_integrity.py'), 'package', str(root)], check=True)
+new = old.replace(b'    base = Path(root).resolve() / BASE\n', b'''    root = Path(root).resolve()
+    # ARES exposes its mounted data disk through /mnt/sda3 on some servers.
+    # Resolve that storage anchor, then retain strict parent checks below it.
+    storage = (root / "mnt/sda3").resolve()
+    if not storage.is_relative_to(root):
+        raise ValueError("Storage alias escapes the installation root: " + str(storage))
+    base = storage / "var/www"
+''')
+if hashlib.sha256(new).hexdigest() != '4c3f66b32f5eda5e96529501286a74e5e098b60df81b4eb8e6bab5e911338efa':
+    raise SystemExit('STOP: correction did not match reviewed source.')
+names = ('tsavo/tsavo_install.py', 'tsavo/SHA256SUMS', 'SHA256SUMS')
+saved = {name: (root / name).read_bytes() for name in names}
+backup = Path(tempfile.mkdtemp(prefix='ares-tsavo-alias-', dir='/var/backups'))
+for name in names:
+    (backup / name).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(root / name, backup / name)
+def update_manifest(name, changes):
+    data = (root / name).read_bytes()
+    for changed in changes:
+        before = hashlib.sha256(saved[changed]).hexdigest().encode()
+        after = hashlib.sha256((root / changed).read_bytes()).hexdigest().encode()
+        if data.count(before) != 1:
+            raise ValueError('Unexpected checksum entry: ' + changed)
+        data = data.replace(before, after)
+    (root / name).write_bytes(data)
+try:
+    helper.write_bytes(new)
+    update_manifest('tsavo/SHA256SUMS', ('tsavo/tsavo_install.py',))
+    update_manifest('SHA256SUMS', ('tsavo/tsavo_install.py', 'tsavo/SHA256SUMS'))
+except BaseException:
+    for name, data in saved.items():
+        (root / name).write_bytes(data)
+    raise
+print('PASS: storage-alias correction applied. Backup:', backup)
+FIX
+```
+
+Only after the correction reports PASS, continue:
+
+```bash
+cd /mnt/sda3/home/ares/Downloads/ARES_Q4_Update_offline_v1.13/ARES_Q4_Offline_v0.94_amd64_v1.13
+sudo bash install_offline.sh ARES-S0035
+```
 
 ## Pending live acceptance - repeat for both profiles
 

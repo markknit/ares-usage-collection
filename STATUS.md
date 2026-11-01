@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-10-31
+Last updated: 2026-11-01
 
 ## Current checkout
 
@@ -20,7 +20,7 @@ Last updated: 2026-10-31
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Implemented; production artifact verified; live installation Pending | One master command, automatic package check, no bypass mode, non-blocking optional remote preparation. Final source `487dea0`: all 82 Ubuntu tests passed. |
+| Simplified offline installation | Test installation reached step 7; storage-alias correction awaiting host rerun | User-supplied tsavo3 log confirms healthy Lesson3 and 95 plans / 806 lessons imported. Tsavo helper rejected `/mnt/sda3`; corrected source resolves the storage anchor. Original ZIP needs correction before field rollout. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -34,7 +34,7 @@ Last updated: 2026-10-31
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Production payload packaged and verified; live acceptance Pending | [Tsavo Trust](offline-installer/docs/TSAVO_TRUST.md): pinned eight-file payload and media included in the verified production ZIP. Actual installation, portal/video playback and report attribution remain Pending. |
-| Field rollout approval | Pending live offline acceptance | The production artifact is verified and promoted. Next is an offline installation/client test on a disposable server. Remote-support acceptance applies when enabling that optional feature. |
+| Field rollout approval | Pending corrected artifact and live acceptance | Original ZIP retains the storage-alias defect found on tsavo3. Corrected test installation, independently verified release and client/phone checks are required before rollout. Remote-support acceptance applies when enabling that optional feature. |
 
 ## Production v1.13 artifact
 
@@ -75,6 +75,11 @@ Last updated: 2026-10-31
 
 ## Known Issues / Lessons Learned
 
+- ARES can expose its mounted disk through the `/mnt/sda3` symlink. Resolve that
+  configured anchor before Tsavo destination checks, while rejecting symlinked
+  parents below it and preventing alternate test roots from escaping. The original
+  v1.13 ZIP remains byte-verified but has this known deployment defect; build
+  verification alone did not establish compatibility with the live disk layout.
 - Docker saved-image TARs can use internal links for shared layers. Resolve them
   within archive metadata rather than rejecting every link; retain regular-file,
   image identity and platform checks. Real archive metadata and regression
@@ -127,6 +132,32 @@ Last updated: 2026-10-31
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-01 - tsavo3 test installation and storage-alias correction
+
+- User confirmed tsavo3 has always been a test server. The first attempt stopped
+  when Docker could not create the Lesson3 bridge: its DOCKER filter chain was
+  missing. Later diagnostics showed the separate ARES Internet lockdown plus
+  extra default-drop rules in the iptables-managed IPv4 filter table. Supplied a
+  targeted backup/removal/Docker-restart procedure retaining the ARES lockdown;
+  the subsequent install log establishes Lesson3 readiness, not persistent
+  firewall configuration or full support-network acceptance.
+- Read the supplied `ares-offline-install-20261101_105039.log`: Lesson Plan,
+  tracking mappings, usage-export smoke test and teacher APK deployment passed;
+  Lesson3 was healthy and the administrator-guided importer reported 95 plans /
+  806 lessons with installed status. Step 7 failed on `/mnt/sda3` parent checking
+  before Tsavo staging/publication. Field/client/phone gates remain Pending.
+- Corrected the Tsavo helper to resolve the configured storage anchor before
+  strict destination checks. Added install/repeat/rollback, alternate-root
+  confinement and below-anchor symlink regression coverage. Targeted Windows
+  source/content/workflow/ZIP-fixture suite: 27 passed, two native-link checks
+  skipped. Documented offline correction tested, including unchanged-package
+  verification, exact three-file updates, backups and rejection of unrelated
+  package damage. Native Ubuntu CI pending.
+- Documented an offline, exact-version correction for only the extracted test
+  helper and two containing manifests, with backups outside the package. The ZIP
+  and v1.12 remain unchanged. Host rerun and corrected release qualification are
+  still required; the existing ZIP is not approved for field rollout.
 
 ### 2026-10-31 - Production v1.13 verified and promoted
 

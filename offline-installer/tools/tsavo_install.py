@@ -33,7 +33,13 @@ def mapping_bytes(original):
 
 
 def paths(root):
-    base = Path(root).resolve() / BASE
+    root = Path(root).resolve()
+    # ARES exposes its mounted data disk through /mnt/sda3 on some servers.
+    # Resolve that storage anchor, then retain strict parent checks below it.
+    storage = (root / "mnt/sda3").resolve()
+    if not storage.is_relative_to(root):
+        raise ValueError("Storage alias escapes the installation root: " + str(storage))
+    base = storage / "var/www"
     return base / "modules/TsavoTrust", base / "www2/modules/TsavoTrust", base / "tracker/key_map.csv"
 
 

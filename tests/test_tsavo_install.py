@@ -60,6 +60,95 @@ class TsavoInstallTests(unittest.TestCase):
         self.assertTrue(list(self.target.parent.glob(".TsavoTrust.tsavo-backup-*")))
         self.assertFalse(list(self.target.parent.glob("TsavoTrust.tsavo-backup-*")))
 
+    def storage_alias(self, destination=None):
+        """Use a native Linux link; Windows simulates only anchor resolution."""
+        alias = self.root / "mnt/sda3"
+        destination = destination or self.root / "mnt/disk-uuid"
+        alias.rename(destination)
+        if os.name == "nt":
+            resolve = Path.resolve
+            self.addCleanup(patch.stopall)
+            def resolve_alias(path, *args, **kwargs):
+                return resolve(destination if path == alias else path, *args, **kwargs)
+            patch.object(Path, "resolve", resolve_alias).start()
+        else:
+            alias.symlink_to(destination, target_is_directory=True)
+        self.target, self.link, self.keymap = installer.paths(self.root)
+
+    def test_storage_alias_install_repeat_and_rollback(self):
+        self.storage_alias()
+        installer.install(self.package, self.root)
+        installer.install(self.package, self.root)
+        installer.verify_installed(self.package, self.root)
+        self.assertEqual(self.keymap.read_bytes().count(b"module:TsavoTrust,"), 1)
+        original_map = self.keymap.read_bytes()
+        def failure(manifest):
+            raise ValueError("injected alias deployment failure")
+        with self.assertRaisesRegex(ValueError, "alias deployment"):
+            installer.install(self.package, self.root, after_publish=failure)
+        installer.verify_installed(self.package, self.root)
+        self.assertEqual(self.keymap.read_bytes(), original_map)
+        self.assertFalse(list(self.target.parent.glob(".tsavo-stage-*")))
+
+    def test_storage_alias_cannot_escape_a_disposable_root(self):
+        # The production root is /; an alternate test root remains confined.
+        with self.assertRaisesRegex(ValueError, "escapes the installation root"):
+            self.storage_alias(self.base / "outside-root")
+
+    @unittest.skipIf(os.name == "nt", "Native POSIX symlinks require Linux")
+    def test_symlink_below_storage_anchor_is_still_rejected(self):
+        self.storage_alias()
+        parent = self.target.parent
+        moved = parent.with_name("modules-moved")
+        parent.rename(moved)
+        parent.symlink_to(moved, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlinked destination parent"):
+            installer.install(self.package, self.root)
+        self.assertEqual(self.keymap.read_bytes(), self.original)
+        self.assertFalse((moved / "TsavoTrust").exists())
+
+    def test_documented_offline_correction_and_changed_package_rejection(self):
+        import test_package_integrity as packages
+        import subprocess
+        import contextlib
+        from io import StringIO
+        source = (ROOT / "offline-installer/tools/tsavo_install.py").read_bytes().replace(b"\r\n", b"\n")
+        start = source.index(b"def paths(root):\n") + len(b"def paths(root):\n")
+        end = source.index(b'    return base / "modules/TsavoTrust"', start)
+        old = source[:start] + b"    base = Path(root).resolve() / BASE\n" + source[end:]
+        document = (ROOT / "offline-installer/docs/TSAVO_TRUST.md").read_text(encoding="utf-8")
+        script = document.split("sudo python3 -B <<'FIX'\n", 1)[1].split("\nFIX\n", 1)[0]
+        for damaged in (False, True):
+            with self.subTest(damaged=damaged):
+                root = packages.package(self.base / ("damaged" if damaged else "correction"))
+                packages.write(root, "tsavo/tsavo_install.py", old)
+                packages.manifest(root / "tsavo")
+                packages.manifest(root)
+                if damaged:
+                    (root / "tsavo/payload/index.htmlf").write_text("unexpected change")
+                before = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                lines = script.splitlines()
+                lines = ["root = Path(" + repr(str(root)) + ")" if line.startswith("root = Path(") else line for line in lines]
+                code = "\n".join(lines).replace("dir='/var/backups'", "dir=" + repr(str(self.base)))
+                def verify(args, **kwargs):
+                    self.assertEqual(args[3:], ["package", str(root)])
+                    packages.integrity.verify_package(root)
+                with patch.object(subprocess, "run", side_effect=verify), contextlib.redirect_stdout(StringIO()):
+                    if damaged:
+                        with self.assertRaises(ValueError):
+                            exec(compile(code, "documented-offline-correction", "exec"), {})
+                    else:
+                        exec(compile(code, "documented-offline-correction", "exec"), {})
+                        packages.integrity.verify_package(root)
+                        packages.integrity.checksums(root / "tsavo")
+                changed = {name.as_posix() for name, data in before.items() if (root / name).read_bytes() != data}
+                self.assertEqual(changed, set() if damaged else {"tsavo/tsavo_install.py", "tsavo/SHA256SUMS", "SHA256SUMS"})
+                if not damaged:
+                    self.assertEqual((root / "tsavo/tsavo_install.py").read_bytes(), source)
+                    backup, = self.base.glob("ares-tsavo-alias-*")
+                    for name in changed:
+                        self.assertEqual((backup / name).read_bytes(), before[Path(name)])
+
     def test_existing_module_and_portal_directory_backed_up(self):
         self.target.mkdir()
         (self.target / "old.txt").write_text("old content")

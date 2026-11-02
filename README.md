@@ -56,6 +56,11 @@ The direct server links are `/downloads/ARES_Sync_Teacher_Guide.pdf` and
 installation and ordinary use and is the appropriate teacher-section manual link.
 This copy procedure does not run the server installer or edit the admin module.
 
+The owner subsequently supplied a final admin page, Admin_tools entry and manual
+for grouped deployment by the normal installer. That approved manual is served
+at `/admin/ARES_Sync_User_Guide.pdf` inside the existing password-protected admin
+folder. See [approved admin content](offline-installer/admin-content/README.md).
+
 General Internet-download guidance remains available separately:
 
 - [Technician server update, phone installation, and teacher handoff](docs/TECHNICIAN_PHONE_INSTALL.md) ([printable PDF](output/pdf/ARES_Sync_Technician_Guide.pdf))

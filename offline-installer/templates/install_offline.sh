@@ -104,7 +104,7 @@ run_step "4) Install/update ARES Sync usage collection" \
   bash "$SCRIPT_DIR/ARES_Sync_Rollout_Package/server-installer/update_school_server.sh" \
     --school-code "$SCHOOL_CODE"
 
-run_step "5) Deploy offline ARES Sync teacher APK + install page" \
+run_step "5) Deploy offline ARES Sync APK, install page and admin content" \
   bash "$SCRIPT_DIR/teacher-app/install_teacher_app.sh"
 
 run_step "6) Create Lesson3 administrator and install the packaged corpus" \

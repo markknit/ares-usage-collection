@@ -102,6 +102,12 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 
 - Updated technician and teacher guides are included in the field bundle under `docs/`.
 
+The same installation stage also deploys the owner's tested admin-content unit:
+`admin/admin.html`, `modules/Admin_tools/index.htmlf` and
+`admin/ARES_Sync_User_Guide.pdf` under `/mnt/sda3/var/www/`. Existing files are
+backed up together, and the password-protected admin directory's configuration
+and permissions are preserved. See [approved admin content](admin-content/README.md).
+
 - The complete Lesson3 User Guide is bundled with the field package, installed on the ARES server, and linked from the Lesson Plan Editor interface.
 - The offline guide is published at:
 

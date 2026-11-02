@@ -85,6 +85,10 @@ preflight_main() {
     "$SCRIPT_DIR/lesson3/corpus/SHA256SUMS" \
     "$SCRIPT_DIR/ARES_Sync_Rollout_Package/server-installer/update_school_server.sh" \
     "$SCRIPT_DIR/teacher-app/install_teacher_app.sh" \
+    "$SCRIPT_DIR/teacher-app/install_admin_content.sh" \
+    "$SCRIPT_DIR/teacher-app/admin-content/admin.html" \
+    "$SCRIPT_DIR/teacher-app/admin-content/index.htmlf" \
+    "$SCRIPT_DIR/teacher-app/admin-content/ARES_Sync_User_Guide.pdf" \
     "$SCRIPT_DIR/teacher-app/ares-sync.apk" \
     "$SCRIPT_DIR/teacher-app/ares-sync.apk.sha256" \
     "$SCRIPT_DIR/teacher-app/install-page.html"; do

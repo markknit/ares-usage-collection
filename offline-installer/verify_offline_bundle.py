@@ -29,6 +29,7 @@ REVIEWED = {
     "lesson_plan/configure_nginx.py": "tools/configure_nginx.py",
     "tracking/install_lesson_plan_tracking.sh": "templates/install_lesson_plan_tracking.sh",
     "teacher-app/install_teacher_app.sh": "templates/install_teacher_app.sh",
+    "teacher-app/install_admin_content.sh": "templates/install_admin_content.sh",
     "teacher-app/verify_profile.py": "tools/render_profile.py",
     "tsavo/install.sh": "templates/install_tsavo_trust.sh",
     "tsavo/tsavo_content.py": "tools/tsavo_content.py",
@@ -38,6 +39,13 @@ REVIEWED = {
     "remote-access/ares_disable_remote_access.sh": "templates/ares_disable_remote_access.sh",
     "remote-access/remote_support_common.sh": "templates/remote_support_common.sh",
     "remote-access/remote_support_config.py": "tools/remote_support_config.py",
+}
+
+# These owner-supplied files must retain their exact approved bytes, including
+# line endings and the supplied PDF. Do not normalize or regenerate them.
+APPROVED_ADMIN_CONTENT = {
+    "teacher-app/admin-content/" + name: "admin-content/" + name
+    for name in ("admin.html", "index.htmlf", "ARES_Sync_User_Guide.pdf")
 }
 
 
@@ -81,6 +89,9 @@ def verify(archive, profile="production", apk_sha256=None):
         for target, reviewed in REVIEWED.items():
             if (root / target).read_bytes() != (SELF / reviewed).read_bytes().replace(b"\r\n", b"\n"):
                 raise ValueError("Generated installer/helper differs from reviewed source: " + target)
+        for target, approved in APPROVED_ADMIN_CONTENT.items():
+            if (root / target).read_bytes() != (SELF / approved).read_bytes():
+                raise ValueError("Admin content differs from the owner-approved file: " + target)
         for path in root.rglob("*"):
             if not path.is_file():
                 continue

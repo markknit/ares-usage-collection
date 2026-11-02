@@ -35,6 +35,9 @@ install -m 0644 -o ares -g www-data "$APK_SOURCE" "$APK_TARGET"
 install -m 0644 -o ares -g www-data "$APK_HASH_SOURCE" "$APK_HASH_TARGET"
 install -m 0644 -o ares -g www-data "$PAGE_SOURCE" "$PAGE_TARGET"
 
+# Owner-approved admin pages and their manual form one grouped content update.
+bash "$SCRIPT_DIR/install_admin_content.sh"
+
 # Remove the previous generic /install/ ARES Sync page when upgrading from v1.4.
 # Leave unrelated content untouched.
 if [[ -f "$LEGACY_INSTALL_DIR/index.html" ]] && grep -q "Install ARES Sync" "$LEGACY_INSTALL_DIR/index.html"; then

@@ -25,8 +25,9 @@ Last updated: 2026-11-01
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
-| Phone installation-page link | Explicit page URL corrected in source; release packaging Pending | Operator reports `/app_install/` opens the file manager, while its `index.html` opens the correct page. Installer output, checks and guides now use `/app_install/index.html`. User will add the admin-module teacher-section entry separately. |
-| Offline ARES Sync manuals | Refreshed PDFs prepared; server copy and menu links Pending | `output/pdf/offline/` contains the two-page teacher installation/user manual and three-page technician guide, generated from current offline Markdown. All five pages visually reviewed; direct installation URL and current revision verified. README records server-copy command and direct PDF URLs. |
+| Phone installation-page link | Explicit page URL corrected; owner-supplied admin link integrated in source; release packaging Pending | Installer output, checks and guides use `/app_install/index.html`. The supplied final admin page links directly to that page; its Admin_tools entry and protected manual are now included in one deployment unit. |
+| Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
+| Owner-approved admin pages and manual | Integrated locally as one content unit; publication approval and corrected release packaging Pending | Supplied `admin_temp.html`, `index_temp.htmlf` and `ARES_Sync_User_Guide.pdf` are preserved unchanged under `offline-installer/admin-content/`. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. User reports pages/manual already tested; no further functional tests requested or run. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -148,6 +149,40 @@ Last updated: 2026-11-01
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-01 - Group owner-approved admin content into the installer
+
+- The owner supplied and explicitly approved the already tested admin page,
+  Admin_tools module entry and renamed ARES Sync user guide for one content
+  deployment unit. Imported the files without editing their HTML/PDF bytes.
+  Marked the content files against Git text conversion to preserve exact bytes.
+- Interpreted the supplied `/mt/sda3` manual path as `/mnt/sda3`, matching the
+  two other destinations and the existing storage path. The final targets are
+  `/mnt/sda3/var/www/admin/admin.html`,
+  `/mnt/sda3/var/www/modules/Admin_tools/index.htmlf` and
+  `/mnt/sda3/var/www/admin/ARES_Sync_User_Guide.pdf`.
+- Builder packages the three files and grouped deployment helper inside the
+  existing generated teacher-app component. Normal step 5 calls the helper;
+  no extra technician command is needed. It prechecks the three inputs, backs
+  up prior files together and replaces only the named content. Existing file
+  ownership/modes and destination-directory/authentication settings are retained.
+- Kept the supplied manual separate from regenerated teacher/technician guides.
+  Existing root/component checksums cover the new files, and independent ZIP
+  verification compares the approved content byte-for-byte. Updated existing
+  packaging fixture inputs for the added files; no new tests were added and no
+  tests were run manually for this content update. Configured GitHub CI may run
+  automatically when the branch is published.
+  Only file-copy integrity and installer wiring were reviewed, honoring the
+  owner's explicit direction against additional functional testing.
+
+Still open:
+
+- Explicit permission to publish these newly supplied files to public GitHub;
+  automatic approval review rejected that export, while allowing local integration.
+- Package and independently verify the corrected field ZIP with these content
+  changes and the earlier storage-alias/direct-page fixes. No server deployment
+  or release rebuild was performed by this source update.
+- Remaining support/reboot/tracking and field acceptance work remains separate.
 
 ### 2026-11-01 - Refreshed offline installation and user manuals
 

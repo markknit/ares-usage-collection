@@ -54,6 +54,8 @@ class VerifyBundleTests(unittest.TestCase):
                     root = fixtures.package(base / profile / bundle, profile)
                     for target, reviewed in verifier.REVIEWED.items():
                         fixtures.write(root, target, (BUILDER / reviewed).read_bytes().replace(b"\r\n", b"\n"))
+                    for target, approved in verifier.APPROVED_ADMIN_CONTENT.items():
+                        fixtures.write(root, target, (BUILDER / approved).read_bytes())
                     fixtures.write(root, "package.conf", f"LESSON3_VERSION=v0.94\nLESSON3_SERVER_URL=\nARES_PROFILE={profile}\n")
                     alias = "ares-test.local" if profile == "test" else "ares.local"
                     fixtures.write(root, "MANIFEST.txt", f"Lesson3: v0.94\nOffline bundle revision: v1.13\nProfile: {profile} ({alias})\nTarget architecture: linux/amd64\n")

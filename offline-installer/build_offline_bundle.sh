@@ -181,6 +181,11 @@ install -m 0755 "$SELF_DIR/templates/lesson3_offline.sh" "$STAGE/lesson3/install
 install -m 0755 "$SELF_DIR/templates/install_lesson3_corpus.sh" "$STAGE/lesson3/corpus/install_lesson3_corpus.sh"
 install -m 0755 "$SELF_DIR/templates/install_lesson_plan_tracking.sh" "$STAGE/tracking/install_lesson_plan_tracking.sh"
 install -m 0755 "$SELF_DIR/templates/install_teacher_app.sh" "$STAGE/teacher-app/install_teacher_app.sh"
+install -m 0755 "$SELF_DIR/templates/install_admin_content.sh" "$STAGE/teacher-app/install_admin_content.sh"
+mkdir -p "$STAGE/teacher-app/admin-content"
+for admin_file in admin.html index.htmlf ARES_Sync_User_Guide.pdf; do
+  install -m 0644 "$SELF_DIR/admin-content/$admin_file" "$STAGE/teacher-app/admin-content/$admin_file"
+done
 install -m 0644 "$SELF_DIR/templates/teacher_install_page.html" "$STAGE/teacher-app/install-page.html"
 install -m 0755 "$SELF_DIR/templates/lesson_plan_install.sh" "$STAGE/lesson_plan/install.sh"
 install -m 0755 "$SELF_DIR/templates/prepare_remote_access.sh" "$STAGE/remote-access/prepare_remote_access.sh"
@@ -466,6 +471,10 @@ for required in \
   ARES_Sync_Rollout_Package/server-installer/update_school_server.sh \
   ARES_Sync_Rollout_Package/server-installer/ares_set_school_code.sh \
   teacher-app/install_teacher_app.sh \
+  teacher-app/install_admin_content.sh \
+  teacher-app/admin-content/admin.html \
+  teacher-app/admin-content/index.htmlf \
+  teacher-app/admin-content/ARES_Sync_User_Guide.pdf \
   teacher-app/install-page.html \
   remote-access/prepare_remote_access.sh \
   remote-access/ares_enable_remote_access.sh \

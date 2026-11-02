@@ -1,0 +1,44 @@
+<!-- position:197 -->
+<div class="indexmodule">
+
+
+    <img src="<?php echo $dir ?>/icons8-tools-64.png" alt="Admin Tools">
+
+    <h2>Administration Tools for IT Staff and Teachers</h2>
+
+    <p>This is a collection of tools, utilities, and reference material to be used by the IT Staff and teachers. The content is password protected.  
+    <p>Open <a href="/admin/admin.html" target="_blank">HERE</a></p> 
+    
+    <ul class="double">
+   
+    <h3><u>Monitoring Tools</u></h3>
+   <li><b>ARES Sync</b> - Android app enabling automated collection and upload of ARES monitoring data by school ARES Advocates. </li>
+   <li><b>ARES Usage Monitor</b> - Track Usage by module and device.</li>
+   <li><b>Performance Management utility</b></li>
+   <br>
+    <h3><u>Operations Tools</u></h3>
+    <li><b>Restart Server</b></li>
+    <li><b>Shutdown Server</b></li>
+    <li><b>Update Server</b>
+   <li><b>Remote Control</b> - Enable Support by ARES staff.</li>
+   <br>
+      <h3><u>Manuals</u></h3>
+    <li><b>ARES User/Admin Guide</b></li>
+    <li><b>Khan Academy User Guide</b></li>
+    <li><b>Teacher Textbooks</b> - teacher version of student textbooks with lesson plans, quiz answers, etc.</li>
+    
+
+       
+	<li></li><br>
+
+    </ul>
+
+	
+	
+</div>
+
+
+<!-- ARES_TRACKER_START -->
+<script src="/js/ares_tracker.js" data-module-id="admin_tools_index"></script>
+<!-- ARES_TRACKER_END -->
+

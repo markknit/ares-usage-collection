@@ -27,7 +27,7 @@ Last updated: 2026-11-01
 | Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
 | Phone installation-page link | Explicit page URL corrected; owner-supplied admin link integrated in source; release packaging Pending | Installer output, checks and guides use `/app_install/index.html`. The supplied final admin page links directly to that page; its Admin_tools entry and protected manual are now included in one deployment unit. |
 | Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
-| Owner-approved admin pages and manual | Integrated locally as one content unit; publication approval and corrected release packaging Pending | Supplied `admin_temp.html`, `index_temp.htmlf` and `ARES_Sync_User_Guide.pdf` are preserved unchanged under `offline-installer/admin-content/`. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. User reports pages/manual already tested; no further functional tests requested or run. |
+| Owner-approved admin pages and manual | Published as one content unit; corrected release packaging Pending | Owner explicitly authorized public publication; integration `3ead31a` is pushed. Supplied pages/manual remain unchanged. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. No further functional tests were requested or run manually. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -177,8 +177,13 @@ Last updated: 2026-11-01
 
 Still open:
 
-- Explicit permission to publish these newly supplied files to public GitHub;
-  automatic approval review rejected that export, while allowing local integration.
+- Publication resolved: the owner explicitly authorized pushing the supplied
+  files to public GitHub; integration `3ead31a1e7f056e0816b6d7bee9ad3d79093634e`
+  was pushed and the remote branch identity verified. Original page whitespace
+  is deliberately retained to preserve the supplied files exactly.
+
+Still open after publication:
+
 - Package and independently verify the corrected field ZIP with these content
   changes and the earlier storage-alias/direct-page fixes. No server deployment
   or release rebuild was performed by this source update.

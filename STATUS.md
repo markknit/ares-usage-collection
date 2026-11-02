@@ -28,7 +28,7 @@ Last updated: 2026-11-02
 | Phone installation-page link | Explicit page URL corrected; owner-supplied admin link integrated in source; release packaging Pending | Installer output, checks and guides use `/app_install/index.html`. The supplied final admin page links directly to that page; its Admin_tools entry and protected manual are now included in one deployment unit. |
 | Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
 | Owner-approved admin pages and manual | Published as one content unit; corrected release packaging Pending | Owner explicitly authorized public publication; integration `3ead31a` is pushed. Supplied pages/manual remain unchanged. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. No further functional tests were requested or run manually. |
-| Internet Lockdown v1.4.2 | Supplied project imported and integrated; GitHub sync/CI and corrected release packaging in progress | All ten source files match the handoff ZIP and all eight original release checksums match. Normal installer prepares tools with `--no-boot`, preserves active/boot-enabled lockdown and existing remote services, and defers optional failures without losing core success. No live firewall or system installer was executed. |
+| Internet Lockdown v1.4.2 | Integrated and published; all 94 Ubuntu installer tests passed; corrected release packaging Pending | Source `5a1f5be` preserves all ten imported files and the original eight-file manifest. Normal installer prepares tools with `--no-boot`, preserves active/boot-enabled lockdown and existing remote services, and keeps core success on optional deferral/failure. No live firewall or system installer was executed. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -196,10 +196,15 @@ Last updated: 2026-11-02
   scaffold/fresh-ZIP fixtures; all nine imported/changed shell scripts parsed.
 - No real installer, firewall operation, service change, release build or Docker
   operation ran. Existing admin-content approvals and v1.12 remain unchanged.
+- Published source `5a1f5bef89ece7c77f3184a770c81a6cbfa5059a` on
+  `simplify-offline-install`; remote commit identity and clean Windows checkout
+  verified. Native Ubuntu offline-installer CI passed all 94 tests and shell
+  syntax checks: https://github.com/markknit/ares-usage-collection/actions/runs/41495393636.
+  The profile-renderer change also triggered the separate Android workflow;
+  that build does not replace the approved production APK or v1.12 artifact.
 
 Still open:
 
-- Publish and verify the requested GitHub sync and Ubuntu CI result.
 - Corrected field ZIP/release verification with all accumulated additions.
 - Live project acceptance and remaining support/reboot/tracking work.
 

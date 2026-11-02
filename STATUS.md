@@ -165,7 +165,10 @@ Last updated: 2026-11-01
   both-profile scaffold and fresh-ZIP fixture suites; all three changed shell
   scripts passed syntax checks. The scaffold fixture required the normal
   Windows user context after restricted Git Bash could not create its temporary
-  output directory. Native Ubuntu CI is still pending for this source step.
+  output directory. Published source `6c5f2a74d52bf5b8d23f1d73f62096be3148ee29`
+  passed all 87 native Ubuntu tests, including rejection of a successful file-
+  manager response in the phone-page check, plus shell syntax checks:
+  https://github.com/markknit/ares-usage-collection/actions/runs/41372477909.
 - User will add the admin-module link at the end of its teacher section after
   confirming the direct address. No admin-module content was edited. A corrected
   release build must regenerate guides and package both this change and the

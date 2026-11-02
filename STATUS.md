@@ -26,6 +26,7 @@ Last updated: 2026-11-01
 |---|---|---|
 | Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
 | Phone installation-page link | Explicit page URL corrected in source; release packaging Pending | Operator reports `/app_install/` opens the file manager, while its `index.html` opens the correct page. Installer output, checks and guides now use `/app_install/index.html`. User will add the admin-module teacher-section entry separately. |
+| Offline ARES Sync manuals | Refreshed PDFs prepared; server copy and menu links Pending | `output/pdf/offline/` contains the two-page teacher installation/user manual and three-page technician guide, generated from current offline Markdown. All five pages visually reviewed; direct installation URL and current revision verified. README records server-copy command and direct PDF URLs. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -147,6 +148,27 @@ Last updated: 2026-11-01
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-01 - Refreshed offline installation and user manuals
+
+- Located general Internet-download manuals and the separate local-school-server
+  source guides. Generated fresh offline PDFs under `output/pdf/offline/` from
+  the current offline Markdown, including `/app_install/index.html`. Preserved
+  existing general PDFs, bundled historical PDF copies and v1.12 artifacts.
+- Updated the shared renderer footer revision to 2026-11-01. Teacher manual:
+  two pages; technician manual: three pages. Extracted text confirms the direct
+  installation link and revision on every page; rendered and visually inspected
+  all five pages. No software regression tests were needed for this PDF/footer
+  documentation step.
+- Linked the refreshed manuals from README and documented copying both PDFs to
+  the existing server downloads directory. The teacher PDF covers installation
+  and normal use. No server command, admin-menu edit, live copy verification or
+  release rebuild was performed; those actions remain separate.
+
+Still open:
+
+- Transfer PDFs, run the supplied copy command on Ubuntu and add desired menu links.
+- Remaining corrected ZIP, support/reboot/tracking and field acceptance work above.
 
 ### 2026-11-01 - Client feature report and direct phone-page link
 

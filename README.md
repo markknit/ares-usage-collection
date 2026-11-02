@@ -27,6 +27,37 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 
 ## Phone rollout guides
 
+For the local ARES school-server download workflow, use the refreshed offline
+copies (revision 2026-11-01):
+
+- [Teacher installation and user manual](output/pdf/offline/ARES_Sync_Teacher_Guide.pdf) - 2 pages.
+- [Technician installation and handoff manual](output/pdf/offline/ARES_Sync_Technician_Guide.pdf) - 3 pages.
+
+These use the explicit local page `http://ares.local/app_install/index.html`.
+Their sources are `offline-installer/docs/TEACHER_PHONE_GUIDE.md` and
+`offline-installer/docs/TECHNICIAN_PHONE_INSTALL.md`. Regenerate with:
+
+```bash
+python3 offline-installer/tools/render_rollout_guides.py --source-dir offline-installer/docs --output-dir output/pdf/offline
+```
+
+To publish them on an existing server, transfer both PDFs into the `ares` user's
+Downloads folder, then run on the Ubuntu server:
+
+```bash
+sudo install -m 0644 -o ares -g www-data \
+  /mnt/sda3/home/ares/Downloads/ARES_Sync_Teacher_Guide.pdf \
+  /mnt/sda3/home/ares/Downloads/ARES_Sync_Technician_Guide.pdf \
+  /mnt/sda3/var/www/downloads/
+```
+
+The direct server links are `/downloads/ARES_Sync_Teacher_Guide.pdf` and
+`/downloads/ARES_Sync_Technician_Guide.pdf`. The teacher PDF covers both phone
+installation and ordinary use and is the appropriate teacher-section manual link.
+This copy procedure does not run the server installer or edit the admin module.
+
+General Internet-download guidance remains available separately:
+
 - [Technician server update, phone installation, and teacher handoff](docs/TECHNICIAN_PHONE_INSTALL.md) ([printable PDF](output/pdf/ARES_Sync_Technician_Guide.pdf))
 - [Teacher installation and use guide](docs/TEACHER_PHONE_GUIDE.md) ([printable PDF](output/pdf/ARES_Sync_Teacher_Guide.pdf))
 - [Technician school-server installation and update guide](docs/TECHNICIAN_SERVER_INSTALL.md)

@@ -153,3 +153,17 @@ source "$SCRIPT_DIR/optional_remote_support.sh"
 if prepare_optional_remote_support; then
   optional_remote_support
 fi
+
+echo
+echo "Preparing Internet lockdown tools (activation is a separate choice)."
+if bash "$SCRIPT_DIR/remote-access/prepare_internet_lockdown.sh"; then
+  :
+else
+  rc=$?
+  if [[ "$rc" == 2 ]]; then
+    echo "Internet lockdown setup deferred; core installation remains successful."
+  else
+    echo "WARNING: Internet lockdown tools could not be fully prepared; core installation remains successful."
+    echo "Send the installation log to ARES support if setup is needed."
+  fi
+fi

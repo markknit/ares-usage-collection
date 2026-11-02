@@ -62,6 +62,14 @@ It may require additional server prerequisites; its failure leaves the completed
 offline installation usable. ARES support can arrange preparation and activation
 later. Activation needs outbound Internet on the server. See `docs/REMOTE_ACCESS.md`.
 
+The bundled Internet Lockdown v1.4.2 project is prepared afterward, with activation
+and reboot persistence left as separate choices. Confirm/select the actual
+student-side LAN if prompted. Existing active or boot-enabled lockdown is
+preserved and its upgrade is deferred; optional remote preparation is also
+deferred in that case. If setup needs prerequisites or later attention, core
+ARES installation remains successful. See `docs/INTERNET_LOCKDOWN.md` and the
+supplied operating PDF under `/opt/ares/internet-lockdown/ares-lockdown-v1.4.2/`.
+
 Initial release acceptance is handled by ARES build/support staff using
 `docs/PROFILE_ACCEPTANCE.md` and `docs/LESSON3_V094_ACCEPTANCE.md`. Technicians do
 not repeat the build qualification procedure at each school. A warning alone is

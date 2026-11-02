@@ -14,6 +14,7 @@ SELF = Path(__file__).resolve().parent
 sys.path.insert(0, str(SELF / "tools"))
 import package_integrity as integrity
 import tsavo_content
+from audit_offline_scripts import forbidden_lines
 
 # Compare the generated entry points/helpers with the reviewed builder sources.
 REVIEWED = {
@@ -35,6 +36,7 @@ REVIEWED = {
     "tsavo/tsavo_content.py": "tools/tsavo_content.py",
     "tsavo/tsavo_install.py": "tools/tsavo_install.py",
     "remote-access/prepare_remote_access.sh": "templates/prepare_remote_access.sh",
+    "remote-access/prepare_internet_lockdown.sh": "templates/prepare_internet_lockdown.sh",
     "remote-access/ares_enable_remote_access.sh": "templates/ares_enable_remote_access.sh",
     "remote-access/ares_disable_remote_access.sh": "templates/ares_disable_remote_access.sh",
     "remote-access/remote_support_common.sh": "templates/remote_support_common.sh",
@@ -46,6 +48,12 @@ REVIEWED = {
 APPROVED_ADMIN_CONTENT = {
     "teacher-app/admin-content/" + name: "admin-content/" + name
     for name in ("admin.html", "index.htmlf", "ARES_Sync_User_Guide.pdf")
+}
+
+APPROVED_LOCKDOWN_CONTENT = {
+    "remote-access/internet-lockdown/" + path.relative_to(SELF / "internet-lockdown").as_posix():
+        path.relative_to(SELF).as_posix()
+    for path in (SELF / "internet-lockdown").rglob("*") if path.is_file()
 }
 
 
@@ -92,6 +100,10 @@ def verify(archive, profile="production", apk_sha256=None):
         for target, approved in APPROVED_ADMIN_CONTENT.items():
             if (root / target).read_bytes() != (SELF / approved).read_bytes():
                 raise ValueError("Admin content differs from the owner-approved file: " + target)
+        for target, approved in APPROVED_LOCKDOWN_CONTENT.items():
+            if (root / target).read_bytes() != (SELF / approved).read_bytes():
+                raise ValueError("Bundled lockdown release differs from the supplied project: " + target)
+        integrity.checksums(root / "remote-access/internet-lockdown/ares-lockdown-v1.4.2")
         for path in root.rglob("*"):
             if not path.is_file():
                 continue
@@ -103,8 +115,7 @@ def verify(archive, profile="production", apk_sha256=None):
                 raise ValueError("Obsolete source artifact: " + relative)
             if path.suffix == ".sh":
                 subprocess.run([shutil.which("bash") or "bash", "-n", str(path)], check=True)
-                if re.search(r"github\.com|tailscale\.com|apt-get\s+(update|install)|docker(?:\s+compose)?\s+pull|wget\s",
-                             path.read_text(encoding="utf-8")):
+                if forbidden_lines(path.read_text(encoding="utf-8"), relative):
                     raise ValueError("Internet-dependent field script: " + relative)
         configuration = (root / "package.conf").read_text(encoding="utf-8")
         if configuration != f"LESSON3_VERSION=v0.94\nLESSON3_SERVER_URL=\nARES_PROFILE={profile}\n":

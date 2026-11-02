@@ -24,6 +24,7 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 - `public/` - teacher-facing setup portal assets.
 - `docs/` - technician, acceptance, deployment, and workflow documentation.
 - `tests/` - portal, upload/enrollment, and central processor tests.
+- `offline-installer/internet-lockdown/` - complete owner-supplied Internet Lockdown v1.4.2 project and original handoff; [installer integration](offline-installer/docs/INTERNET_LOCKDOWN.md).
 
 ## Phone rollout guides
 

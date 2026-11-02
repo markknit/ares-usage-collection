@@ -108,6 +108,13 @@ The same installation stage also deploys the owner's tested admin-content unit:
 backed up together, and the password-protected admin directory's configuration
 and permissions are preserved. See [approved admin content](admin-content/README.md).
 
+The complete supplied Internet Lockdown v1.4.2 project is also bundled, including
+its original status, README, operating PDF and release manifest. After core setup,
+the installer retains it under `/opt/ares/internet-lockdown/` and uses the supplied
+installer's `--no-boot` mode. It does not activate firewall rules. Existing active
+or boot-enabled lockdown and its remote services are preserved; setup is deferred
+when needed without failing core ARES. See [Internet lockdown integration](docs/INTERNET_LOCKDOWN.md).
+
 - The complete Lesson3 User Guide is bundled with the field package, installed on the ARES server, and linked from the Lesson Plan Editor interface.
 - The offline guide is published at:
 

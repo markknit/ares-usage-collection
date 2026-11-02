@@ -189,6 +189,8 @@ done
 install -m 0644 "$SELF_DIR/templates/teacher_install_page.html" "$STAGE/teacher-app/install-page.html"
 install -m 0755 "$SELF_DIR/templates/lesson_plan_install.sh" "$STAGE/lesson_plan/install.sh"
 install -m 0755 "$SELF_DIR/templates/prepare_remote_access.sh" "$STAGE/remote-access/prepare_remote_access.sh"
+install -m 0755 "$SELF_DIR/templates/prepare_internet_lockdown.sh" "$STAGE/remote-access/prepare_internet_lockdown.sh"
+rsync -a --delete "$SELF_DIR/internet-lockdown/" "$STAGE/remote-access/internet-lockdown/"
 install -m 0755 "$SELF_DIR/templates/ares_enable_remote_access.sh" "$STAGE/remote-access/ares_enable_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/ares_disable_remote_access.sh" "$STAGE/remote-access/ares_disable_remote_access.sh"
 install -m 0644 "$SELF_DIR/tools/remote_support_config.py" "$STAGE/remote-access/remote_support_config.py"
@@ -201,6 +203,7 @@ install -m 0644 "$SELF_DIR/docs/TEACHER_PHONE_GUIDE.md" "$STAGE/docs/TEACHER_PHO
 install -m 0644 "$SELF_DIR/docs/LESSON3_CORPUS_INSTALL.md" "$STAGE/docs/LESSON3_CORPUS_INSTALL.md"
 install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3_V094_ACCEPTANCE.md"
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
+install -m 0644 "$SELF_DIR/docs/INTERNET_LOCKDOWN.md" "$STAGE/docs/INTERNET_LOCKDOWN.md"
 install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
 install -m 0644 "$SELF_DIR/docs/PROFILE_ACCEPTANCE.md" "$STAGE/docs/PROFILE_ACCEPTANCE.md"
 install -m 0644 "$SELF_DIR/docs/TSAVO_TRUST.md" "$STAGE/docs/TSAVO_TRUST.md"
@@ -477,6 +480,11 @@ for required in \
   teacher-app/admin-content/ARES_Sync_User_Guide.pdf \
   teacher-app/install-page.html \
   remote-access/prepare_remote_access.sh \
+  remote-access/prepare_internet_lockdown.sh \
+  remote-access/internet-lockdown/STATUS.md \
+  remote-access/internet-lockdown/ares-lockdown-v1.4.2/install.sh \
+  remote-access/internet-lockdown/ares-lockdown-v1.4.2/SHA256SUMS \
+  remote-access/internet-lockdown/ares-lockdown-v1.4.2/ARES_Internet_Lockdown_README_v1.4.2.pdf \
   remote-access/ares_enable_remote_access.sh \
   remote-access/ares_disable_remote_access.sh \
   remote-access/remote_support_config.py \
@@ -494,6 +502,7 @@ for required in \
   docs/LESSON3_CORPUS_INSTALL.md \
   docs/LESSON3_V094_ACCEPTANCE.md \
   docs/REMOTE_ACCESS.md \
+  docs/INTERNET_LOCKDOWN.md \
   docs/pdf/ARES_Sync_Technician_Guide.pdf \
   docs/pdf/ARES_Sync_Teacher_Guide.pdf \
   docs/LESSON3_USER_GUIDE.pdf \
@@ -516,6 +525,7 @@ if (( ! SCAFFOLD_ONLY )); then
 fi
 
 python3 "$SELF_DIR/tools/render_profile.py" --root "$STAGE" --profile "$ARES_PROFILE"
+(cd "$STAGE/remote-access/internet-lockdown/ares-lockdown-v1.4.2"; sha256sum -c SHA256SUMS)
 (cd "$STAGE/teacher-app"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
 (cd "$STAGE/lesson_plan/payload"; find . -type f ! -path './SHA256SUMS' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
 if (( ! SCAFFOLD_ONLY )); then
@@ -536,13 +546,9 @@ if (( ! SCAFFOLD_ONLY )); then
   python3 "$SELF_DIR/tools/render_profile.py" --apk "$STAGE/teacher-app/ares-sync.apk" --profile "$ARES_PROFILE"
 fi
 
-# Field-side shell scripts must not install/download from the Internet.
-if grep -RInE 'github\.com|tailscale\.com|apt-get[[:space:]]+(update|install)|docker([[:space:]]+compose)?[[:space:]]+pull|wget[[:space:]]' \
-    "$STAGE" --include='*.sh' > "$STAGE/.offline-audit.txt"; then
-  cat "$STAGE/.offline-audit.txt" >&2
-  die "offline audit found Internet-dependent commands in field-side shell scripts"
-fi
-rm -f "$STAGE/.offline-audit.txt"
+# Field scripts remain offline. The audit recognizes the upstream nftables
+# diagnostic as a printed message, without editing the sealed vendor script.
+python3 "$SELF_DIR/tools/audit_offline_scripts.py" "$STAGE"
 
 cat > "$STAGE/MANIFEST.txt" <<TXT
 ARES Q4 Offline Bundle

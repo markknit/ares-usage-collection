@@ -3,6 +3,14 @@
 prepare_optional_remote_support() {
   echo
   echo "Preparing optional remote support (not needed for offline use)."
+  # Replacing/restarting Tailscale can invalidate a live service-cgroup firewall
+  # exception. Preserve existing support when lockdown is active or boot-enabled.
+  if { command -v nft >/dev/null 2>&1 && nft list table inet ares_internet_lockdown >/dev/null 2>&1; } \
+      || systemctl is-enabled --quiet ares-internet-lockdown.service 2>/dev/null; then
+    echo "Remote support preparation deferred: existing Internet lockdown is active or enabled at boot."
+    echo "Existing remote services are preserved; core installation remains successful."
+    return 1
+  fi
   # Run as a separate Bash process so failures stop preparation, while the
   # conditional caller preserves the already completed core installation.
   if bash "$SCRIPT_DIR/remote-access/prepare_remote_access.sh"; then

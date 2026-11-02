@@ -1,0 +1,34 @@
+ARES Internet Lockdown v1.4.2 - simplified installer release
+Date: 2026-11-02
+
+This is an installer / documentation update only. The firewall scripts are
+byte-for-byte identical to v1.4.1; no filtering behavior was modified.
+
+What changed:
+- Primary install command is now: bash install.sh
+- Automatically reuses a valid existing LAN mapping.
+- On first installation with one eligible IPv4 LAN interface, discovers the
+  interface and its exact subnet without manually entering a CIDR pair.
+  If this is also the default-route interface, confirms it serves LAN students
+  rather than automatically trusting a modem-only uplink.
+- If multiple possible interfaces exist, asks for one or more numbered choices.
+  It does not automatically trust all of them or an internet modem.
+- Mode A (application server) is the default; Mode B is advanced-only.
+- Existing installed scripts are kept when identical; changed versions are backed
+  up before replacement; compatible user-facing command wrappers are preserved.
+- Optional reboot persistence is still gated by a live-test confirmation.
+- No firewall rules are activated during installation.
+- A clear Tailscale preflight warning appears if the configuration cannot yet be
+  validated on the host.
+- Compatibility entry point install_lockdown_commands.sh invokes install.sh.
+
+This installer was tested with mock commands for network discovery, two-network
+selection, existing configurations, command preservation and boot opt-in.
+It was NOT executed against the user's production Ubuntu host or tested against
+its running kernel / nftables engine. Continue to test AnyDesk and restoration
+on the real server before enabling permanent or reboot-time lockdown.
+
+To deploy:
+  unzip ARES_Internet_Lockdown_Package_v1.4.2.zip
+  cd ares-lockdown-v1.4.2
+  bash install.sh

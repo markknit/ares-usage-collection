@@ -49,6 +49,9 @@ def binary_xml_strings(value):
 def render(root, profile):
     alias = ALIASES[profile]
     for path in root.rglob("*"):
+        # Imported versioned scripts/docs have their own unchanged release seal.
+        if (root / "remote-access/internet-lockdown") in path.parents:
+            continue
         if path.is_file() and path.suffix.lower() in {".html", ".htmlf", ".js", ".json", ".md"}:
             old = path.read_text(encoding="utf-8")
             value = old.replace("ares-test.local", "ares.local").replace("ares.local", alias)

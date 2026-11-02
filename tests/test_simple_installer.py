@@ -46,7 +46,7 @@ class SimpleInstallerTests(unittest.TestCase):
             server.server_close()
             thread.join()
 
-    def run_install(self, *, remote_status=0, broken_package=False, failed_step=""):
+    def run_install(self, *, remote_status=0, broken_package=False, failed_step="", lockdown_status=0, active_lockdown=False):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             root = base / "package"
@@ -88,6 +88,8 @@ class SimpleInstallerTests(unittest.TestCase):
             remote = root / "remote-access/prepare_remote_access.sh"
             remote.parent.mkdir()
             remote.write_text('#!/bin/bash\necho REMOTE_PREPARATION >> "$CALLS"\nexit "$REMOTE_STATUS"\n', newline="\n")
+            (root / "remote-access/prepare_internet_lockdown.sh").write_text(
+                '#!/bin/bash\necho LOCKDOWN_PREPARATION >> "$CALLS"\nexit "${LOCKDOWN_STATUS:-0}"\n', newline="\n")
             manifest(root)
             if broken_package == "missing":
                 (root / "package.conf").unlink()
@@ -99,8 +101,16 @@ class SimpleInstallerTests(unittest.TestCase):
             shim = bin_dir / "python3"
             shim.write_text('#!/bin/bash\nexec "' + Path(sys.executable).as_posix() + '" "$@"\n', newline="\n")
             shim.chmod(0o755)
+            for name, body in {
+                "nft": '[[ "$ACTIVE_LOCKDOWN" == yes ]]',
+                "systemctl": 'exit 1',
+            }.items():
+                path = bin_dir / name
+                path.write_text('#!/bin/bash\n' + body + '\n', newline="\n")
+                path.chmod(0o755)
             prefix = 'export PATH="$(cygpath -u "$1"):$PATH"; ' if os.name == "nt" else 'export PATH="$1:$PATH"; '
-            env = dict(os.environ, CALLS=(base / "calls").as_posix(), REMOTE_STATUS=str(remote_status), FAIL_STEP=failed_step)
+            env = dict(os.environ, CALLS=(base / "calls").as_posix(), REMOTE_STATUS=str(remote_status), FAIL_STEP=failed_step,
+                       LOCKDOWN_STATUS=str(lockdown_status), ACTIVE_LOCKDOWN="yes" if active_lockdown else "no")
             result = subprocess.run([BASH, "-c", prefix + 'bash "$2" ARES-S0099', "test",
                                      bin_dir.as_posix(), (root / "install_offline.sh").as_posix()],
                                     capture_output=True, text=True, env=env)
@@ -112,7 +122,21 @@ class SimpleInstallerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("completed successfully", result.stdout)
         self.assertIn("Remote support deferred", result.stdout)
-        self.assertTrue(calls.endswith("tsavo/install.sh\nREMOTE_PREPARATION\n"), calls)
+        self.assertTrue(calls.endswith("tsavo/install.sh\nREMOTE_PREPARATION\nLOCKDOWN_PREPARATION\n"), calls)
+
+    def test_lockdown_deferral_or_failure_keeps_core_success(self):
+        for code in (2, 42):
+            result, calls = self.run_install(lockdown_status=code)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("completed successfully", result.stdout)
+            self.assertIn("core installation remains successful", result.stdout)
+            self.assertIn("LOCKDOWN_PREPARATION", calls)
+
+    def test_existing_lockdown_skips_remote_service_changes(self):
+        result, calls = self.run_install(active_lockdown=True, lockdown_status=2)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("REMOTE_PREPARATION", calls)
+        self.assertIn("Existing remote services are preserved", result.stdout)
 
     def test_missing_remote_prerequisites_and_preparation_errors_preserve_core_success(self):
         for code in (1, 42):

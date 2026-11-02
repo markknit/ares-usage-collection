@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 
 ## Current checkout
 
@@ -28,6 +28,7 @@ Last updated: 2026-11-01
 | Phone installation-page link | Explicit page URL corrected; owner-supplied admin link integrated in source; release packaging Pending | Installer output, checks and guides use `/app_install/index.html`. The supplied final admin page links directly to that page; its Admin_tools entry and protected manual are now included in one deployment unit. |
 | Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
 | Owner-approved admin pages and manual | Published as one content unit; corrected release packaging Pending | Owner explicitly authorized public publication; integration `3ead31a` is pushed. Supplied pages/manual remain unchanged. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. No further functional tests were requested or run manually. |
+| Internet Lockdown v1.4.2 | Supplied project imported and integrated; GitHub sync/CI and corrected release packaging in progress | All ten source files match the handoff ZIP and all eight original release checksums match. Normal installer prepares tools with `--no-boot`, preserves active/boot-enabled lockdown and existing remote services, and defers optional failures without losing core success. No live firewall or system installer was executed. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -41,7 +42,7 @@ Last updated: 2026-11-01
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
-| Field rollout approval | Pending corrected artifact and remaining live acceptance | Corrected test-copy installation and requested client features passed by operator report. A corrected ZIP must include the storage-alias fix and explicit phone-page URL, then pass independent verification. Tracking/support/reboot and remaining feature checks remain separate. |
+| Field rollout approval | Pending corrected artifact and remaining live acceptance | A corrected ZIP must include storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2, then pass independent verification. Earlier host/client results remain recorded. Live lockdown/support/reboot, tracking and remaining feature checks remain separate. |
 
 ## Production v1.13 artifact
 
@@ -83,6 +84,17 @@ Last updated: 2026-11-01
 
 ## Known Issues / Lessons Learned
 
+- Preserve the supplied Internet Lockdown release and its own checksum manifest
+  unchanged, excluding it from profile substitution. Its handoff STATUS is a
+  historical upstream document; repository-root STATUS and the integration guide
+  record later import/deployment decisions. Installation prepares tools without
+  activating rules or choosing boot persistence. Do not restart/replace optional
+  support services while active or boot-enabled lockdown may depend on their
+  service-cgroup identity.
+- An upstream error message recommending `apt-get install nftables` is not an
+  executed package installation. The shared offline audit exempts only that
+  exact line at the sealed versioned script path; actual install/download
+  commands and the same text in other script paths remain rejected.
 - A directory URL returning HTTP 200 may be the ARES file manager, not the
   requested installation page. Use `/app_install/index.html` explicitly and
   require the expected page title in the installed HTTP check. Do not infer
@@ -149,6 +161,47 @@ Last updated: 2026-11-01
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-02 - Integrate supplied Internet Lockdown v1.4.2 project
+
+- Restart verification found the expected clean `simplify-offline-install`
+  checkout at `45cfd18`, matching GitHub after fetch. Main has eight unmerged
+  commits; no merge, base change or new branch was requested or performed.
+- Read the supplied project STATUS, both operating-PDF pages, README, release
+  notes and installer/scripts as source material. Imported all ten handoff files
+  into `offline-installer/internet-lockdown/`, preserving exact ZIP bytes and
+  the original eight-file release manifest. The imported upstream STATUS still
+  describes its earlier no-destination/no-push handoff; this record supersedes
+  those historical integration-status statements without altering that source.
+- Builder packages the project under the existing generated `remote-access/`
+  tree, with independent exact-byte/source and upstream-manifest verification.
+  Profile rendering skips this sealed project, retaining its original production
+  examples and PDF. No uploaded firewall code or hashes were changed.
+- Added a preparation stage after successful core/optional-remote setup. It keeps
+  the source/docs under `/opt/ares/internet-lockdown/` and invokes only the
+  supplied `install.sh --no-boot` when suitable. LAN discovery/selection remains
+  upstream behavior. Active or boot-enabled lockdown, missing dependencies or
+  noninteractive input defer setup; existing runtime rules/configuration remain
+  untouched. Optional failures keep the completed core installation successful.
+- Optional remote preparation now defers while lockdown is active/boot-enabled,
+  preserving existing Tailscale/remote services and their cgroup exceptions.
+  The supplied project documents known AnyDesk recovery, mesh, IPv6 and reboot
+  limitations; no live acceptance is inferred from the import or mock checks.
+- Fixed the offline audit false positive on the upstream dependency-error echo
+  using one exact path/message exception shared by builder and ZIP verifier;
+  real network installation commands are still rejected. Added integration
+  tests with fake firewall/service/upstream commands, covering no-boot invocation,
+  active/boot deferral, noninteractive input, upstream failure and core-success
+  preservation. All 23 focused Windows tests passed, including both-profile
+  scaffold/fresh-ZIP fixtures; all nine imported/changed shell scripts parsed.
+- No real installer, firewall operation, service change, release build or Docker
+  operation ran. Existing admin-content approvals and v1.12 remain unchanged.
+
+Still open:
+
+- Publish and verify the requested GitHub sync and Ubuntu CI result.
+- Corrected field ZIP/release verification with all accumulated additions.
+- Live project acceptance and remaining support/reboot/tracking work.
 
 ### 2026-11-01 - Group owner-approved admin content into the installer
 

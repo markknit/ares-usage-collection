@@ -11,3 +11,6 @@ offline-installer/package.conf text eol=lf
 offline-installer/admin-content/admin.html -text
 offline-installer/admin-content/index.htmlf -text
 offline-installer/admin-content/ARES_Sync_User_Guide.pdf -text
+
+# Preserve the imported release, its checksums, PDF and handoff exactly.
+offline-installer/internet-lockdown/** -text

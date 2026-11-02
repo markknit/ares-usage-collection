@@ -6,7 +6,9 @@ Current source targets bundle v1.13 with Lesson3 v0.94; v1.12 artifact evidence
 is retained unchanged. See [Tsavo Trust](TSAVO_TRUST.md) for external-source
 requirements, mapping reconciliation, backup/restore behavior and pending tests.
 Live acceptance status: **Corrected test-copy host installation and corpus counts
-passed according to operator output; remaining acceptance is Pending**. The
+passed according to operator output; the operator also reports the three requested
+client feature checks passed, with the directory-link correction below. Remaining
+acceptance is Pending**. The
 permanent-test profile remains Pending for every live check. See the table below.
 Do not infer field success from mocked service checks or fixture scaffolds.
 
@@ -19,8 +21,16 @@ optional activation successfully. It confirmed healthy Lesson3 with installed
 95/806 corpus counts, Tsavo installation/HTTP checks and final installed-service
 checks. See the [operator evidence](evidence/2026-11-01-v1.13-tsavo3-install.md).
 The original ZIP retains the old helper; corrected release verification, clean
-installation from that release, client/phone/browser and reboot acceptance remain
-required. No field rollout is approved by this corrected existing-server run.
+installation from that release and remaining tracking/support/reboot acceptance
+remain required. No field rollout is approved by this corrected existing-server run.
+
+Subsequent operator report: all three requested feature checks passed, covering
+portal/Tsavo videos, Lesson3 and phone installation/collection. The exception was
+that `/app_install/` opened the file manager; selecting `index.html` opened the
+correct installation page. Use `http://ares.local/app_install/index.html` directly.
+Source installer messages/checks and guides now use that full address. No detailed
+collection, browser or report traces were supplied; this is operator-reported
+client evidence. The user will add the admin-module link separately.
 
 ## Native Linux fixture evidence
 
@@ -60,9 +70,9 @@ when enabling that optional feature; they do not gate ordinary offline use.
 |---|---|---|---|
 | Clean offline install | Corrected existing-server run passed; clean corrected-ZIP install Pending | Pending | Corrected ZIP identity, disconnected Internet, preflight and install logs |
 | 95 plans / 806 lessons | Passed - operator-supplied host status/count check, run 20261101_111100 | Pending | Installer status and actual database counts |
-| Client-side mDNS | Pending | Pending | Resolve selected alias on a separate client; match target LAN address |
-| Nginx and Lesson3 URLs | Host checks passed; separate-client browser check Pending | Pending | Client browser, Host-header HTTP checks, ADMIN_URL and empty SERVER_URL check |
-| ARES Sync discovery/collection | Pending | Pending | Actual phone using the matching approved profile APK against the selected server alias |
+| Client-side mDNS | Alias-based feature access passed by operator report; explicit address comparison Pending | Pending | Resolve selected alias on a separate client; match target LAN address |
+| Nginx and Lesson3 URLs | Host checks passed; requested browser checks passed by operator report | Pending | Client browser, Host-header HTTP checks, ADMIN_URL and empty SERVER_URL check |
+| ARES Sync discovery/collection | Requested phone check passed by operator report; detailed due/upload traces not supplied | Pending | Actual phone using the matching approved profile APK against the selected server alias |
 | Tailscale enrollment | Pending | Pending | Device approved, matching machine identity, Tailscale IP; no secrets in evidence |
 | Standard OpenSSH over Tailscale | Pending | Pending | Actual SSH login to Tailscale IP and RunSSH=false |
 | VNC tunnel and desktop | Pending | Pending | SSH forwarding, VNC authentication, usable Cinnamon 2D desktop |
@@ -72,7 +82,7 @@ when enabling that optional feature; they do not gate ordinary offline use.
 | Enrollment timeout and secret-free logs | Pending | Pending | Offline/deferred/timeout retry command, connected identity reuse, console-only authentication URL and absence from activation/installer logs |
 | Core success when optional support is unavailable | Preparation and declined activation passed; other failure cases Pending | Pending | Real install exit status/logs for missing remote prerequisites, failed preparation, default-No and failed activation |
 | TsavoTrust offline install and repeat | Corrected installation/verification passed; repeat Pending | Pending | Installed eight-file hashes, unchanged prior mapping rows, exactly one new Tsavo key and correct portal link |
-| TsavoTrust portal, videos and tracking | Loopback portal/logo/video-range checks passed; browser/tracking Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |
+| TsavoTrust portal, videos and tracking | Host checks passed; requested browser/video check passed by operator report; tracking Pending | Pending | Actual rendered card/logo, all six videos with seeking/ranges, correct report attribution and preserved Ol Pejeta history |
 | TsavoTrust failure restoration | Pending | Pending | Disposable-target copy/publication/HTTP failure, restored prior module/link/map and reviewed recovery evidence |
 
 ## Historical v1.12 software evidence recorded locally

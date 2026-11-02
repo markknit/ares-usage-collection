@@ -62,7 +62,7 @@ can retain earlier text until those backups expire.
   disposable test content.
 - Confirm the local Lesson3 User Guide opens from
   `http://ares.local/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf`.
-- Confirm `http://ares.local/app_install/` and the APK download still work.
+- Confirm `http://ares.local/app_install/index.html` and the APK download still work.
 - Confirm ARES usage collection, school-code reassignment, `ares.local`, and tracking checks remain
   successful.
 - Decline optional remote activation and confirm Tailscale and TigerVNC remain stopped/disabled,

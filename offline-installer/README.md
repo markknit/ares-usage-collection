@@ -94,7 +94,7 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 - The builder verifies the APK's exact approved SHA-256 and never falls back to debug or acceptance APK artifacts.
 - The school server publishes a deliberately non-generic teacher installation page at:
 
-  `http://ares.local/app_install/`
+  `http://ares.local/app_install/index.html`
 
 - The direct APK remains:
 
@@ -114,7 +114,7 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 - Lesson3 Lesson Plan Editor on port 3001
 - Lesson Plan tracker key mappings
 - ARES Sync / usage-collection server update
-- approved ARES Sync teacher APK + local `/app_install/` page
+- approved ARES Sync teacher APK + local `/app_install/index.html` page
 - package SHA-256 verification, preflight, post-install checks, and logging
 - technician and teacher setup guides
 - approved Lesson3 JSON corpus plus fresh-database installer and rollback
@@ -231,7 +231,7 @@ See `docs/REMOTE_ACCESS.md` before later running `sudo ares-enable-remote-access
 
 After successful installation, a teacher connected to ARES/ARES2 can install the app locally from:
 
-`http://ares.local/app_install/`
+`http://ares.local/app_install/index.html`
 
 No Internet is required to download or install the APK. If the current enrollment flow needs to contact the central ARES enrollment service, normal Internet/mobile data is required when the one-time installation key is submitted.
 

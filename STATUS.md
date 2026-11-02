@@ -15,14 +15,17 @@ Last updated: 2026-11-01
   and operator-reported evidence below. Historical v1.12 retained unchanged.
 - Production alias: `ares.local`; permanent test alias: `ares-test.local`.
 - The corrected extracted test copy completed installation on tsavo3 on
-  2026-11-01, according to the supplied operator transcript. Corrected release
-  packaging and client/phone/reboot acceptance remain Pending.
+  2026-11-01, according to the supplied operator transcript. The operator reports
+  the three requested client feature checks passed, with the direct phone-page
+  link correction below. Corrected release packaging and remaining acceptance
+  are still Pending.
 
 ## Active Threads
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
+| Phone installation-page link | Explicit page URL corrected in source; release packaging Pending | Operator reports `/app_install/` opens the file manager, while its `index.html` opens the correct page. Installer output, checks and guides now use `/app_install/index.html`. User will add the admin-module teacher-section entry separately. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -32,11 +35,11 @@ Last updated: 2026-11-01
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
-| Production profile live acceptance | Host installation/counts passed for corrected test copy; remaining acceptance Pending | [Acceptance record](offline-installer/docs/PROFILE_ACCEPTANCE.md) distinguishes operator-supplied server results from corrected-ZIP clean installation, client/phone/browser and reboot checks still required. |
+| Production profile live acceptance | Host results and three requested feature checks passed by operator report; remaining acceptance Pending | Operator reports portal/Tsavo, Lesson3 and phone feature checks passed, with directory-link issue corrected by the explicit filename. Corrected ZIP, remaining tracking/support/reboot and deeper feature checks are separate. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
-| TsavoTrust v1.13 integration | Corrected host installation and HTTP verification passed; browser/tracking acceptance Pending | Run `20261101_111100` passed content/link/mapping, portal/logo and all video byte-range checks. Actual browser playback/seeking, report attribution, repeat/failure recovery and remaining acceptance are Pending. |
-| Field rollout approval | Pending corrected artifact and remaining live acceptance | Corrected test-copy installation passed. Original ZIP retains the storage-alias defect; independently verified corrected release and client/phone/reboot checks remain required. Enabled remote-support acceptance is separate. |
+| TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
+| Field rollout approval | Pending corrected artifact and remaining live acceptance | Corrected test-copy installation and requested client features passed by operator report. A corrected ZIP must include the storage-alias fix and explicit phone-page URL, then pass independent verification. Tracking/support/reboot and remaining feature checks remain separate. |
 
 ## Production v1.13 artifact
 
@@ -78,6 +81,10 @@ Last updated: 2026-11-01
 
 ## Known Issues / Lessons Learned
 
+- A directory URL returning HTTP 200 may be the ARES file manager, not the
+  requested installation page. Use `/app_install/index.html` explicitly and
+  require the expected page title in the installed HTTP check. Do not infer
+  correct page delivery from a successful status alone.
 - Declining optional remote activation does not mean preparation left older
   support services unchanged: the successful tsavo3 transcript explicitly shows
   `x11vnc.service` being disabled. Record that change and verify existing VNC
@@ -140,6 +147,36 @@ Last updated: 2026-11-01
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-01 - Client feature report and direct phone-page link
+
+- Operator reports all three requested ARES feature checks passed: portal/Tsavo,
+  Lesson3 and phone installation/collection, with one navigation exception.
+  `/app_install/` opens the server file manager; selecting `index.html` opens
+  the correct page. This is a user-reported result, not a new local browser or
+  phone test; no detailed phone collection/HTTP/report trace was supplied.
+- Adopted `http://ares.local/app_install/index.html` as the explicit page link
+  in builder metadata, installer messages/checks and source guides. The current
+  deployed page already exists at that address, so no host reinstallation or
+  Nginx change is required for this link correction. Directory routing remains
+  unchanged. Strengthened the post-install HTTP check to require the real page
+  title, with a regression against an HTTP-200 file-manager response.
+- Targeted Windows verification: 16 tests passed across the workflow, profiles,
+  both-profile scaffold and fresh-ZIP fixture suites; all three changed shell
+  scripts passed syntax checks. The scaffold fixture required the normal
+  Windows user context after restricted Git Bash could not create its temporary
+  output directory. Native Ubuntu CI is still pending for this source step.
+- User will add the admin-module link at the end of its teacher section after
+  confirming the direct address. No admin-module content was edited. A corrected
+  release build must regenerate guides and package both this change and the
+  storage-alias fix; existing ZIPs and PDFs were not changed by this source edit.
+
+Still open:
+
+- User's admin-module entry and remaining report attribution/support/reboot checks.
+- Corrected ZIP, generated guides and independent release verification.
+- Remaining deeper feature/repeat/failure checks and separate permanent-test or
+  enabled optional-support acceptance.
 
 ### 2026-11-01 - Corrected test-copy installation completed on tsavo3
 

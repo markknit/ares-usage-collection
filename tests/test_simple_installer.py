@@ -12,6 +12,40 @@ from test_package_integrity import manifest
 
 
 class SimpleInstallerTests(unittest.TestCase):
+    def test_phone_page_postcheck_rejects_a_successful_file_manager_response(self):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        import threading
+        state = {"page": b"<html>File manager: index.html</html>", "requests": []}
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+            def do_GET(self):
+                state["requests"].append((self.path, self.headers["Host"]))
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(state["page"])
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=0.05), daemon=True)
+        thread.start()
+        master = (BUILDER / "templates/install_offline.sh").read_text(encoding="utf-8")
+        start = master.index('  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/app_install/')
+        end = master.index('\n  curl ', start + 1)
+        command = master[start:end].replace("http://127.0.0.1/", f"http://127.0.0.1:{server.server_port}/")
+        try:
+            for alias in ("ares.local", "ares-test.local"):
+                for correct in (False, True):
+                    state["page"] = ((BUILDER / "templates/teacher_install_page.html").read_bytes()
+                                     if correct else b"<html>File manager: index.html</html>")
+                    result = subprocess.run([BASH, "-c", "set -o pipefail\n" + command],
+                                            env={**os.environ, "ARES_ALIAS": alias, "NO_PROXY": "127.0.0.1"},
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode == 0, correct, result.stdout + result.stderr)
+                    self.assertEqual(state["requests"][-1], ("/app_install/index.html", alias))
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def run_install(self, *, remote_status=0, broken_package=False, failed_step=""):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)

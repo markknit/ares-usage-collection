@@ -114,7 +114,7 @@ run_step "7) Install Tsavo Trust module and tracking mapping" \
   bash "$SCRIPT_DIR/tsavo/install.sh" --host "$ARES_ALIAS"
 
 run_step "8) Check the installed services and content" bash -c '
-  set -e
+  set -eo pipefail
   nginx -t
   systemctl is-active --quiet nginx
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/ >/dev/null
@@ -130,7 +130,8 @@ run_step "8) Check the installed services and content" bash -c '
   test -s /mnt/sda3/var/www/downloads/ares-sync.apk
   test -f /mnt/sda3/var/www/downloads/ares-sync.apk.sha256
   test -f /mnt/sda3/var/www/app_install/index.html
-  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/app_install/ >/dev/null
+  curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/app_install/index.html \
+    | grep -F "<title>Install ARES Sync</title>" >/dev/null
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/downloads/ares-sync.apk -o /dev/null
   curl -fsS --max-time 8 -H "Host: $ARES_ALIAS" http://127.0.0.1/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf -o /dev/null
   test -f "$0/lesson3/corpus/install_lesson3_corpus.sh"
@@ -143,7 +144,7 @@ echo
 echo "ARES Q4 offline installation completed successfully for $SCHOOL_CODE."
 echo "Lesson Plan Editor: ${LESSON3_URL}/login"
 echo "Lesson3 User Guide: ${ARES_URL}/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf"
-echo "Teacher ARES Sync installer: ${ARES_URL}/app_install/"
+echo "Teacher ARES Sync installer: ${ARES_URL}/app_install/index.html"
 echo "Direct teacher APK: ${ARES_URL}/downloads/ares-sync.apk"
 echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"

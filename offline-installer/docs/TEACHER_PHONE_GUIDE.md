@@ -18,7 +18,7 @@ You will need:
 1. Connect your phone to the school's **ARES** or **ARES2** network.
 2. In Chrome, open:
 
-   `http://ares.local/app_install/`
+   `http://ares.local/app_install/index.html`
 
 3. Tap **Download ARES Sync for Android**.
 4. Open `ares-sync.apk` from the download notification or Chrome's Downloads list.
@@ -59,14 +59,14 @@ ARES Sync does not read your messages, contacts, photos, documents, or browsing 
 - Do not share an installation key.
 - Do not clear the app's storage unless ARES support instructs you to do so.
 - A new phone or reinstallation requires a new installation key.
-- If you need to reinstall the app while at school, reconnect to ARES/ARES2 and open `http://ares.local/app_install/`.
+- If you need to reinstall the app while at school, reconnect to ARES/ARES2 and open `http://ares.local/app_install/index.html`.
 
 ## When to contact your ARES Advocate
 
 Ask for help if:
 
 - you have not received an installation key;
-- `http://ares.local/app_install/` does not open while connected to ARES/ARES2;
+- `http://ares.local/app_install/index.html` does not open while connected to ARES/ARES2;
 - Android will not install the downloaded APK;
 - your school is missing or the wrong school is shown;
 - enrollment fails after normal Internet is available; or

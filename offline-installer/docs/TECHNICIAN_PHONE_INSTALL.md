@@ -6,13 +6,18 @@ Use this guide when an ARES technician or ARES Advocate prepares a school server
 
 The approved production ARES Sync APK is now bundled into the ARES Q4 Offline package and copied to the school server. A teacher connected to the school ARES network can install the app without Internet access by opening:
 
-`http://ares.local/app_install/`
+`http://ares.local/app_install/index.html`
 
 The direct APK is also available at:
 
 `http://ares.local/downloads/ares-sync.apk`
 
 The local install page is intentionally named `app_install` rather than a generic `install` path to reduce accidental discovery by users who do not need to install the app.
+
+Keep `index.html` in the link. Some ARES servers route directory addresses through
+the file manager; the explicit filename opens the installation page directly.
+The administrator can use `/app_install/index.html` for an entry at the end of
+the teacher section. Adding that menu entry is a separate server-content edit.
 
 The one-time installation key is still supplied by ARES staff. Installing the APK itself does not require Internet. If the current ARES Sync enrollment process needs to contact the central ARES enrollment service, normal Internet or mobile data is required when the teacher enrolls the phone.
 
@@ -46,7 +51,7 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
    a successful core installation. Save the installation log path printed on screen.
 6. From another device on the school network, open `http://ares.local`, check
    Lesson Plans and the Lesson3 login, and open Tsavo Trust and play a video.
-   Confirm `http://ares.local/app_install/` opens before setting up teacher phones.
+   Confirm `http://ares.local/app_install/index.html` opens before setting up teacher phones.
 
 If the package check fails, copy the complete ZIP again and extract it into a new
 folder. For any other installation failure, stop and send ARES support the printed
@@ -74,7 +79,7 @@ The teacher guide calls this an **installation key**. The app or staff portal ma
 ## 3. Install ARES Sync from the school server
 
 1. Connect the teacher's Android phone to the local ARES or ARES2 school network.
-2. In Chrome, open `http://ares.local/app_install/`.
+2. In Chrome, open `http://ares.local/app_install/index.html`.
 3. Tap **Download ARES Sync for Android**.
 4. Open `ares-sync.apk` from the download notification or browser Downloads list.
 5. If Android blocks installation from Chrome or Files, open the offered Settings page and enable **Allow from this source** only for the app being used to open the APK.
@@ -115,14 +120,14 @@ Tell the teacher:
 - Keep ARES Sync installed and notifications enabled.
 - A new phone or reinstallation requires a new one-time installation key.
 - Contact the ARES Advocate if the app shows the wrong school, repeatedly needs attention, or fails to return to the ready state.
-- The local page `http://ares.local/app_install/` is for installing/reinstalling ARES Sync while connected to the school ARES network.
+- The local page `http://ares.local/app_install/index.html` is for installing/reinstalling ARES Sync while connected to the school ARES network.
 
 ## Quick troubleshooting
 
-### `ares.local/app_install/` does not open
+### `ares.local/app_install/index.html` does not open
 
 - Confirm the phone is connected to ARES or ARES2.
-- On the server, test `curl -I -H 'Host: ares.local' http://127.0.0.1/app_install/`.
+- On the server, test `curl -I -H 'Host: ares.local' http://127.0.0.1/app_install/index.html`.
 - Confirm `/mnt/sda3/var/www/app_install/index.html` exists.
 
 ### APK will not download

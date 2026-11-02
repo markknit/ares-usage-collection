@@ -43,5 +43,5 @@ if [[ -f "$LEGACY_INSTALL_DIR/index.html" ]] && grep -q "Install ARES Sync" "$LE
 fi
 
 log "deployed APK: $APK_TARGET"
-log "teacher install page: ${ARES_URL}/app_install/"
+log "teacher install page: ${ARES_URL}/app_install/index.html"
 log "direct APK URL: ${ARES_URL}/downloads/ares-sync.apk"

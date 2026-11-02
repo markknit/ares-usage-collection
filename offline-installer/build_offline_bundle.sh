@@ -546,7 +546,7 @@ Target architecture: linux/amd64
 Offline bundle revision: $BUNDLE_REVISION
 Profile: $ARES_PROFILE ($ARES_ALIAS)
 Teacher APK: bundled profile-matching APK with SHA-256 verification
-Teacher install URL after deployment: $ARES_URL/app_install/
+Teacher install URL after deployment: $ARES_URL/app_install/index.html
 Lesson3 User Guide after deployment: $ARES_URL/modules/Lesson_Plans/LESSON3_USER_GUIDE.pdf
 Remote access: Tailscale $TAILSCALE_VERSION and TigerVNC $TIGERVNC_VERSION bundled; preparation is optional and non-blocking
 Source directory: $SOURCE

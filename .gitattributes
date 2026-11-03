@@ -6,6 +6,7 @@
 offline-installer/rollout/** text=auto eol=lf
 local-server/** text=auto eol=lf
 offline-installer/package.conf text eol=lf
+offline-installer/manifests/*.json text eol=lf
 
 # Owner-supplied, already tested admin pages and manual are copied byte-for-byte.
 offline-installer/admin-content/admin.html -text

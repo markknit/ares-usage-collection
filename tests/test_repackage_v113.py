@@ -17,6 +17,11 @@ spec.loader.exec_module(repack)
 class RepackageTests(unittest.TestCase):
     def fixture(self, root):
         package = fixtures.package(root / "base" / repack.BUNDLE)
+        pin = package / "tsavo/MANIFEST.json"
+        document = json.loads(pin.read_text())
+        document["source_manifest_sha256"] = fixtures.integrity.digest(repack.SELF / "manifests/tsavo-trust-source.json")
+        pin.write_text(json.dumps(document), encoding="utf-8")
+        fixtures.manifest(package / "tsavo")
         fixtures.write(package, "MANIFEST.txt", "Lesson3: v0.94\nOffline bundle revision: v1.13\nProfile: production (ares.local)\nTarget architecture: linux/amd64\n")
         fixtures.write(package, "package.conf", "LESSON3_VERSION=v0.94\nLESSON3_SERVER_URL=\nARES_PROFILE=production\n")
         fixtures.manifest(package)
@@ -83,6 +88,19 @@ class RepackageTests(unittest.TestCase):
             output.mkdir()
             with self.assertRaisesRegex(ValueError, "already exists"):
                 repack.repackage(archive, output, "a" * 40)
+
+    def test_changed_source_pin_is_rejected_before_staging(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            archive = self.fixture(root)
+            other = root / "other-builder"
+            (other / "manifests").mkdir(parents=True)
+            (other / "manifests/tsavo-trust-source.json").write_text("changed source bytes")
+            output = root / "output"
+            with patch.object(repack, "BASE_SHA", fixtures.integrity.digest(archive)), patch.object(repack, "SELF", other):
+                with self.assertRaisesRegex(ValueError, "canonical LF"):
+                    repack.repackage(archive, output, "a" * 40)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

@@ -49,6 +49,9 @@ def repackage(base_zip, output, revision):
         raise ValueError("Base ZIP is not the previously verified production artifact")
     with zipfile.ZipFile(base_zip) as archive:
         required = sum(item.file_size for item in archive.infolist()) * 3 + 2 * 1024**3
+        source_pin = json.loads(archive.read(BUNDLE + "/tsavo/MANIFEST.json"))["source_manifest_sha256"]
+    if source_pin != verifier.integrity.digest(SELF / "manifests/tsavo-trust-source.json"):
+        raise ValueError("Source pin bytes differ from the verified base. Export canonical LF source with git -c core.autocrlf=false archive.")
     if shutil.disk_usage(output.parent).free < required:
         raise ValueError("Insufficient space for staging, ZIP and independent extraction")
     output.mkdir()

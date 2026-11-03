@@ -18,6 +18,11 @@ extracts/verifies the candidate before promoting the corrected ZIP. The original
 ZIP and its evidence remain unchanged. The old `--resume` command was specific
 to the original failed candidate and is not used for this corrected release.
 
+When exporting source on Windows, use `git -c core.autocrlf=false archive` so
+the bytes of pinned JSON remain canonical LF. The repack tool checks that raw
+source-pin reference before creating its staging area; logically identical JSON
+with changed line endings is not silently accepted as a new pin.
+
 This kit converts the approved ARES Q4 update folder into a field package that can be installed at a school with **no Internet connection**.
 
 The builder now seals a production (`ares.local`, default) or permanent test

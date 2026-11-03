@@ -194,6 +194,12 @@ Last updated: 2026-11-02
   promoted and remains marked incomplete. Corrected the repack tool to reseal
   that component and strengthened the existing workflow check for nested Tsavo
   and teacher-app checksums before retrying in a fresh output folder.
+- The next candidate passed component checks but stopped at the raw Tsavo
+  source-pin reference. Comparison with the original qualified checkout proved
+  the JSON content was identical: the Windows Git archive had exported CRLF
+  instead of LF. No pin values/media changed. Source exports now explicitly
+  disable autocrlf and pinned JSON uses LF attributes; the repack tool rejects
+  this mismatch before staging. Failed candidates remain unpromoted.
 - Added a two-page technician overview and a pre-reload preservation guide.
   Generated and visually reviewed both overview pages; distinguish server school
   ID from the phone's separate one-time enrollment key. The normal full builder

@@ -189,6 +189,11 @@ Last updated: 2026-11-02
   not run an installer, pull/download or change Docker. Added three passing
   disposable workflow tests, including wrong-base/existing-output rejection and
   failed-verification retention without promotion. Backup helper syntax checked.
+- The first actual candidate stopped at independent verification because the
+  updated Tsavo helper still had its old component checksum list. It was not
+  promoted and remains marked incomplete. Corrected the repack tool to reseal
+  that component and strengthened the existing workflow check for nested Tsavo
+  and teacher-app checksums before retrying in a fresh output folder.
 - Added a two-page technician overview and a pre-reload preservation guide.
   Generated and visually reviewed both overview pages; distinguish server school
   ID from the phone's separate one-time enrollment key. The normal full builder

@@ -59,7 +59,7 @@ def repackage(base_zip, output, revision):
     verifier.extract(base_zip, work, BUNDLE)
     stage = work / BUNDLE
     verifier.integrity.verify_package(stage)
-    updated = {"SHA256SUMS", "MANIFEST.txt", "teacher-app/SHA256SUMS",
+    updated = {"SHA256SUMS", "MANIFEST.txt", "teacher-app/SHA256SUMS", "tsavo/SHA256SUMS",
                "ARES_Sync_Rollout_Package/SHA256SUMS.txt"}
 
     def copy(source, relative, normalize=False):
@@ -101,6 +101,7 @@ def repackage(base_zip, output, revision):
                     "Technician overview: docs/pdf/ARES_Offline_Installer_Overview.pdf\n")
     (stage / "MANIFEST.txt").write_text(description, encoding="utf-8", newline="\n")
     seal(stage / "teacher-app")
+    seal(stage / "tsavo")
 
     # Compare every untouched original file directly to the pinned ZIP. This
     # retains inherited files, media, image archives, corpus and approved APK.

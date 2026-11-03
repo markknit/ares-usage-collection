@@ -41,6 +41,8 @@ class RepackageTests(unittest.TestCase):
                 repack.verifier.extract(candidate, extracted, repack.BUNDLE)
                 stage = extracted / repack.BUNDLE
                 fixtures.integrity.verify_package(stage)
+                fixtures.integrity.checksums(stage / "teacher-app")
+                fixtures.integrity.checksums(stage / "tsavo")
                 for target, source in repack.verifier.APPROVED_ADMIN_CONTENT.items():
                     self.assertEqual((stage / target).read_bytes(), (repack.SELF / source).read_bytes())
                 for target, source in repack.verifier.APPROVED_LOCKDOWN_CONTENT.items():

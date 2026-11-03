@@ -17,21 +17,21 @@ Last updated: 2026-11-02
 - The corrected extracted test copy completed installation on tsavo3 on
   2026-11-01, according to the supplied operator transcript. The operator reports
   the three requested client feature checks passed, with the direct phone-page
-  link correction below. Corrected release packaging and remaining acceptance
-  are still Pending.
+  link correction below. Corrected release packaging, independent verification and Windows copy are
+  complete. Clean installation of that ZIP and remaining acceptance are Pending.
 
 ## Active Threads
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Corrected test-copy installation passed on tsavo3 | [Operator evidence](offline-installer/docs/evidence/2026-11-01-v1.13-tsavo3-install.md): run `20261101_111100` passed through step 8 and deferred optional activation successfully. Lesson3 retained 95 plans / 806 lessons. Original ZIP still needs the storage-alias fix before field rollout. |
-| Phone installation-page link | Explicit page URL corrected; owner-supplied admin link integrated in source; release packaging Pending | Installer output, checks and guides use `/app_install/index.html`. The supplied final admin page links directly to that page; its Admin_tools entry and protected manual are now included in one deployment unit. |
-| Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
-| Owner-approved admin pages and manual | Published as one content unit; corrected release packaging Pending | Owner explicitly authorized public publication; integration `3ead31a` is pushed. Supplied pages/manual remain unchanged. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. No further functional tests were requested or run manually. |
-| Internet Lockdown v1.4.2 | Integrated and published; all 94 Ubuntu installer tests passed; corrected release packaging Pending | Source `5a1f5be` preserves all ten imported files and the original eight-file manifest. Normal installer prepares tools with `--no-boot`, preserves active/boot-enabled lockdown and existing remote services, and keeps core success on optional deferral/failure. No live firewall or system installer was executed. |
-| Corrected v1.13 ZIP and technician overview | Repackaging prepared; final remote build/copy in progress | Reuses the pinned original `1f0993a8` ZIP without downloads or Docker operations. Three local workflow tests passed, including preservation and no promotion after verification failure. New two-page overview visually reviewed; full builder also includes its source and generated PDF. |
-| tsavo3 pre-reload preservation | Whole-disk reload planned; private backup and off-server copies in progress | Owner confirms the Clonezilla baseline is this same system minus installer additions. Root helper completed configuration/web/DB backups; checksums passed on host. Original ZIP copied to Windows with matching hash. Build inputs/evidence and private backup are being copied off-server before any reload. |
-| Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
+| Simplified offline installation | Earlier test-copy installation passed; corrected ZIP ready | [Corrected artifact](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md) includes the storage-alias fix and all subsequent additions. Original test evidence remains separate; the corrected ZIP needs a clean installation test. |
+| Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
+| Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
+| Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
+| Internet Lockdown v1.4.2 | Published and included in corrected ZIP; live acceptance Pending | All ten supplied files retained. Normal setup uses `--no-boot`; active/boot-enabled lockdown and existing remote services are preserved/deferred. No live firewall activation occurred. |
+| Corrected v1.13 ZIP and technician overview | Independent verification and Windows copy complete | [Release evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md): source `3053d50`, 332 files, SHA-256 `d3dc1c30...`; 98 Ubuntu tests passed. Windows ZIP hash and five PDF copies match. Two-page overview visually checked. |
+| tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. No reload or restore test performed. |
+| Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
@@ -40,13 +40,22 @@ Last updated: 2026-11-02
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
-| Production profile live acceptance | Host results and three requested feature checks passed by operator report; remaining acceptance Pending | Operator reports portal/Tsavo, Lesson3 and phone feature checks passed, with directory-link issue corrected by the explicit filename. Corrected ZIP, remaining tracking/support/reboot and deeper feature checks are separate. |
+| Production profile live acceptance | Earlier operator feature checks passed; corrected-ZIP clean acceptance Pending | Prior operator results remain recorded. The new ZIP is verified and copied to Windows, but clean installation, remaining tracking/support/reboot and deeper feature checks need their own evidence. |
 | Permanent test profile live acceptance | Pending - all checks | Every permanent-test column entry in `offline-installer/docs/PROFILE_ACCEPTANCE.md` remains Pending. Includes actual discovery/collection and the Lesson3 UI/content gates. |
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
-| Field rollout approval | Pending corrected artifact and remaining live acceptance | A corrected ZIP must include storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2, then pass independent verification. Earlier host/client results remain recorded. Live lockdown/support/reboot, tracking and remaining feature checks remain separate. |
+| Field rollout approval | Pending clean installation and remaining live acceptance | Corrected artifact includes storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2 and passed independent verification. No field acceptance inferred from packaging. |
 
-## Production v1.13 artifact
+## Corrected production v1.13 artifact
+
+- Source: `3053d5022382d49a3e61185262cbb754b2f25ed2`.
+- SHA-256: `d3dc1c301290a398a30478cbd8a2ee804a31b78a8bdffd7a88aaf00f07b4edf2`.
+- Independent verification: 332 files; Windows copy hash matches.
+- Windows release folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261102`.
+- [Complete corrected release/preservation evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md).
+- Clean installation and remaining field acceptance: **Pending**.
+
+## Original production v1.13 artifact (retained payload baseline)
 
 - Filename: `ARES_Q4_Offline_v0.94_amd64_v1.13.zip`.
 - ZIP SHA-256:
@@ -163,6 +172,25 @@ Last updated: 2026-11-02
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-02 - Corrected ZIP and Windows preservation handoff completed
+
+- Repack source `3053d50` passed all 98 Ubuntu tests. Fresh r3 output passed
+  full independent verification of 332 ZIP files and was promoted with hash
+  `d3dc1c301290a398a30478cbd8a2ee804a31b78a8bdffd7a88aaf00f07b4edf2`.
+  Preserved 267 base files; updated/added 65. Failed earlier candidates retained.
+- Windows final ZIP hash and all five PDF copies match. Linux-generated overview
+  has two visually reviewed pages. Added Windows START_HERE instructions and
+  copy-verification record; old ZIP retained under a clearly different name.
+- Private configuration/web/DB backup completed; all 29 checks passed both on
+  host and Windows. Original/normalized source plus sealed evidence archive also
+  passed its Windows checksum. Backups remain outside GitHub/technician docs.
+- Removed only the temporary SSH authorized-key entry and deleted its local key
+  files. No installer, reload, service restart, firewall activation or Docker
+  operation ran during this packaging/preservation work. v1.12 unchanged.
+- [Release evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md)
+  records exact paths, identities and preservation limits. Owner-controlled
+  Clonezilla restore, clean installation and remaining live acceptance are next.
 
 ### 2026-11-02 - Corrected release packaging and pre-reload handoff
 

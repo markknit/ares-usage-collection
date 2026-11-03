@@ -2,6 +2,10 @@
 
 Use this guide when an ARES technician or ARES Advocate prepares a school server, then helps a teacher install and enroll ARES Sync.
 
+For a short components-and-process handout, use
+`docs/pdf/ARES_Offline_Installer_Overview.pdf` in the completed installer bundle.
+Before a whole-disk reload, follow `docs/PRE_RELOAD_PRESERVATION.md`.
+
 ## What changed for offline school installations
 
 The approved production ARES Sync APK is now bundled into the ARES Q4 Offline package and copied to the school server. A teacher connected to the school ARES network can install the app without Internet access by opening:

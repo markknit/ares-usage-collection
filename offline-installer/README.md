@@ -1,5 +1,23 @@
 # ARES Q4 Offline Installer Builder v1.13
 
+## Corrected v1.13 packaging and technician handoff
+
+The current source includes the storage-alias fix, direct phone-page link,
+approved admin pages/manual and Internet Lockdown v1.4.2. The two-page
+`docs/TECHNICIAN_OVERVIEW.md` and generated
+`docs/pdf/ARES_Offline_Installer_Overview.pdf` summarize the components and normal
+technician process. `docs/PRE_RELOAD_PRESERVATION.md` covers the separate backup
+step before a whole-disk Clonezilla restore.
+
+`repackage_verified_v113.py` refreshes only the known, previously verified
+production ZIP (SHA-256 beginning `1f0993a8`) using the current reviewed source.
+It reuses the bundled APK, Docker images, media and corpus without downloads,
+Docker operations or an installer run. It requires a fresh output directory,
+checks untouched base files, regenerates guides/checksums and independently
+extracts/verifies the candidate before promoting the corrected ZIP. The original
+ZIP and its evidence remain unchanged. The old `--resume` command was specific
+to the original failed candidate and is not used for this corrected release.
+
 This kit converts the approved ARES Q4 update folder into a field package that can be installed at a school with **no Internet connection**.
 
 The builder now seals a production (`ares.local`, default) or permanent test

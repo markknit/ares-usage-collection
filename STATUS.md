@@ -29,6 +29,8 @@ Last updated: 2026-11-02
 | Offline ARES Sync manuals | Refreshed PDFs available; owner-approved protected manual integrated; release packaging Pending | `output/pdf/offline/` retains the teacher/technician PDFs. The subsequently supplied `ARES_Sync_User_Guide.pdf` is preserved exactly and will install under `/admin/`, matching the owner's final admin-page link. |
 | Owner-approved admin pages and manual | Published as one content unit; corrected release packaging Pending | Owner explicitly authorized public publication; integration `3ead31a` is pushed. Supplied pages/manual remain unchanged. The teacher-app stage installs all three together, backs up old files and preserves existing file metadata and folder protection. No further functional tests were requested or run manually. |
 | Internet Lockdown v1.4.2 | Integrated and published; all 94 Ubuntu installer tests passed; corrected release packaging Pending | Source `5a1f5be` preserves all ten imported files and the original eight-file manifest. Normal installer prepares tools with `--no-boot`, preserves active/boot-enabled lockdown and existing remote services, and keeps core success on optional deferral/failure. No live firewall or system installer was executed. |
+| Corrected v1.13 ZIP and technician overview | Repackaging prepared; final remote build/copy in progress | Reuses the pinned original `1f0993a8` ZIP without downloads or Docker operations. Three local workflow tests passed, including preservation and no promotion after verification failure. New two-page overview visually reviewed; full builder also includes its source and generated PDF. |
+| tsavo3 pre-reload preservation | Whole-disk reload planned; private backup and off-server copies in progress | Owner confirms the Clonezilla baseline is this same system minus installer additions. Root helper completed configuration/web/DB backups; checksums passed on host. Original ZIP copied to Windows with matching hash. Build inputs/evidence and private backup are being copied off-server before any reload. |
 | Simplified-r3 production artifact | Build, independent verification and promotion passed; corrected ZIP outstanding | [Artifact record](offline-installer/docs/evidence/2026-10-31-v1.13-production-artifact.md): user-supplied tsavo3 transcript confirms 313 ZIP files and 133 inherited files verified; SHA-256 `1f0993a806b41aa7024e0f4af7e634e7186f9d08983669a88d91c45a93b692c9`. No installer ran during the build; later test-copy correction is recorded separately. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -161,6 +163,43 @@ Last updated: 2026-11-02
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-02 - Corrected release packaging and pre-reload handoff
+
+- Owner authorized building the corrected ZIP, copying it to Windows and adding
+  a technician component/process overview, then clarified that the upcoming test
+  restores the whole disk from an existing Clonezilla baseline of this system
+  without offline-installer additions. The live layout has Ubuntu on sda2 and
+  the data/build area on sda3, on the same disk. The Clonezilla image's unchanged
+  library coverage is owner-reported, not independently verified here.
+- Established authorized temporary-key SSH access after hostname resolution and
+  keyless authentication were unavailable. Build/file-copy operations run as
+  ares. The owner ran the reviewed private preservation helper with sudo in the
+  existing terminal; no password was collected in chat. No reload, firewall
+  change or service restart was performed. Remove the temporary key when done.
+- Copied the original production ZIP to Windows and confirmed its recorded
+  `1f0993a8...` SHA-256. Prepared separate preservation of original/normalized
+  sources and sealed evidence. A private configuration/changed-page archive and
+  current Lesson3 dump completed on-host and passed its checksums; off-server
+  copying remains in progress at this source commit. Private data stays outside
+  the repository and must not be published with technician documentation.
+- Added a pinned-base repackage tool: fresh output only, current reviewed scripts
+  and approved payloads, regenerated guides/checksums, unchanged-base-file
+  comparison and full independent ZIP verification before promotion. It does
+  not run an installer, pull/download or change Docker. Added three passing
+  disposable workflow tests, including wrong-base/existing-output rejection and
+  failed-verification retention without promotion. Backup helper syntax checked.
+- Added a two-page technician overview and a pre-reload preservation guide.
+  Generated and visually reviewed both overview pages; distinguish server school
+  ID from the phone's separate one-time enrollment key. The normal full builder
+  and corrected repack both include the documents and generated overview PDF.
+
+Still open:
+
+- Complete actual corrected-ZIP verification and the Windows copy/checksum.
+- Confirm private backup/build-input archives are complete and verified off-server.
+- Remove temporary SSH access, record final artifact identity, then hand back for
+  the owner's clean Clonezilla/offline-install test. No reload is authorized here.
 
 ### 2026-11-02 - Integrate supplied Internet Lockdown v1.4.2 project
 

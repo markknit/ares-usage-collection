@@ -285,6 +285,10 @@ def main() -> None:
     for source, destination in guides:
         build(source, destination)
         print(destination)
+    if args.source_dir and (args.source_dir / "TECHNICIAN_OVERVIEW.md").is_file():
+        destination = args.output_dir / "ARES_Offline_Installer_Overview.pdf"
+        build(args.source_dir / "TECHNICIAN_OVERVIEW.md", destination)
+        print(destination)
 
 
 if __name__ == "__main__":

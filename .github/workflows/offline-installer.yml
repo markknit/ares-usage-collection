@@ -2,9 +2,9 @@ name: Offline installer profiles
 
 on:
   push:
-    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', 'tests/test_build_resume.py', 'tests/test_internet_lockdown.py', '.github/workflows/offline-installer.yml']
+    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', 'tests/test_build_resume.py', 'tests/test_internet_lockdown.py', 'tests/test_repackage_v113.py', '.github/workflows/offline-installer.yml']
   pull_request:
-    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', 'tests/test_build_resume.py', 'tests/test_internet_lockdown.py', '.github/workflows/offline-installer.yml']
+    paths: ['offline-installer/**', 'local-server/**', 'tests/test_*profiles.py', 'tests/test_tsavo*.py', 'tests/test_remote_support.py', 'tests/test_offline_installer.py', 'tests/test_package_integrity.py', 'tests/test_simple_installer.py', 'tests/test_verify_bundle.py', 'tests/test_build_resume.py', 'tests/test_internet_lockdown.py', 'tests/test_repackage_v113.py', '.github/workflows/offline-installer.yml']
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install packaging tools
-        run: sudo apt-get update && sudo apt-get install -y rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync python3-reportlab
       - name: Check shell syntax
         run: |
           while IFS= read -r -d '' script; do
@@ -21,4 +21,4 @@ jobs:
       - name: Test source, corpus status, profiles, packaging and activation helpers
         env:
           PYTHONPATH: tests
-        run: sudo --preserve-env=PYTHONPATH python3 -B -m unittest -v test_offline_installer test_profiles test_remote_support test_bundle_profiles test_tsavo_content test_tsavo_install test_package_integrity test_simple_installer test_verify_bundle test_build_resume test_internet_lockdown
+        run: sudo --preserve-env=PYTHONPATH python3 -B -m unittest -v test_offline_installer test_profiles test_remote_support test_bundle_profiles test_tsavo_content test_tsavo_install test_package_integrity test_simple_installer test_verify_bundle test_build_resume test_internet_lockdown test_repackage_v113

@@ -28,6 +28,9 @@ Round Sync and phone-side rclone are no longer part of the production data path.
 
 ## Phone rollout guides
 
+- [ARES v1.13 technician overview - components and installation process](output/pdf/ARES_Offline_Installer_Overview.pdf)
+- [Before reloading tsavo3](offline-installer/docs/PRE_RELOAD_PRESERVATION.md)
+
 For the local ARES school-server download workflow, use the refreshed offline
 copies (revision 2026-11-01):
 

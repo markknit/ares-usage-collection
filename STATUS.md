@@ -26,12 +26,12 @@ Last updated: 2026-11-04
 |---|---|---|
 | Simplified offline installation | Full SSH rerun passed core installation and preserved Lesson3 | November 4 transcript `20261104_102223` confirms healthy existing Lesson3/corpus and core verification passed. Remote activation failed at the empty-name prompt; AnyDesk desktop client subsequently crashed. |
 | School hostname and generic mDNS alias | Follow-up packaged; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
-| AnyDesk school identity | ID/password created; desktop connection failed; recovery Pending | Operator reports `desk_rt_ipc_error`, active X11 and online AnyDesk service but user client aborts. Root-owned user profile was found. Ownership repair/relaunch did not restore access; reboot/retest requested. Source now isolates root CLI HOME, repairs user ownership and reports client abort as Pending. |
+| AnyDesk school identity | ID/password created; desktop connection failed; recovery Pending | Operator reports `desk_rt_ipc_error`, active X11 and online AnyDesk service but user client aborts. Root-owned user profile was found. Ownership repair/relaunch and reboot did not restore access; trace/crash details requested. Source now isolates root CLI HOME, repairs user ownership and reports client abort as Pending. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
-| Corrected v1.13 ZIP and technician overview | November 3 full ZIP and small offline update verified on Windows | [New evidence](offline-installer/docs/evidence/2026-11-03-school-setup-update.md): full SHA `195a140f...`, 340 files; small update 29 files, also in Git. Prior artifacts unchanged. |
+| Corrected v1.13 ZIP and technician overview | November 4 candidate verified; live remote recovery unresolved | [New evidence](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md): 341 files, hash `bc1b1f8e...`, 114 Ubuntu tests. Full ZIP and reviewed documents on Windows; earlier artifacts unchanged. |
 | tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. Owner subsequently reloaded the base and reported the standalone installation; backup restoration itself has not been tested. |
 | Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
@@ -47,6 +47,16 @@ Last updated: 2026-11-04
 | Production v1.12 artifact | Built and independently verified; live acceptance Pending | `ARES_Q4_Offline_v0.94_amd64_v1.12.zip`, built from `973708935eacac62a210e7d065779090170733bf`; identity and verification evidence below. |
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
 | Field rollout approval | Pending clean installation and remaining live acceptance | Corrected artifact includes storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2 and passed independent verification. No field acceptance inferred from packaging. |
+
+## Latest software-verified candidate (November 4)
+
+- Source: `29c3a1e11b48299b2021199a016ac0e17d213047`.
+- SHA-256: `bc1b1f8e1a79d38f6faa97527b2869e857aea2f74074f085e6be0c79b9d7edaa`.
+- Windows folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261104`.
+- 341 ZIP files independently verified; 114 Ubuntu tests passed.
+- [Candidate identity and limits](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md).
+- **AnyDesk live crash remains unresolved after reboot.** Pending trace/crash
+  evidence; no field-rollout or updated remote desktop acceptance claimed.
 
 ## Current production v1.13 artifact (November 3)
 
@@ -188,7 +198,8 @@ Last updated: 2026-11-04
   returned `desk_rt_ipc_error`. Root service was online; the graphical client was
   absent. A relaunch found the X11 session but aborted. The user profile was
   root-owned; ownership repair and another launch still did not restore access.
-  A normal reboot was suggested; its result remains Pending. Do not infer live
+  A normal reboot was tried; the owner reports the same error. Trace/version/crash
+  report details were requested. Do not infer live
   desktop recovery from a new ID, successful password CLI or service readiness.
 - Optional preparation disabled x11vnc and left Tailscale/TigerVNC inactive.
   Activation received an empty/unusable school name and stopped before enabling
@@ -199,8 +210,9 @@ Last updated: 2026-11-04
   the new desktop helper repairs user-folder ownership, locates the actual X11
   environment and launches as ares. Client abort/no desktop returns Pending.
 - Local fixtures verify input handling, state preservation, ownership and client
-  startup/failure handling without touching a server. Final CI/package identity
-  will be recorded after validation. No new server SSH access was established;
+  startup/failure handling without touching a server. Native CI passed 114 tests;
+  full candidate passed independent 341-file verification. [Candidate evidence](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md)
+  records the Windows identity and unresolved live crash. No new server SSH access was established;
   recovery commands were run by the owner in the existing SSH session.
 
 ### 2026-11-03 - Standalone-install follow-up: local names, lockdown and AnyDesk

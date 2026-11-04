@@ -86,7 +86,7 @@ exec /usr/bin/sleep 10''',
             self.assertEqual(helper.configure(options, ask=lambda _: '2', path=path), 2)
             self.assertTrue(helper.current_matches(path, options))
 
-    def fixture(self, root, *, interactive=True, active=False, password_failure=False, no_id=False):
+    def fixture(self, root, *, interactive=True, active=False, password_failure=False, no_id=False, desktop_pending=False):
         bin_dir = root / 'bin'
         bin_dir.mkdir()
         state = root / 'state'
@@ -101,6 +101,7 @@ exec /usr/bin/sleep 10''',
             'flock': 'exit 0',
             'pkill': 'echo "pkill $*" >> "$CALLS"\nexit 1',
             'getent': 'exit 0',
+            'python3': 'echo "DESKTOP_CLIENT_CHECK" >> "$CALLS"\nexit "$DESKTOP_STATUS"',
             'nft': '[[ "$ACTIVE" == yes ]]',
             'systemctl': '''echo "systemctl $*" >> "$CALLS"
 if [[ "$1" == is-enabled ]]; then exit 1; fi
@@ -108,7 +109,7 @@ if [[ "$1" == enable ]]; then
   if [[ "$NO_ID" == yes ]]; then printf 0 > "$IDFILE"; else printf 987654321 > "$IDFILE"; fi
 fi
 exit 0''',
-            'anydesk': '''echo "anydesk $*" >> "$CALLS"
+            'anydesk': '''echo "anydesk $* HOME=$HOME DISPLAY=${DISPLAY-unset}" >> "$CALLS"
 if [[ "$1" == --get-id ]]; then cat "$IDFILE"; exit 0; fi
 if [[ "$1" == --set-password ]]; then
   cat > "$PASSWORD_CAPTURE"
@@ -135,7 +136,8 @@ exit 1''',
         script.write_text(text, newline='\n')
         env = dict(os.environ, SUDO_USER='root', CALLS=calls.as_posix(), IDFILE=idfile.as_posix(),
                    ACTIVE='yes' if active else 'no', PASSWORD_CAPTURE=(root / 'password-input').as_posix(),
-                   PASSWORD_FAILURE='yes' if password_failure else 'no', NO_ID='yes' if no_id else 'no')
+                   PASSWORD_FAILURE='yes' if password_failure else 'no', NO_ID='yes' if no_id else 'no',
+                   DESKTOP_STATUS='2' if desktop_pending else '0')
         prefix = 'export PATH="$(cygpath -u "$1"):$PATH"; ' if os.name == 'nt' else 'export PATH="$1:$PATH"; '
         def run(*args, text='RESET\nprivate-password\nprivate-password\n'):
             result = subprocess.run([BASH, '-c', prefix + 'exec bash "$2" "${@:3}"', 'fixture',
@@ -160,6 +162,9 @@ exit 1''',
             self.assertIn('AnyDesk ID: 987654321', result.stdout)
             self.assertEqual((root / 'password-input').read_text(), 'private-password\n')
             self.assertNotIn('private-password', result.stdout + result.stderr + calls.read_text())
+            for line in calls.read_text().splitlines():
+                if line.startswith('anydesk '):
+                    self.assertIn('HOME=/root DISPLAY=unset', line)
             self.assertEqual((state / 'anydesk-id.txt').read_text().strip(), '987654321')
             result = run('ARES-S0035', text='')
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -179,6 +184,19 @@ exit 1''',
                 result = run('ARES-S0035', text='private-password\nprivate-password\n')
                 self.assertEqual(result.returncode, 2)
                 self.assertEqual(calls.read_text().count('systemctl stop anydesk.service'), 1)
+
+    def test_missing_desktop_remains_pending_without_resetting_the_new_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run, state, config, calls = self.fixture(Path(temp), desktop_pending=True)
+            result = run('ARES-S0035')
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertTrue((state / 'password-set').exists())
+            self.assertIn('AnyDesk ID: 987654321', result.stdout)
+            self.assertIn('Desktop client is Pending', result.stdout)
+            result = run('ARES-S0035', text='')
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(calls.read_text().count('systemctl stop anydesk.service'), 1)
+            self.assertEqual(calls.read_text().count('DESKTOP_CLIENT_CHECK'), 2)
 
     def test_anydesk_defer_bad_password_active_lockdown_and_no_terminal_preserve_clone(self):
         for flags, answer in (({}, '\n'), ({}, 'RESET\nshort\nshort\n'),

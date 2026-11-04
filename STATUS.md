@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-03
+Last updated: 2026-11-04
 
 ## Current checkout
 
@@ -24,9 +24,9 @@ Last updated: 2026-11-03
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Owner reports fresh standalone install ran well except two network setup issues | November 3 report: generic mDNS alias absent and lockdown setup required an active adapter. AnyDesk cloning setup requested. New code/update packages are verified and published; new live checks remain Pending. |
+| Simplified offline installation | Full SSH rerun passed core installation and preserved Lesson3 | November 4 transcript `20261104_102223` confirms healthy existing Lesson3/corpus and core verification passed. Remote activation failed at the empty-name prompt; AnyDesk desktop client subsequently crashed. |
 | School hostname and generic mDNS alias | Follow-up packaged; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
-| AnyDesk school identity | Packaged with operator confirmation; live check Pending | Reset cloned configuration once, hidden password prompt, display/save verified new ID; repeat runs preserve identity. Active/boot lockdown defers service changes. |
+| AnyDesk school identity | ID/password created; desktop connection failed; recovery Pending | Operator reports `desk_rt_ipc_error`, active X11 and online AnyDesk service but user client aborts. Root-owned user profile was found. Ownership repair/relaunch did not restore access; reboot/retest requested. Source now isolates root CLI HOME, repairs user ownership and reports client abort as Pending. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
@@ -38,7 +38,7 @@ Last updated: 2026-11-03
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
-| Optional OpenSSH / TigerVNC support | Offline preparation and declined activation passed; enabled acceptance Pending | Run `20261101_111100` prepared bundled packages/binaries and accepted `n` without failing core installation. Preparation disabled legacy `x11vnc.service`; existing VNC access needs verification. Activation, client connections and lifecycle checks remain Pending. |
+| Optional OpenSSH / TigerVNC support | Preparation passed; November 4 activation failed before enabling services | Empty/unusable school name caused a traceback; x11vnc had already been disabled by preparation. Follow-up retains current hostname on Enter, reprompts invalid names and preserves existing support services. Actual updated activation Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -178,6 +178,30 @@ Last updated: 2026-11-03
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-04 - SSH rerun and remote-support recovery
+
+- Owner supplied the complete `20261104_102223` install transcript. Core passed:
+  mDNS service installed, healthy existing Lesson3 retained, corpus status already
+  installed, tracking/admin/APK/Tsavo and installed-service checks passed.
+- AnyDesk reset/password/new numeric ID completed, but unattended desktop access
+  returned `desk_rt_ipc_error`. Root service was online; the graphical client was
+  absent. A relaunch found the X11 session but aborted. The user profile was
+  root-owned; ownership repair and another launch still did not restore access.
+  A normal reboot was suggested; its result remains Pending. Do not infer live
+  desktop recovery from a new ID, successful password CLI or service readiness.
+- Optional preparation disabled x11vnc and left Tailscale/TigerVNC inactive.
+  Activation received an empty/unusable school name and stopped before enabling
+  Tailscale. No lockdown table was active; restore reported no table present.
+- Follow-up source keeps the current hostname on Enter, reprompts invalid input
+  without a traceback and preserves existing service states/x11vnc during remote
+  preparation. AnyDesk root CLI omits desktop variables and uses root's HOME;
+  the new desktop helper repairs user-folder ownership, locates the actual X11
+  environment and launches as ares. Client abort/no desktop returns Pending.
+- Local fixtures verify input handling, state preservation, ownership and client
+  startup/failure handling without touching a server. Final CI/package identity
+  will be recorded after validation. No new server SSH access was established;
+  recovery commands were run by the owner in the existing SSH session.
 
 ### 2026-11-03 - Standalone-install follow-up: local names, lockdown and AnyDesk
 

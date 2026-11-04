@@ -67,7 +67,8 @@ installation log. Do not run individual component installers to work around it.
 Remote-support preparation is attempted after the core installation succeeds.
 It may require additional server prerequisites; its failure leaves the completed
 offline installation usable. ARES support can arrange preparation and activation
-later. Activation needs outbound Internet on the server. See `docs/REMOTE_ACCESS.md`.
+later. Preparation preserves existing support services. Activation needs outbound
+Internet on the server. Press Enter at the school-name prompt to keep its hostname. See `docs/REMOTE_ACCESS.md`.
 
 The bundled Internet Lockdown v1.4.2 project is prepared afterward, with activation
 and reboot persistence left as separate choices. Commands install with no

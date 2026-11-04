@@ -1,7 +1,9 @@
 # Optional remote support: OpenSSH over Tailscale, localhost TigerVNC
 
 After core installation and verification succeed, the installer attempts to
-prepare the pinned offline Tailscale/TigerVNC payloads and leave them dormant.
+prepare the pinned offline Tailscale/TigerVNC payloads. Preparation preserves
+existing active services, enablement, Tailscale identity and x11vnc console access.
+It does not stop/disable support services merely to offer optional activation.
 Missing remote-support prerequisites or preparation failure give a warning and
 do not fail the completed core installation. Optional activation is offered only
 after successful preparation and defaults to No. Deferral, failure or partial
@@ -10,7 +12,8 @@ Existing Tailscale identity is never logged out, reset or deleted by these comma
 
 If preparation was deferred, ARES support can diagnose its log and retry from the
 extracted package with `sudo bash remote-access/prepare_remote_access.sh`. This
-requires Ubuntu 24.04, OpenSSH, Cinnamon 2D and an available port 5901. These are
+requires Ubuntu 24.04, OpenSSH, Cinnamon 2D and an available port 5901 unless
+the existing active TigerVNC already owns that port. These are
 remote-support requirements, not prerequisites for core offline installation.
 
 The v1.13 source uses the canonical activation/disable scripts and the shared
@@ -26,7 +29,10 @@ Run at an interactive console:
 sudo ares-enable-remote-access
 ```
 
-Confirm the school name and normalized Linux/Tailscale hostname. This never
+Press Enter at the school-name prompt to keep the current hostname, then
+confirm it (default Yes). To rename deliberately, enter a school name and approve
+the normalized name (default No). Invalid names reprompt; EOF defers without a
+Python traceback or service changes. This never
 changes the selected mDNS profile alias. The ARES server needs outbound Internet
 for enrollment and connectivity. The technician may open the authentication URL
 on a phone using cellular data; the phone need not be on the ARES network. The
@@ -151,3 +157,12 @@ Packaged display `:1`, actual Tailscale-path SSH/VNC, reboot/autostart, full
 disable/re-enable, partial-failure recovery and physical-session coexistence remain
 **Pending** for both profiles in [PROFILE_ACCEPTANCE.md](PROFILE_ACCEPTANCE.md).
 TsavoTrust is documented separately in [TSAVO_TRUST.md](TSAVO_TRUST.md).
+
+## November 4 SSH rerun evidence
+
+The operator's `20261104_102223` transcript confirms a healthy existing Lesson3
+and installed corpus were preserved and core checks passed. Optional preparation
+then disabled legacy x11vnc and left new services inactive; activation failed on
+an empty/unusable school name before enabling Tailscale. The November 4 source
+corrects that prompt and preserves existing support during preparation. These
+source checks do not establish a new live Tailscale/VNC activation.

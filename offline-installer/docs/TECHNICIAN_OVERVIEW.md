@@ -69,7 +69,7 @@ run separate checksum or build-qualification commands at every school.
   Keep one-time enrollment keys private.
 - Open the protected Admin Tools page and its ARES Sync user-guide link.
 - Confirm the support connections the school uses still work. Remote preparation
-  can disable older x11vnc services; new Tailscale/VNC activation is separate.
+  preserves existing support services. New Tailscale/VNC activation is separate.
 
 Before reloading a test server, follow docs/PRE_RELOAD_PRESERVATION.md. Keep the
 Clonezilla base image, final installer ZIP and backups off the disk being erased.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install offline remote-access components but leave them stopped and disabled.
+# Prepare offline support without stopping or disabling existing access.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,10 +22,6 @@ command -v cinnamon-session-cinnamon2d >/dev/null \
 for cmd in awk dpkg dpkg-query find grep install mktemp pgrep rm sha256sum ss systemctl tar; do
   command -v "$cmd" >/dev/null 2>&1 || die "required command not found: $cmd"
 done
-if ss -ltn | awk '{print $4}' | grep -E '(^|:)5901$' >/dev/null; then
-  die "port 5901 is already in use; leave the existing remote desktop unchanged"
-fi
-
 [[ -f "$TIGERVNC_DIR/SHA256SUMS" ]] || die "TigerVNC checksum manifest is missing"
 [[ -f "$TAILSCALE_DIR/SHA256SUMS" ]] || die "Tailscale checksum manifest is missing"
 [[ -n "$TAILSCALE_ARCHIVE" && -f "$TAILSCALE_ARCHIVE" ]] || die "Tailscale amd64 archive is missing"
@@ -42,26 +38,35 @@ log "verifying offline remote-access payload"
 mapfile -t tiger_debs < <(find "$TIGERVNC_DIR" -maxdepth 1 -type f -name '*.deb' -print | sort)
 ((${#tiger_debs[@]} >= 4)) || die "expected TigerVNC package set is incomplete"
 
-log "installing TigerVNC packages from the offline bundle"
-if ! dpkg -i "${tiger_debs[@]}"; then
-  die "TigerVNC package installation failed; do not use apt-get -f install while offline"
+install -d -m 0755 /usr/local/sbin /usr/local/bin /usr/local/lib/ares
+install -m 0755 "$ACTIVATE_SOURCE" /usr/local/sbin/ares-enable-remote-access
+install -m 0755 "$DISABLE_SOURCE" /usr/local/sbin/ares-disable-remote-access
+install -d -m 0755 /usr/local/lib/ares
+install -m 0644 "$SCRIPT_DIR/remote_support_config.py" /usr/local/lib/ares/remote_support_config.py
+install -m 0644 "$SCRIPT_DIR/remote_support_common.sh" /usr/local/lib/ares/remote_support_common.sh
+# Never take away the current support path merely to prepare an optional one.
+# Active services retain their packages, binaries, units and enablement state.
+TAILSCALE_ACTIVE=no
+VNC_ACTIVE=no
+if systemctl is-active --quiet tailscaled.service; then TAILSCALE_ACTIVE=yes; fi
+if systemctl is-active --quiet 'tigervncserver@:1.service'; then VNC_ACTIVE=yes; fi
+if pgrep -x x11vnc >/dev/null 2>&1; then
+  log 'Existing x11vnc console sharing is retained; preparation will not disable it.'
+fi
+if [[ "$VNC_ACTIVE" != yes ]] && ss -ltn | awk '{print $4}' | grep -E '(^|:)5901$' >/dev/null; then
+  die 'port 5901 is occupied; preserving its owner and all current services'
+fi
+
+if [[ "$VNC_ACTIVE" == yes ]]; then
+  log 'Existing TigerVNC is active; preserving its packages, service and configuration.'
+else
+  log "installing TigerVNC packages from the offline bundle"
+  if ! dpkg -i "${tiger_debs[@]}"; then
+    die "TigerVNC package installation failed; no network repair attempted"
+  fi
 fi
 command -v tigervncserver >/dev/null 2>&1 || die "tigervncserver was not installed"
 command -v tigervncpasswd >/dev/null 2>&1 || die "tigervncpasswd was not installed"
-
-log "disabling the TigerVNC template until deliberate activation"
-systemctl disable --now 'tigervncserver@:1.service' >/dev/null 2>&1 || true
-
-mapfile -t x11_units < <(
-  systemctl list-unit-files --type=service --no-legend 2>/dev/null \
-    | awk '$1 ~ /x11vnc.*\.service$/ {print $1}'
-)
-for unit in "${x11_units[@]}"; do
-  log "disabling superseded console-sharing service $unit"
-  systemctl disable --now "$unit" >/dev/null 2>&1 || die "could not disable $unit"
-done
-pgrep -x x11vnc >/dev/null 2>&1 \
-  && die "x11vnc is still running after its service units were disabled"
 
 tailscale_tmp="$(mktemp -d /tmp/ares-tailscale.XXXXXX)"
 cleanup() { rm -rf -- "$tailscale_tmp"; }
@@ -71,7 +76,9 @@ tailscale_binary="$(find "$tailscale_tmp" -type f -name tailscale -perm -u+x -pr
 tailscaled_binary="$(find "$tailscale_tmp" -type f -name tailscaled -perm -u+x -print -quit)"
 [[ -n "$tailscale_binary" && -n "$tailscaled_binary" ]] || die "Tailscale archive did not contain both binaries"
 
-if dpkg-query -W -f='${Status}' tailscale 2>/dev/null | grep -q '^install ok installed$'; then
+if [[ "$TAILSCALE_ACTIVE" == yes ]]; then
+  log 'Existing Tailscale is active; preserving its binaries, unit and identity.'
+elif dpkg-query -W -f='${Status}' tailscale 2>/dev/null | grep -q '^install ok installed$'; then
   log "distribution Tailscale package already exists; preserving its managed binaries and unit"
 else
   log "installing pinned Tailscale static binaries"
@@ -103,19 +110,8 @@ WantedBy=multi-user.target
 EOF
 fi
 
-install -m 0755 "$ACTIVATE_SOURCE" /usr/local/sbin/ares-enable-remote-access
-install -m 0755 "$DISABLE_SOURCE" /usr/local/sbin/ares-disable-remote-access
-install -d -m 0755 /usr/local/lib/ares
-install -m 0644 "$SCRIPT_DIR/remote_support_config.py" /usr/local/lib/ares/remote_support_config.py
-install -m 0644 "$SCRIPT_DIR/remote_support_common.sh" /usr/local/lib/ares/remote_support_common.sh
 systemctl daemon-reload
-systemctl disable --now tailscaled.service >/dev/null 2>&1 || true
-
-systemctl is-active --quiet tailscaled.service && die "tailscaled unexpectedly remained active"
-systemctl is-active --quiet 'tigervncserver@:1.service' && die "TigerVNC unexpectedly remained active"
-if ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq '(^|:)5901$'; then
-  die "port 5901 is listening even though TigerVNC should be dormant"
-fi
-
-log "preparation complete; Tailscale and TigerVNC are installed but inactive"
+# No service activation or enablement change is needed for preparation.
+# The static unit and TigerVNC template remain as configured until activation.
+log "preparation complete; existing service states and console-sharing support were preserved"
 log "later activation command: sudo ares-enable-remote-access"

@@ -5,6 +5,12 @@ HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 [[ ${EUID} == 0 ]] || { echo 'Run with sudo from the local console.' >&2; exit 1; }
 [[ "${1:-}" =~ ^[A-Z0-9_-]+$ ]] || { echo 'Usage: sudo bash apply_school_setup_updates.sh ARES-S00XX'; exit 2; }
 python3 "$HERE/package_integrity.py" package "$HERE"
+install -d -m 0755 /usr/local/sbin /usr/local/lib/ares
+install -m 0755 "$HERE/remote-access/ares_enable_remote_access.sh" /usr/local/sbin/ares-enable-remote-access
+install -m 0755 "$HERE/remote-access/ares_disable_remote_access.sh" /usr/local/sbin/ares-disable-remote-access
+for helper in remote_support_config.py remote_support_common.sh; do
+  install -m 0644 "$HERE/remote-access/$helper" "/usr/local/lib/ares/$helper"
+done
 bash "$HERE/lesson_plan/configure_mdns.sh"
 backup="/root/ares_deploy_backups/school-setup-$(date +%Y%m%d_%H%M%S)"
 install -d -m 0700 "$backup"

@@ -113,8 +113,9 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         activate = (BUILDER / "templates" / "ares_enable_remote_access.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("systemctl disable --now tailscaled.service", prepare)
-        self.assertIn("systemctl disable --now 'tigervncserver@:1.service'", prepare)
+        self.assertNotIn("systemctl disable", prepare)
+        self.assertNotIn("systemctl stop", prepare)
+        self.assertIn('TAILSCALE_ACTIVE', prepare)
         self.assertNotIn("tailscale up", prepare)
         self.assertIn('$localhost = "yes";', activate)
         self.assertIn('tailscale set --ssh=false', activate)

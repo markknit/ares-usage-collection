@@ -194,6 +194,7 @@ install -m 0644 "$SELF_DIR/tools/configure_lockdown.py" "$STAGE/remote-access/co
 install -m 0755 "$SELF_DIR/templates/lockdown_dispatch.sh" "$STAGE/remote-access/lockdown_dispatch.sh"
 install -m 0755 "$SELF_DIR/templates/prepare_anydesk.sh" "$STAGE/remote-access/prepare_anydesk.sh"
 install -m 0755 "$SELF_DIR/templates/setup_anydesk.sh" "$STAGE/remote-access/setup_anydesk.sh"
+install -m 0644 "$SELF_DIR/tools/anydesk_desktop.py" "$STAGE/remote-access/anydesk_desktop.py"
 install -m 0755 "$SELF_DIR/templates/configure_mdns.sh" "$STAGE/lesson_plan/configure_mdns.sh"
 install -m 0755 "$SELF_DIR/templates/ares_mdns_alias.sh" "$STAGE/lesson_plan/ares_mdns_alias.sh"
 install -m 0644 "$SELF_DIR/tools/mdns_addresses.py" "$STAGE/lesson_plan/mdns_addresses.py"
@@ -495,6 +496,7 @@ for required in \
   remote-access/lockdown_dispatch.sh \
   remote-access/prepare_anydesk.sh \
   remote-access/setup_anydesk.sh \
+  remote-access/anydesk_desktop.py \
   lesson_plan/configure_mdns.sh \
   lesson_plan/ares_mdns_alias.sh \
   lesson_plan/mdns_addresses.py \

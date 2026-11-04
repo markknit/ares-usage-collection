@@ -13,7 +13,7 @@ SELF = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SELF))
 import verify_offline_bundle as verifier
 
-NAME = 'ARES_v1.13_School_Setup_Update_20261103'
+NAME = 'ARES_v1.13_School_Setup_Update_20261104'
 TARGETS = [
     'ares_config.sh', 'package_integrity.py',
     'lesson_plan/configure_mdns.sh', 'lesson_plan/ares_mdns_alias.sh',
@@ -21,6 +21,9 @@ TARGETS = [
     'remote-access/prepare_internet_lockdown.sh', 'remote-access/lockdown_dispatch.sh',
     'remote-access/configure_lockdown.py', 'remote-access/prepare_anydesk.sh',
     'remote-access/setup_anydesk.sh',
+    'remote-access/anydesk_desktop.py',
+    'remote-access/ares_enable_remote_access.sh', 'remote-access/ares_disable_remote_access.sh',
+    'remote-access/remote_support_config.py', 'remote-access/remote_support_common.sh',
 ]
 
 

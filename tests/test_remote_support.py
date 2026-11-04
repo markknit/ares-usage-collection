@@ -3,6 +3,10 @@ import os
 import sys
 import tempfile
 import subprocess
+import hashlib
+import io
+import shutil
+import tarfile
 import unittest
 from test_profiles import BASH, BUILDER, load
 
@@ -58,6 +62,104 @@ systemctl() {
 
 
 class RemoteSupportTests(unittest.TestCase):
+    def test_preparation_preserves_live_support_and_never_disables_console_sharing(self):
+        for active in (False, True):
+            with self.subTest(active=active), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                remote, bin_dir = root / 'remote', root / 'bin'
+                for directory in (remote / 'tigervnc', remote / 'tailscale', bin_dir,
+                                  root / 'etc/systemd/system', root / 'etc/default',
+                                  root / 'share/xsessions', root / 'local/bin', root / 'local/sbin'):
+                    directory.mkdir(parents=True, exist_ok=True)
+                (root / 'etc/os-release').write_text('ID=ubuntu\nVERSION_ID=24.04\n')
+                (root / 'share/xsessions/cinnamon2d.desktop').touch()
+                for name, source in {
+                    'ares_enable_remote_access.sh': 'templates/ares_enable_remote_access.sh',
+                    'ares_disable_remote_access.sh': 'templates/ares_disable_remote_access.sh',
+                    'remote_support_common.sh': 'templates/remote_support_common.sh',
+                    'remote_support_config.py': 'tools/remote_support_config.py',
+                }.items():
+                    shutil.copyfile(BUILDER / source, remote / name)
+                    (remote / name).chmod(0o755)
+                for i in range(4):
+                    (remote / 'tigervnc' / f'fixture{i}.deb').write_text('fixture')
+                with tarfile.open(remote / 'tailscale/tailscale_fixture_amd64.tgz', 'w:gz') as archive:
+                    for name in ('tailscale', 'tailscaled'):
+                        data = b'#!/usr/bin/env bash\nexit 0\n'
+                        info = tarfile.TarInfo('tailscale/' + name)
+                        info.mode = 0o755
+                        info.size = len(data)
+                        archive.addfile(info, io.BytesIO(data))
+                for component in ('tigervnc', 'tailscale'):
+                    folder = remote / component
+                    (folder / 'SHA256SUMS').write_text(''.join(
+                        hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n'
+                        for p in sorted(folder.iterdir())), newline='\n')
+                commands = {
+                    'uname': 'echo x86_64',
+                    'cinnamon-session-cinnamon2d': 'exit 0',
+                    'tigervncserver': 'exit 0', 'tigervncpasswd': 'exit 0',
+                    'pgrep': 'exit 0',  # Existing x11vnc is always retained.
+                    'ss': '[[ "$ACTIVE" != yes ]] || echo "LISTEN 0 5 127.0.0.1:5901"; exit 0',
+                    'dpkg-query': 'exit 1',
+                    'dpkg': 'echo "dpkg $*" >> "$CALLS"',
+                    'systemctl': 'echo "systemctl $*" >> "$CALLS"\nif [[ "$1" == is-active ]]; then [[ "$ACTIVE" == yes ]]; else exit 0; fi',
+                }
+                for name, body in commands.items():
+                    path = bin_dir / name
+                    path.write_text('#!/bin/bash\n' + body + '\n', newline='\n')
+                    path.chmod(0o755)
+                marker = root / 'local/bin/tailscale'
+                marker.write_text('retain enrolled binary')
+                text = (BUILDER / 'templates/prepare_remote_access.sh').read_text()
+                text = text.replace('[[ ${EUID:-$(id -u)} -eq 0 ]] || die "run as root"', '')
+                text = text.replace('/usr/local/', (root / 'local').as_posix() + '/')
+                text = text.replace('/usr/share/', (root / 'share').as_posix() + '/')
+                text = text.replace('/etc/', (root / 'etc').as_posix() + '/')
+                text = text.replace('/tmp/ares-tailscale', root.as_posix() + '/tailscale-work')
+                if os.name == 'nt':
+                    # Native Ubuntu checks real executable bits; Git Bash on
+                    # NTFS cannot represent the TAR's Unix execute permissions.
+                    text = text.replace(' -perm -u+x', '')
+                script = remote / 'prepare.sh'
+                script.write_text(text, newline='\n')
+                prefix = 'export PATH="$(cygpath -u "$1"):$PATH"; ' if os.name == 'nt' else 'export PATH="$1:$PATH"; '
+                result = subprocess.run([BASH, '-c', prefix + 'exec bash "$2"', 'fixture',
+                                         bin_dir.as_posix(), script.as_posix()], capture_output=True, text=True,
+                                        env=dict(os.environ, ACTIVE='yes' if active else 'no',
+                                                 CALLS=(root / 'calls').as_posix()))
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                calls = (root / 'calls').read_text()
+                self.assertNotIn('disable', calls)
+                self.assertNotIn('stop', calls)
+                self.assertNotIn('restart', calls)
+                self.assertNotIn('systemctl enable', calls)
+                if active:
+                    self.assertEqual(marker.read_text(), 'retain enrolled binary')
+                    self.assertNotIn('dpkg -i', calls)
+                else:
+                    self.assertIn('dpkg -i', calls)
+                self.assertIn('x11vnc console sharing is retained', result.stdout)
+
+    def test_empty_remote_name_retains_current_hostname_and_invalid_name_reprompts(self):
+        for values, expected in (("\\n\\n", 'tsavo3'),
+                                 ("!!!\\nExample School\\ny\\n", 'example-school')):
+            result = shell('ares_enable_remote_access.sh', '''
+OLD_HOSTNAME=tsavo3
+exec 3>"$STATE_DIR/terminal"
+''' + "exec 4<<<$'" + values + "'\nchoose_remote_hostname\n[[ \"$SELECTED_HOSTNAME\" == \"" + expected + "\" ]]\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn('Traceback', result.stdout + result.stderr)
+
+    def test_cancelled_remote_name_is_deferred_without_a_traceback(self):
+        result = shell('ares_enable_remote_access.sh', '''
+OLD_HOSTNAME=tsavo3
+exec 3>"$STATE_DIR/terminal"; exec 4</dev/null
+choose_remote_hostname
+''')
+        self.assertEqual(result.returncode, 3, result.stderr)
+        self.assertNotIn('Traceback', result.stdout + result.stderr)
+
     def test_hosts_preserves_aliases_comments_and_actual_separators(self):
         value = "127.0.0.1 localhost\n127.0.1.1 old retained ares.local # comment\n"
         changed = config.hosts(value, "old", "new")

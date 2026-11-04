@@ -13,6 +13,36 @@ COMPLETE=0; STARTED=0; CLI_READY=0; VNC_PHASE=0; VNC_OWNED=0; SSH_TOUCHED=0; HOS
 retry_instructions() { echo "Retry when ready: sudo ares-enable-remote-access"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 
+choose_remote_hostname() {
+  local school_name candidate reply attempt
+  for attempt in {1..3}; do
+    printf 'School name for remote support [keep %s]: ' "$OLD_HOSTNAME" >&3
+    if ! IFS= read -r -u 4 school_name; then
+      echo 'Name entry cancelled; existing hostname and services retained.'
+      return 3
+    fi
+    if [[ -z "${school_name//[[:space:]]/}" ]]; then
+      candidate=$OLD_HOSTNAME
+    elif ! candidate=$(python3 "$CONFIG_TOOL" hostname "$school_name" 2>/dev/null); then
+      printf 'Use letters or numbers for the school name, or press Enter to keep %s.\n' "$OLD_HOSTNAME" >&3
+      continue
+    fi
+    if [[ "$candidate" == "$OLD_HOSTNAME" ]]; then
+      printf 'Keep Linux/Tailscale name %s? [Y/n]: ' "$candidate" >&3
+      IFS= read -r -u 4 reply || return 3
+      case "$reply" in ''|y|Y|yes|YES|Yes) ;; *) return 3 ;; esac
+    else
+      printf 'Change Linux/Tailscale name to %s? [y/N]: ' "$candidate" >&3
+      IFS= read -r -u 4 reply || return 3
+      case "$reply" in y|Y|yes|YES|Yes) ;; *) return 3 ;; esac
+    fi
+    SELECTED_HOSTNAME=$candidate
+    return 0
+  done
+  echo 'No usable school name entered; activation deferred without changing the hostname.'
+  return 3
+}
+
 verify_vnc_listeners() {
   local listener seen=0
   while IFS= read -r listener; do
@@ -227,11 +257,9 @@ main() {
   trap cleanup EXIT
   trap 'exit 130' HUP INT TERM
   OLD_HOSTNAME="$(hostnamectl --static)"
-  local school_name reply new_hostname
-  read -r -u 4 -p "Full school name: " school_name
-  new_hostname="$(python3 "$CONFIG_TOOL" hostname "$school_name")"
-  read -r -u 4 -p "Use $new_hostname as Linux and Tailscale hostname? [y/N]: " reply
-  case "$reply" in y|Y|yes|YES|Yes) ;; *) retry_instructions; die "hostname not confirmed; no services changed" ;; esac
+  local new_hostname
+  choose_remote_hostname || { retry_instructions; exit 3; }
+  new_hostname=$SELECTED_HOSTNAME
   capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
   STARTED=1
   cp -a /etc/hosts "$WORK/hosts"

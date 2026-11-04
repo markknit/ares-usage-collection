@@ -55,7 +55,10 @@ if __name__ == "__main__":
     parser.add_argument("values", nargs="*")
     args = parser.parse_args()
     if args.mode == "hostname":
-        print(hostname(args.values[0]))
+        try:
+            print(hostname(args.values[0] if args.values else ''))
+        except ValueError as error:
+            parser.exit(2, str(error) + '\n')
     elif args.mode == "hosts":
         print(hosts(Path(args.values[0]).read_text(), args.values[1], args.values[2]), end="")
     elif args.mode == "display":

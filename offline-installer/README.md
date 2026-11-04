@@ -79,12 +79,11 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
 - Keeps the field installation to one command: the installer pauses for creation of the first
   Lesson3 Site Administrator, then imports and verifies the approved 95-plan/806-lesson corpus.
 - Configures and verifies `ares.local` through the ARES server's existing Avahi service.
-- Bundles pinned Tailscale and TigerVNC packages, installs them stopped and disabled, and provides
+- Bundles pinned Tailscale and TigerVNC packages, preserves existing service states, and provides
   separate activation/deactivation commands for a later authorized support session.
-- Disables the base-image `x11vnc` service so it cannot remain exposed or conflict with the
-  localhost-only TigerVNC configuration.
-
-## v1.9 changes
+- Preserves existing `x11vnc` console access during optional preparation; active
+  Tailscale/TigerVNC services keep their binaries/configuration. Activation is a
+  separate explicit choice.
 
 - Corrects Lesson3 corpus uploads for JSON filenames containing commas.
 - Prevents a transport-level upload failure from invoking the database rollback handler twice.

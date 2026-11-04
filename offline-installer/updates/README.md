@@ -1,4 +1,8 @@
-# Offline update for an already-installed v1.13 school server
+# Historical November 3 offline update
+
+This retained ZIP predates the November 4 remote-support/AnyDesk corrections.
+Use the newest full installer for further testing. The source packager now
+includes the desktop-client recovery helper and updated activation controls.
 
 Use `ARES_v1.13_School_Setup_Update_20261103.zip` to apply just the school
 hostname/generic alias, disconnected-safe lockdown command and AnyDesk cloning

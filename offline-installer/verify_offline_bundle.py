@@ -41,6 +41,7 @@ REVIEWED = {
     "remote-access/lockdown_dispatch.sh": "templates/lockdown_dispatch.sh",
     "remote-access/prepare_anydesk.sh": "templates/prepare_anydesk.sh",
     "remote-access/setup_anydesk.sh": "templates/setup_anydesk.sh",
+    "remote-access/anydesk_desktop.py": "tools/anydesk_desktop.py",
     "lesson_plan/configure_mdns.sh": "templates/configure_mdns.sh",
     "lesson_plan/ares_mdns_alias.sh": "templates/ares_mdns_alias.sh",
     "lesson_plan/mdns_addresses.py": "tools/mdns_addresses.py",

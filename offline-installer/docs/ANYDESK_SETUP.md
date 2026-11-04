@@ -45,6 +45,35 @@ setup, an ordinary installer rerun preserves both identity and password. A
 deliberate replacement requires `ares-setup-anydesk --reset ARES-S00XX` and the
 same local confirmation. A different school code requires that explicit reset.
 
+## Desktop client and SSH setup
+
+The AnyDesk background service reporting online and returning an ID is not proof
+that its graphical client can capture the desktop. An incoming Linux connection
+needs a usable Xorg desktop. After reset, the helper selects the existing local
+X11 session, repairs ownership of `ares`'s `.anydesk` folder and launches the
+client as `ares` using that session's actual DISPLAY/Xauthority. It does not
+assume display :0, restart the display manager, create another desktop or change
+the AnyDesk ID/password during client recovery.
+
+Root CLI queries/password setup use root's HOME and omit desktop environment
+variables, to avoid creating root-owned files in the user's profile. The global
+`/etc/anydesk` configuration remains root-owned; only the desktop user's folder
+belongs to `ares`. If no unique X11 session exists or the graphical process
+immediately aborts, setup reports Pending and preserves the new ID/password.
+A client launch is still not an accepted unattended connection test.
+
+To recover only the client from SSH, after logging into the local Xorg desktop:
+
+```bash
+sudo ares-recover-anydesk-desktop
+```
+
+Its log is `/var/log/ares-anydesk-desktop.log`. Do not repeatedly reset a valid
+new ID to troubleshoot a desktop IPC error. The November 4 operator report
+showed a root-owned user profile and a client abort; correcting ownership and
+launching the client did not by itself establish recovery. A reboot/retest was
+requested, and live recovery remains Pending until the operator confirms it.
+
 Existing active or boot-enabled Internet Lockdown defers AnyDesk setup, because
 restarting its service could invalidate service-specific firewall allowances.
 Arrange local access and restore/disable lockdown before retrying. The helper

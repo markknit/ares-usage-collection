@@ -12,7 +12,7 @@ case "${1:-}" in
   --reset) ACTION=reset; shift ;;
 esac
 SCHOOL=${1:-}
-for command in anydesk systemctl timeout flock pkill getent; do
+for command in anydesk systemctl timeout flock pkill getent python3; do
   command -v "$command" >/dev/null || { echo "AnyDesk setup deferred: missing $command; no download attempted."; exit 2; }
 done
 install -d -m 0700 "$STATE"
@@ -20,7 +20,7 @@ exec 9>"$STATE/setup.lock"
 flock -n 9 || { echo 'Another AnyDesk setup is running.'; exit 2; }
 get_id() {
   local value
-  value=$(timeout 5 anydesk --get-id 9>&- 2>/dev/null | tr -d '[:space:]') || value=''
+  value=$(timeout 5 env -u DISPLAY -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS -u XDG_RUNTIME_DIR -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE HOME=/root anydesk --get-id 9>&- 2>/dev/null | tr -d '[:space:]') || value=''
   [[ "$value" =~ ^[0-9]{9,10}$ ]] || return 1
   printf '%s' "$value"
 }
@@ -54,8 +54,10 @@ if [[ -f "$STATE/school-code" && "$(cat "$STATE/school-code")" != "$SCHOOL" ]]; 
 fi
 if [[ -f "$STATE/reset-done" && -f "$STATE/password-set" && "$ACTION" != reset ]]; then
   echo 'AnyDesk was already personalized; preserving its identity and password.'
-  report_id
-  exit $?
+  desktop_status=0
+  python3 /usr/local/lib/ares/anydesk_desktop.py || desktop_status=$?
+  report_id || exit $?
+  exit "$desktop_status"
 fi
 [[ -t 0 ]] || { echo "AnyDesk setup deferred. Later, run: sudo ares-setup-anydesk $SCHOOL"; exit 2; }
 reset=no
@@ -112,7 +114,7 @@ if [[ "$reset" == yes ]]; then
 fi
 systemctl enable --now anydesk.service
 stopped=no
-if ! printf '%s\n' "$password" | timeout 20 anydesk --set-password 9>&- >/dev/null 2>&1; then
+if ! printf '%s\n' "$password" | timeout 20 env -u DISPLAY -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS -u XDG_RUNTIME_DIR -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE HOME=/root anydesk --set-password 9>&- >/dev/null 2>&1; then
   unset password
   echo "AnyDesk is reset; unattended password is Pending. Rerun: sudo ares-setup-anydesk $SCHOOL"
   exit 2
@@ -120,8 +122,13 @@ fi
 unset password
 touch "$STATE/password-set"
 echo 'Unattended-access password configured. The password was not saved in the installer or log.'
+desktop_status=0
+python3 /usr/local/lib/ares/anydesk_desktop.py || desktop_status=$?
+if (( desktop_status != 0 )); then
+  echo 'Desktop client is Pending. Log into the local Xorg desktop and run sudo ares-recover-anydesk-desktop.'
+fi
 for attempt in {1..6}; do
-  if report_id >/dev/null; then report_id; exit 0; fi
+  if report_id >/dev/null; then report_id; exit "$desktop_status"; fi
   sleep 2
 done
 report_id || true

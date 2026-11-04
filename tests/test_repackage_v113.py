@@ -59,6 +59,8 @@ class RepackageTests(unittest.TestCase):
             self.assertEqual(calls, ["production"])
             self.assertEqual(fixtures.integrity.digest(archive), original_hash)
             self.assertTrue(artifact.exists())
+            with zipfile.ZipFile(artifact) as archive:
+                self.assertEqual(archive.getinfo(repack.BUNDLE + '/remote-access/setup_anydesk.sh').external_attr >> 16 & 0o777, 0o755)
             self.assertFalse((output / "BUILD_INCOMPLETE").exists())
             evidence = json.loads((output / "repack-evidence.json").read_text())
             self.assertIn("teacher-app/ares-sync.apk", evidence["preserved_base_files"])

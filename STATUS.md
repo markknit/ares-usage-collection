@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-02
+Last updated: 2026-11-03
 
 ## Current checkout
 
@@ -24,12 +24,14 @@ Last updated: 2026-11-02
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Earlier test-copy installation passed; corrected ZIP ready | [Corrected artifact](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md) includes the storage-alias fix and all subsequent additions. Original test evidence remains separate; the corrected ZIP needs a clean installation test. |
+| Simplified offline installation | Owner reports fresh standalone install ran well except two network setup issues | November 3 report: generic mDNS alias absent and lockdown setup required an active adapter. AnyDesk cloning setup requested. New code/update packages are being validated; no new live acceptance inferred. |
+| School hostname and generic mDNS alias | Follow-up implemented; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
+| AnyDesk school identity | Implemented with operator confirmation; live check Pending | Reset cloned configuration once, hidden password prompt, display/save verified new ID; repeat runs preserve identity. Active/boot lockdown defers service changes. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
-| Internet Lockdown v1.4.2 | Published and included in corrected ZIP; live acceptance Pending | All ten supplied files retained. Normal setup uses `--no-boot`; active/boot-enabled lockdown and existing remote services are preserved/deferred. No live firewall activation occurred. |
-| Corrected v1.13 ZIP and technician overview | Independent verification and Windows copy complete | [Release evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md): source `3053d50`, 332 files, SHA-256 `d3dc1c30...`; 98 Ubuntu tests passed. Windows ZIP hash and five PDF copies match. Two-page overview visually checked. |
+| Internet Lockdown v1.4.2 | Disconnected-safe command installation implemented; validation in progress | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
+| Corrected v1.13 ZIP and technician overview | November 2 artifact retained; November 3 update being packaged | Prior verified `d3dc1c30...` ZIP remains unchanged. New standalone network/AnyDesk changes will have a separately named release folder and evidence. |
 | tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. No reload or restore test performed. |
 | Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
@@ -53,7 +55,10 @@ Last updated: 2026-11-02
 - Independent verification: 332 files; Windows copy hash matches.
 - Windows release folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261102`.
 - [Complete corrected release/preservation evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md).
-- Clean installation and remaining field acceptance: **Pending**.
+- Owner reports a standalone installation on a freshly loaded server succeeded
+  with mDNS and disconnected-lockdown exceptions; the AnyDesk cloning step was
+  missing. Follow-up source fixes are in progress below; remaining acceptance
+  is **Pending**.
 
 ## Original production v1.13 artifact (retained payload baseline)
 
@@ -172,6 +177,34 @@ Last updated: 2026-11-02
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-03 - Standalone-install follow-up: local names, lockdown and AnyDesk
+
+- Owner reports the offline install on a freshly loaded server ran well with two
+  exceptions: no generic ares.local alias and lockdown setup refused an absent
+  active adapter. Added the requested AnyDesk clone personalization step.
+- Restart check: expected branch `simplify-offline-install`, clean initial HEAD
+  `8bd06d7` matched GitHub; no CLAUDE/WORKFLOW/active HANDOFF controls in this
+  checkout. Preserved the existing profile/acceptance boundaries and old artifacts.
+- Extracted the mDNS publisher/setup into reviewed helpers. Avahi preserves the
+  machine hostname; Nginx includes it alongside the generic profile alias.
+  Publisher waits offline, supports link-local IPv4 and retries exited children.
+- Lockdown installation now installs commands without a connected adapter or
+  terminal. First activation selects the real student LAN; restore bypasses LAN
+  selection. Original v1.4.2 imported project/rules remain unchanged. Existing
+  active/boot lockdown still defers upgrades and optional service restarts.
+- AnyDesk helper archives both system.conf/service.conf and the desktop user's
+  configuration after local RESET confirmation, configures the hidden unattended
+  password through the supported CLI, and displays/saves a different numeric ID.
+  Pending ID/password setup can be retried without resetting again. No password
+  is hardcoded or committed. Existing lockdown prevents service reset.
+- Builder and independent verifier include every new helper. Added a small
+  offline update packager for the already installed server, without reinstalling
+  content/database. Repack ZIP Unix file modes are explicit on Windows too.
+- Focused portable fixtures passed 44 tests before final documentation refresh;
+  all installer shell scripts parsed. Updated two technician PDFs and visually
+  reviewed every page. Final CI/artifact identity will be recorded separately.
+- No actual server commands, AnyDesk resets or firewall changes performed here.
 
 ### 2026-11-02 - Corrected ZIP and Windows preservation handoff completed
 

@@ -17,44 +17,55 @@ the lockdown project. The versioned source and documentation are retained at:
 /opt/ares/internet-lockdown/ares-lockdown-v1.4.2/
 ```
 
-With an interactive terminal and the required existing OS tools, the integration
-calls the supplied installer with `--no-boot`. That installer discovers or reuses
-the actual student-facing LAN mapping and may ask the technician to confirm a
-shared LAN/uplink or select numbered LAN interfaces. No school-specific interface
-or IP address is embedded in this integration. Upstream default mode is `server`;
-an existing gateway-mode selection is retained by the supplied installer.
+The integration installs `lockdown-internet`, `restore-internet`,
+`ares-configure-lockdown` and `ares-anydesk-diagnose` even when no network
+adapter has an address or no interactive terminal is attached. The original
+v1.4.2 source and firewall engine remain unchanged. No LAN address or interface
+name is guessed or embedded at build time.
 
-Installation does not activate firewall rules, restore an existing firewall,
-enable boot persistence, start Tailscale or install OS packages. Its firewall
-readiness invocation uses only `--tailscale --check`. A readiness warning does
-not mean real connectivity was tested or that activation is ready.
+Installation does not apply firewall rules, enable boot persistence, start
+Tailscale or download packages. It needs the existing OS tools (`nft`, `ip`,
+Python and systemd). Missing prerequisites defer optional setup without failing
+the successful core installation.
 
-If lockdown is already active or enabled at boot, existing rules, runtime scripts,
-configuration and services are retained, and setup is deferred. Optional remote
-preparation is also deferred so it does not restart/replace service-cgroup-based
-Tailscale exceptions. Missing tools or noninteractive input similarly leave the
-project available for later setup; optional setup failure does not invalidate a
-successful core installation. The existing `nft`, `ip`, Python, systemd and core
-utilities are prerequisites; no dependency download occurs at the school.
+If lockdown is already active or enabled at boot, its runtime scripts, commands,
+configuration and services are preserved. Optional remote/AnyDesk preparation
+also defers, avoiding service restarts that could invalidate cgroup allowances.
 
-## Later setup and use
+## First use after connecting a network
 
-From an interactive Ubuntu terminal, when the operator has arranged safe access
-and the upstream prerequisites are satisfied:
+Run from a local console or a separately arranged support connection:
 
 ```bash
-sudo bash /opt/ares/internet-lockdown/ares-lockdown-v1.4.2/install.sh --no-boot
+lockdown-internet
 ```
 
-The upstream installer refuses an in-place upgrade while lockdown is active or
-boot lockdown is enabled. The ARES installer does not remove those protections
-automatically. Use the supplied operating guide to arrange a later upgrade and
-to choose temporary, permanent-for-this-boot or reboot-persistent operation.
+If no current LAN mapping exists, this command asks which numbered interface and
+subnet student devices actually use. It never silently trusts a modem-only
+uplink, including when that is the only interface. If there is no eligible
+student IPv4 LAN yet, selection remains pending; connect/configure the LAN and
+run the same command again. Installing offline does not activate a firewall.
+LAN selection requires a terminal; subsequent use reuses a current mapping.
+The supplied engine then applies its normal five-minute rollback test.
 
-The project provides `lockdown-internet`, `restore-internet` and
-`ares-anydesk-diagnose`. A later reboot opt-in uses the supplied `install.sh
---boot` procedure and its live-test confirmation. No boot setting is selected by
-the ARES master installer. The operating PDF is:
+Restore does not require any LAN selection or active adapter:
+
+```bash
+restore-internet
+```
+
+Reselect a LAN after a subnet/interface change with `ares-configure-lockdown`.
+For Tailscale exceptions, bring it online first and use
+`lockdown-internet --tailscale`. Other original options pass through unchanged.
+The wrapper sends `--confirm` directly to the rule engine so an in-progress test
+can be confirmed without an unrelated LAN configuration prompt.
+
+The original `install.sh --boot` procedure remains a separate advanced opt-in,
+after the documented live connectivity/recovery tests. It is not run by the ARES
+master installer. The original versioned manual explains the firewall engine;
+this guide describes the added deferred LAN-selection commands. The operating PDF is:
+
+
 
 ```text
 /opt/ares/internet-lockdown/ares-lockdown-v1.4.2/ARES_Internet_Lockdown_README_v1.4.2.pdf
@@ -74,8 +85,8 @@ source and checks the upstream manifest. The shared offline audit recognizes
 only the exact upstream error message recommending installation of missing
 nftables; it does not allow execution of package installation or downloads.
 
-The helper's service/firewall cases are exercised with fake commands and a fake
-upstream system installer. Those tests do not establish live AnyDesk, Tailscale,
+The integration's disconnected installation and service/firewall cases are
+exercised with fake commands, while LAN selection is checked independently. Those tests do not establish live AnyDesk, Tailscale,
 Docker, IPv6, mesh mDNS, restoration or reboot behavior. The handoff reports only
 initial user-observed v1.4.2 success; its remaining field limitations are retained.
 The v1.4.2 installer deliberately contains v1.4.1 firewall code/banners.

@@ -61,3 +61,13 @@ the selected profile Host header; the old installer is excluded. See
 [Tsavo Trust](TSAVO_TRUST.md). Missing or invalid required Tsavo content fails the
 build/preflight rather than silently omitting the module. No checksum-bypass
 wrapper is copied. Earlier v1.12 evidence remains historical and unchanged.
+
+## School hostname alongside the shared alias
+
+Production keeps the existing Linux hostname (for example `tsavo3`) and Avahi's
+`tsavo3.local`, adds `ares.local`, and includes both in the ARES Nginx site.
+The test profile instead adds `ares-test.local`. The publisher waits for an
+address, supports a link-local LAN without DHCP, follows address changes and
+retries a failed publisher. It does not need Internet. Use only one shared
+`ares.local` on a given LAN; a name collision cannot give two servers that same
+unambiguous address. Linux/Tailscale hostname changes remain separate actions.

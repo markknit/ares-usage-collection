@@ -149,6 +149,14 @@ echo "Direct teacher APK: ${ARES_URL}/downloads/ares-sync.apk"
 echo "Installation log: $LOG_FILE"
 echo "Lesson3 corpus: installed and verified (95 plans / 806 lessons)"
 echo "Lesson3 $LESSON3_VERSION: complete the packaged acceptance checklist before rollout."
+echo
+echo 'Preparing the school AnyDesk identity and unattended access.'
+if bash "$SCRIPT_DIR/remote-access/prepare_anydesk.sh" "$SCHOOL_CODE"; then
+  echo 'AnyDesk setup completed; save the printed ID with the school record.'
+else
+  echo 'AnyDesk setup is Pending; core installation remains successful.'
+  echo "Later setup from a local console: sudo ares-setup-anydesk $SCHOOL_CODE"
+fi
 source "$SCRIPT_DIR/optional_remote_support.sh"
 if prepare_optional_remote_support; then
   optional_remote_support

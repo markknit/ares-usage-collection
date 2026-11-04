@@ -46,7 +46,7 @@ class SimpleInstallerTests(unittest.TestCase):
             server.server_close()
             thread.join()
 
-    def run_install(self, *, remote_status=0, broken_package=False, failed_step="", lockdown_status=0, active_lockdown=False):
+    def run_install(self, *, remote_status=0, broken_package=False, failed_step="", lockdown_status=0, active_lockdown=False, anydesk_status=0):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             root = base / "package"
@@ -90,6 +90,8 @@ class SimpleInstallerTests(unittest.TestCase):
             remote.write_text('#!/bin/bash\necho REMOTE_PREPARATION >> "$CALLS"\nexit "$REMOTE_STATUS"\n', newline="\n")
             (root / "remote-access/prepare_internet_lockdown.sh").write_text(
                 '#!/bin/bash\necho LOCKDOWN_PREPARATION >> "$CALLS"\nexit "${LOCKDOWN_STATUS:-0}"\n', newline="\n")
+            (root / "remote-access/prepare_anydesk.sh").write_text(
+                '#!/bin/bash\necho ANYDESK_PREPARATION >> "$CALLS"\nexit "$ANYDESK_STATUS"\n', newline="\n")
             manifest(root)
             if broken_package == "missing":
                 (root / "package.conf").unlink()
@@ -110,7 +112,7 @@ class SimpleInstallerTests(unittest.TestCase):
                 path.chmod(0o755)
             prefix = 'export PATH="$(cygpath -u "$1"):$PATH"; ' if os.name == "nt" else 'export PATH="$1:$PATH"; '
             env = dict(os.environ, CALLS=(base / "calls").as_posix(), REMOTE_STATUS=str(remote_status), FAIL_STEP=failed_step,
-                       LOCKDOWN_STATUS=str(lockdown_status), ACTIVE_LOCKDOWN="yes" if active_lockdown else "no")
+                       ANYDESK_STATUS=str(anydesk_status), LOCKDOWN_STATUS=str(lockdown_status), ACTIVE_LOCKDOWN="yes" if active_lockdown else "no")
             result = subprocess.run([BASH, "-c", prefix + 'bash "$2" ARES-S0099', "test",
                                      bin_dir.as_posix(), (root / "install_offline.sh").as_posix()],
                                     capture_output=True, text=True, env=env)
@@ -122,7 +124,14 @@ class SimpleInstallerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("completed successfully", result.stdout)
         self.assertIn("Remote support deferred", result.stdout)
-        self.assertTrue(calls.endswith("tsavo/install.sh\nREMOTE_PREPARATION\nLOCKDOWN_PREPARATION\n"), calls)
+        self.assertTrue(calls.endswith("tsavo/install.sh\nANYDESK_PREPARATION\nREMOTE_PREPARATION\nLOCKDOWN_PREPARATION\n"), calls)
+
+    def test_anydesk_deferral_or_failure_preserves_core_success(self):
+        for code in (2, 42):
+            result, calls = self.run_install(anydesk_status=code)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('AnyDesk setup is Pending', result.stdout)
+            self.assertIn('LOCKDOWN_PREPARATION', calls)
 
     def test_lockdown_deferral_or_failure_keeps_core_success(self):
         for code in (2, 42):

@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import zipfile
@@ -23,6 +24,7 @@ DOCUMENTS = (
     "LESSON3_V094_ACCEPTANCE.md", "REMOTE_ACCESS.md", "INTERNET_LOCKDOWN.md",
     "PROFILES.md", "PROFILE_ACCEPTANCE.md", "TSAVO_TRUST.md",
     "TECHNICIAN_OVERVIEW.md", "PRE_RELOAD_PRESERVATION.md",
+    "ANYDESK_SETUP.md",
 )
 
 
@@ -110,6 +112,8 @@ def repackage(base_zip, output, revision):
     # retains inherited files, media, image archives, corpus and approved APK.
     preserved = []
     with zipfile.ZipFile(base_zip) as archive:
+        base_modes = {item.filename.split('/', 1)[1]: (item.external_attr >> 16) & 0o777
+                      for item in archive.infolist() if not item.is_dir()}
         for item in archive.infolist():
             if item.is_dir():
                 continue
@@ -129,7 +133,13 @@ def repackage(base_zip, output, revision):
     with zipfile.ZipFile(candidate, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
         for path in sorted(stage.rglob("*")):
             if path.is_file():
-                archive.write(path, path.relative_to(work).as_posix())
+                relative = path.relative_to(stage).as_posix()
+                mode = (0o755 if path.suffix == '.sh' else 0o644) if relative in updated else base_modes[relative]
+                info = zipfile.ZipInfo.from_file(path, path.relative_to(work).as_posix())
+                info.create_system = 3
+                info.external_attr = (stat.S_IFREG | mode) << 16
+                with path.open('rb') as source, archive.open(info, 'w', force_zip64=True) as target:
+                    shutil.copyfileobj(source, target, 1024 * 1024)
     checksum = verifier.verify(candidate, "production", APK_SHA)
     artifact = output / (BUNDLE + ".zip")
     candidate.rename(artifact)

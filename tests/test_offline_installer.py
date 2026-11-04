@@ -122,13 +122,15 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('trap cleanup EXIT', activate)
 
     def test_mdns_selector_excludes_non_lan_networks(self):
-        installer = (BUILDER / "templates" / "lesson_plan_install.sh").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn('str(parsed) == "10.42.0.1"', installer)
-        self.assertIn('ipaddress.ip_network("100.64.0.0/10")', installer)
-        for prefix in ("docker", "br-", "veth", "tailscale", "tun", "tap", "wg"):
-            self.assertIn(f'"{prefix}"', installer)
+        from test_profiles import load
+        selector = load('mdns_addresses')
+        def dev(name, address, up=True):
+            return dict(ifname=name, flags=['UP'] if up else [],
+                        addr_info=[dict(family='inet', local=address)])
+        devices = [dev('docker0', '172.17.0.1'), dev('tailscale0', '100.80.0.1'),
+                   dev('tun0', '10.8.0.1'), dev('enp2s0', '169.254.4.5'),
+                   dev('wlp1s0', '10.42.0.1'), dev('eth0', '192.168.1.5', False)]
+        self.assertEqual(selector.endpoints(devices), [('wlp1s0', '10.42.0.1'), ('enp2s0', '169.254.4.5')])
 
     def test_builder_pins_remote_access_payloads(self):
         builder = (BUILDER / "build_offline_bundle.sh").read_text(encoding="utf-8")

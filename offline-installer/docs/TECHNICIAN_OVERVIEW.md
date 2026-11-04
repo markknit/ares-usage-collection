@@ -20,7 +20,8 @@ Keep the ZIP and this overview on a separate Windows computer or external drive.
 - **ARES Sync:** server usage-export and tracking support, approved Android APK and the local phone installation page.
 - **Admin tools:** the approved admin page, Admin_tools module entry and ARES Sync user guide, installed as one content update. The admin folder keeps its existing password protection.
 - **Tsavo Trust:** the module page, logo, six offline videos and tracking mapping.
-- **Local addressing:** ares.local configuration and the module links needed on the school LAN.
+- **Local addressing:** ares.local alongside the school hostname (for example tsavo3.local). Publication starts automatically when a LAN address is available.
+- **AnyDesk:** reset the cloned identity once per school, enter the standard unattended password and save the displayed new ID. If disconnected registration is pending, retrieve the ID later.
 - **Optional remote support:** bundled Tailscale and TigerVNC preparation; activation requires a separate choice and server Internet access.
 - **Internet Lockdown v1.4.2:** the supplied tools and operating manual. Setup does not apply firewall rules or enable reboot lockdown. Existing active lockdown is preserved.
 
@@ -46,8 +47,10 @@ and later uploads still need normal Internet or mobile data on the phone.
    asked. The installer imports and checks the corpus. An already installed
    corpus is recognized rather than imported again.
 4. **Leave optional activation for a separate decision.** Choose No for remote
-   activation during an offline install. If lockdown setup asks, confirm/select
-   only the actual student-facing LAN. Do not select a modem-only uplink.
+   activation during an offline install. AnyDesk setup asks for RESET and a hidden
+   password; use a local console because reset disconnects AnyDesk sessions. Save
+   the new ID, or retrieve it later if Pending. Lockdown commands install without
+   an adapter; first use selects the student LAN. Do not select a modem-only uplink.
    Existing active or boot-enabled lockdown may defer optional setup.
 5. **Read the final result.** Require the core installation success message and
    keep the installation log path. Optional-tool warnings do not cancel core

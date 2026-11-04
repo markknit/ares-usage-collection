@@ -25,20 +25,15 @@ class InternetLockdownTests(unittest.TestCase):
             remote.mkdir()
             shutil.copytree(BUILDER / "internet-lockdown", remote / "internet-lockdown")
             release = remote / "internet-lockdown/ares-lockdown-v1.4.2"
-            # Substitute only the vendor's privileged installer and its fixture
-            # checksum. All original imported files remain unchanged in source.
-            (release / "install.sh").write_text(
-                '#!/bin/bash\necho "VENDOR_INSTALL $*" >> "$CALLS"\nexit "$VENDOR_STATUS"\n', newline="\n")
             manifest = release / "SHA256SUMS"
-            manifest.write_text("".join(
-                hashlib.sha256((release / line[66:]).read_bytes()).hexdigest() + "  " + line[66:] + "\n"
-                for line in manifest.read_text().splitlines()), newline="\n")
+            for name, source in {"lockdown_dispatch.sh": "templates/lockdown_dispatch.sh",
+                                 "configure_lockdown.py": "tools/configure_lockdown.py"}.items():
+                shutil.copyfile(BUILDER / source, remote / name)
             helper = remote / "prepare_internet_lockdown.sh"
             text = (BUILDER / "templates/prepare_internet_lockdown.sh").read_text()
             text = text.replace('[[ ${EUID:-$(id -u)} -eq 0 ]] || { log \'run as root\'; exit 1; }', '')
-            if terminal:
-                # Model an interactive operator without needing a Windows PTY.
-                text = text.replace('if [[ ! -t 0 ]]; then', 'if false; then')
+            # Keep every host path in this disposable fixture.
+            text = text.replace('/usr/local/', (root / 'local').as_posix() + '/')
             helper.write_text(text, newline="\n")
             bin_dir = root / "bin"
             bin_dir.mkdir()
@@ -67,12 +62,19 @@ class InternetLockdownTests(unittest.TestCase):
             self.assertNotIn("nft -f", calls)
             self.assertNotIn("systemctl enable", calls)
             self.assertNotIn("systemctl stop", calls)
+            if not active and not boot:
+                for command in ('lockdown-internet', 'restore-internet', 'ares-configure-lockdown'):
+                    self.assertTrue((root / 'local/bin' / command).is_file(), command)
+                self.assertEqual((root / 'local/sbin/lockdown_internet.sh').read_bytes(),
+                                 (release / 'lockdown_internet.sh').read_bytes())
             return result, calls
 
-    def test_preparation_invokes_only_no_boot_installer(self):
-        result, calls = self.run_preparation()
+    def test_unplugged_preparation_installs_commands_without_network_selection(self):
+        result, calls = self.run_preparation(terminal=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("VENDOR_INSTALL --no-boot", calls)
+        self.assertNotIn("VENDOR_INSTALL", calls)
+        self.assertIn("no adapter or Internet connection", result.stdout)
+        self.assertNotIn("ip ", calls)
 
     def test_active_or_boot_lockdown_preserves_commands_and_configuration(self):
         for flags in ({"active": True}, {"boot": True}):
@@ -80,16 +82,6 @@ class InternetLockdownTests(unittest.TestCase):
                 result, calls = self.run_preparation(**flags)
                 self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                 self.assertNotIn("VENDOR_INSTALL", calls)
-
-    def test_noninteractive_install_leaves_project_for_later(self):
-        result, calls = self.run_preparation(terminal=False)
-        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertNotIn("VENDOR_INSTALL", calls)
-
-    def test_vendor_failure_is_reported(self):
-        result, calls = self.run_preparation(vendor_status=23)
-        self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
-        self.assertIn("VENDOR_INSTALL --no-boot", calls)
 
 
 if __name__ == "__main__":

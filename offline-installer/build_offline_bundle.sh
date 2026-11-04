@@ -190,6 +190,13 @@ install -m 0644 "$SELF_DIR/templates/teacher_install_page.html" "$STAGE/teacher-
 install -m 0755 "$SELF_DIR/templates/lesson_plan_install.sh" "$STAGE/lesson_plan/install.sh"
 install -m 0755 "$SELF_DIR/templates/prepare_remote_access.sh" "$STAGE/remote-access/prepare_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/prepare_internet_lockdown.sh" "$STAGE/remote-access/prepare_internet_lockdown.sh"
+install -m 0644 "$SELF_DIR/tools/configure_lockdown.py" "$STAGE/remote-access/configure_lockdown.py"
+install -m 0755 "$SELF_DIR/templates/lockdown_dispatch.sh" "$STAGE/remote-access/lockdown_dispatch.sh"
+install -m 0755 "$SELF_DIR/templates/prepare_anydesk.sh" "$STAGE/remote-access/prepare_anydesk.sh"
+install -m 0755 "$SELF_DIR/templates/setup_anydesk.sh" "$STAGE/remote-access/setup_anydesk.sh"
+install -m 0755 "$SELF_DIR/templates/configure_mdns.sh" "$STAGE/lesson_plan/configure_mdns.sh"
+install -m 0755 "$SELF_DIR/templates/ares_mdns_alias.sh" "$STAGE/lesson_plan/ares_mdns_alias.sh"
+install -m 0644 "$SELF_DIR/tools/mdns_addresses.py" "$STAGE/lesson_plan/mdns_addresses.py"
 rsync -a --delete "$SELF_DIR/internet-lockdown/" "$STAGE/remote-access/internet-lockdown/"
 install -m 0755 "$SELF_DIR/templates/ares_enable_remote_access.sh" "$STAGE/remote-access/ares_enable_remote_access.sh"
 install -m 0755 "$SELF_DIR/templates/ares_disable_remote_access.sh" "$STAGE/remote-access/ares_disable_remote_access.sh"
@@ -204,6 +211,7 @@ install -m 0644 "$SELF_DIR/docs/LESSON3_CORPUS_INSTALL.md" "$STAGE/docs/LESSON3_
 install -m 0644 "$SELF_DIR/docs/LESSON3_V094_ACCEPTANCE.md" "$STAGE/docs/LESSON3_V094_ACCEPTANCE.md"
 install -m 0644 "$SELF_DIR/docs/REMOTE_ACCESS.md" "$STAGE/docs/REMOTE_ACCESS.md"
 install -m 0644 "$SELF_DIR/docs/INTERNET_LOCKDOWN.md" "$STAGE/docs/INTERNET_LOCKDOWN.md"
+install -m 0644 "$SELF_DIR/docs/ANYDESK_SETUP.md" "$STAGE/docs/ANYDESK_SETUP.md"
 install -m 0644 "$SELF_DIR/docs/TECHNICIAN_OVERVIEW.md" "$STAGE/docs/TECHNICIAN_OVERVIEW.md"
 install -m 0644 "$SELF_DIR/docs/PRE_RELOAD_PRESERVATION.md" "$STAGE/docs/PRE_RELOAD_PRESERVATION.md"
 install -m 0644 "$SELF_DIR/docs/PROFILES.md" "$STAGE/docs/PROFILES.md"
@@ -483,6 +491,13 @@ for required in \
   teacher-app/install-page.html \
   remote-access/prepare_remote_access.sh \
   remote-access/prepare_internet_lockdown.sh \
+  remote-access/configure_lockdown.py \
+  remote-access/lockdown_dispatch.sh \
+  remote-access/prepare_anydesk.sh \
+  remote-access/setup_anydesk.sh \
+  lesson_plan/configure_mdns.sh \
+  lesson_plan/ares_mdns_alias.sh \
+  lesson_plan/mdns_addresses.py \
   remote-access/internet-lockdown/STATUS.md \
   remote-access/internet-lockdown/ares-lockdown-v1.4.2/install.sh \
   remote-access/internet-lockdown/ares-lockdown-v1.4.2/SHA256SUMS \
@@ -505,6 +520,7 @@ for required in \
   docs/LESSON3_V094_ACCEPTANCE.md \
   docs/REMOTE_ACCESS.md \
   docs/INTERNET_LOCKDOWN.md \
+  docs/ANYDESK_SETUP.md \
   docs/pdf/ARES_Sync_Technician_Guide.pdf \
   docs/pdf/ARES_Sync_Teacher_Guide.pdf \
   docs/LESSON3_USER_GUIDE.pdf \

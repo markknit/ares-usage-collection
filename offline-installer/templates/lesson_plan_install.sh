@@ -52,123 +52,12 @@ echo "Backups of anything replaced will be saved to: $BACKUP_DIR"
 # ============================================================================
 step "1. mDNS alias ($ARES_ALIAS) — systemd service"
 # ============================================================================
-# Works identically whether this box is running its own DHCP/DNS (hotspot
-# mode) or is just a client on someone else's router. The publisher prefers
-# the normal ARES LAN address and deliberately excludes container, tunnel,
-# loopback, link-local, and Tailscale carrier-grade NAT addresses.
-
-if ! command -v avahi-publish >/dev/null 2>&1; then
-  fail "avahi-publish not found. Is avahi-utils installed? Skipping mDNS setup — fix manually."
+# Avahi retains hostname.local; the separate publisher adds the generic alias.
+# An unplugged LAN is a normal deployment state, not a failed installation.
+if bash "$SCRIPT_DIR/configure_mdns.sh"; then
+  ok "installed $ARES_ALIAS alongside $(hostname -s).local"
 else
-  install -d -m 0755 /etc/ares
-  printf 'ARES_ALIAS=%s\n' "$ARES_ALIAS" > /etc/ares/mdns-profile.conf
-  chmod 0644 /etc/ares/mdns-profile.conf
-  cat > /usr/local/bin/ares-mdns-alias.sh << 'EOF'
-#!/bin/bash
-# Publishes a fixed mDNS alias (ares.local) pointing at this box's current
-# IP. Re-publishes automatically if the IP changes (e.g. DHCP lease renewal
-# on boxes that are DNS/DHCP clients rather than the server).
-source /etc/ares/mdns-profile.conf
-ALIAS="$ARES_ALIAS"
-CHECK_INTERVAL=30
-current_pid=""
-last_ip=""
-
-choose_lan_ip() {
-  ip -o -4 address show scope global | python3 -c '
-import ipaddress
-import sys
-
-candidates = []
-for line in sys.stdin:
-    fields = line.split()
-    if len(fields) < 4:
-        continue
-    interface = fields[1]
-    address = fields[3].split("/", 1)[0]
-    try:
-        parsed = ipaddress.ip_address(address)
-    except ValueError:
-        continue
-    if interface.startswith(("docker", "br-", "veth", "tailscale", "tun", "tap", "wg")):
-        continue
-    if parsed.is_loopback or parsed.is_link_local or parsed in ipaddress.ip_network("100.64.0.0/10"):
-        continue
-    candidates.append((interface, parsed))
-
-for interface, parsed in candidates:
-    if str(parsed) == "10.42.0.1":
-        print(parsed)
-        raise SystemExit(0)
-for interface, parsed in candidates:
-    if interface.startswith(("wl", "en", "eth")) and parsed.is_private:
-        print(parsed)
-        raise SystemExit(0)
-for interface, parsed in candidates:
-    if parsed.is_private:
-        print(parsed)
-        raise SystemExit(0)
-if candidates:
-    print(candidates[0][1])
-'
-}
-
-cleanup() {
-  [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
-  exit 0
-}
-trap cleanup TERM INT
-
-while true; do
-  lan_ip=$(choose_lan_ip)
-  if [ -n "$lan_ip" ] && [ "$lan_ip" != "$last_ip" ]; then
-    echo "$(date -Is) IP changed: '$last_ip' -> '$lan_ip'. Republishing $ALIAS."
-    [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
-    avahi-publish -a -R "$ALIAS" "$lan_ip" &
-    current_pid=$!
-    last_ip="$lan_ip"
-  elif [ -z "$lan_ip" ] && [ -n "$last_ip" ]; then
-    echo "$(date -Is) no eligible LAN IPv4 address; withdrawing $ALIAS."
-    [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
-    current_pid=""
-    last_ip=""
-  fi
-  sleep "$CHECK_INTERVAL"
-done
-EOF
-  chmod +x /usr/local/bin/ares-mdns-alias.sh
-  ok "wrote /usr/local/bin/ares-mdns-alias.sh"
-
-  cat > /etc/systemd/system/ares-mdns-alias.service << 'EOF'
-[Unit]
-Description=Publish fixed mDNS alias (ares.local) for this ARES box
-After=network-online.target avahi-daemon.service
-Wants=network-online.target
-Requires=avahi-daemon.service
-
-[Service]
-ExecStart=/usr/local/bin/ares-mdns-alias.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  ok "wrote /etc/systemd/system/ares-mdns-alias.service"
-
-  systemctl daemon-reload
-  systemctl enable ares-mdns-alias.service
-  systemctl restart ares-mdns-alias.service
-  sleep 2
-  if systemctl is-active --quiet ares-mdns-alias.service; then
-    if timeout 8 avahi-resolve -4 -n "$ARES_ALIAS" >/dev/null 2>&1; then
-      ok "ares-mdns-alias.service is running and $ARES_ALIAS resolves"
-    else
-      fail "ares-mdns-alias.service is running, but $ARES_ALIAS did not resolve"
-    fi
-  else
-    fail "ares-mdns-alias.service did not start — check: systemctl status ares-mdns-alias.service"
-  fi
+  fail "mDNS setup failed; check avahi-daemon and ares-mdns-alias services"
 fi
 
 # ============================================================================
@@ -193,7 +82,7 @@ if [ -z "$NGINX_ACTIVE_CONF" ]; then
   fail "Could not find an active nginx config with an 'ares' server_name. Skipping — patch manually."
 else
   cp "$NGINX_ACTIVE_CONF" "$BACKUP_DIR/$(basename "$NGINX_ACTIVE_CONF").bak"
-  if python3 "$SCRIPT_DIR/configure_nginx.py" "$NGINX_ACTIVE_CONF" "$ARES_ALIAS" && nginx -t; then
+  if python3 "$SCRIPT_DIR/configure_nginx.py" "$NGINX_ACTIVE_CONF" "$ARES_ALIAS" "$(hostname -s).local" && nginx -t; then
     systemctl reload nginx || fail "Nginx reload failed"
     ok "configured $ARES_ALIAS in $NGINX_ACTIVE_CONF"
   else

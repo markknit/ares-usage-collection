@@ -50,7 +50,10 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
    `READY`, then enter the administrator email and password when asked.
 4. Wait for `ARES Q4 offline installation completed successfully`. The installer
    imports and verifies 95 lesson plans and 806 lessons and installs Tsavo Trust.
-5. If asked to activate remote support, press Enter for No during an offline
+5. AnyDesk setup asks for `RESET` and the standard unattended-access password.
+   Use a local console; reset disconnects AnyDesk sessions. Save the printed ID.
+   If Pending, follow `docs/ANYDESK_SETUP.md`; retry preserves the new identity.
+   If asked to activate remote support, press Enter for No during an offline
    installation. A warning about unavailable remote support does not invalidate
    a successful core installation. Save the installation log path printed on screen.
 6. From another device on the school network, open `http://ares.local`, check
@@ -67,8 +70,9 @@ offline installation usable. ARES support can arrange preparation and activation
 later. Activation needs outbound Internet on the server. See `docs/REMOTE_ACCESS.md`.
 
 The bundled Internet Lockdown v1.4.2 project is prepared afterward, with activation
-and reboot persistence left as separate choices. Confirm/select the actual
-student-side LAN if prompted. Existing active or boot-enabled lockdown is
+and reboot persistence left as separate choices. Commands install with no
+active adapter; the first `lockdown-internet` run after connection asks for the
+actual student-side LAN. `restore-internet` does not require LAN selection. Existing active or boot-enabled lockdown is
 preserved and its upgrade is deferred; optional remote preparation is also
 deferred in that case. If setup needs prerequisites or later attention, core
 ARES installation remains successful. See `docs/INTERNET_LOCKDOWN.md` and the

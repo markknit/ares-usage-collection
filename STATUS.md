@@ -24,15 +24,15 @@ Last updated: 2026-11-03
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Owner reports fresh standalone install ran well except two network setup issues | November 3 report: generic mDNS alias absent and lockdown setup required an active adapter. AnyDesk cloning setup requested. New code/update packages are being validated; no new live acceptance inferred. |
-| School hostname and generic mDNS alias | Follow-up implemented; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
-| AnyDesk school identity | Implemented with operator confirmation; live check Pending | Reset cloned configuration once, hidden password prompt, display/save verified new ID; repeat runs preserve identity. Active/boot lockdown defers service changes. |
+| Simplified offline installation | Owner reports fresh standalone install ran well except two network setup issues | November 3 report: generic mDNS alias absent and lockdown setup required an active adapter. AnyDesk cloning setup requested. New code/update packages are verified and published; new live checks remain Pending. |
+| School hostname and generic mDNS alias | Follow-up packaged; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
+| AnyDesk school identity | Packaged with operator confirmation; live check Pending | Reset cloned configuration once, hidden password prompt, display/save verified new ID; repeat runs preserve identity. Active/boot lockdown defers service changes. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
-| Internet Lockdown v1.4.2 | Disconnected-safe command installation implemented; validation in progress | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
-| Corrected v1.13 ZIP and technician overview | November 2 artifact retained; November 3 update being packaged | Prior verified `d3dc1c30...` ZIP remains unchanged. New standalone network/AnyDesk changes will have a separately named release folder and evidence. |
-| tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. No reload or restore test performed. |
+| Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
+| Corrected v1.13 ZIP and technician overview | November 3 full ZIP and small offline update verified on Windows | [New evidence](offline-installer/docs/evidence/2026-11-03-school-setup-update.md): full SHA `195a140f...`, 340 files; small update 29 files, also in Git. Prior artifacts unchanged. |
+| tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. Owner subsequently reloaded the base and reported the standalone installation; backup restoration itself has not been tested. |
 | Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
@@ -48,17 +48,18 @@ Last updated: 2026-11-03
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
 | Field rollout approval | Pending clean installation and remaining live acceptance | Corrected artifact includes storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2 and passed independent verification. No field acceptance inferred from packaging. |
 
-## Corrected production v1.13 artifact
+## Current production v1.13 artifact (November 3)
 
-- Source: `3053d5022382d49a3e61185262cbb754b2f25ed2`.
-- SHA-256: `d3dc1c301290a398a30478cbd8a2ee804a31b78a8bdffd7a88aaf00f07b4edf2`.
-- Independent verification: 332 files; Windows copy hash matches.
-- Windows release folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261102`.
-- [Complete corrected release/preservation evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md).
-- Owner reports a standalone installation on a freshly loaded server succeeded
-  with mDNS and disconnected-lockdown exceptions; the AnyDesk cloning step was
-  missing. Follow-up source fixes are in progress below; remaining acceptance
-  is **Pending**.
+- Source: `96281fc50741e539f1f3131c9dd4265abcb4a2bc`.
+- SHA-256: `195a140f9acea56b7237b84e35a6853b3cb1a0939224db0060e456178a8372fe`.
+- Independent verification: 340 files; Windows hash confirmed.
+- Windows folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261103`.
+- [Full and small update evidence](offline-installer/docs/evidence/2026-11-03-school-setup-update.md).
+- [Small offline update for an already-installed server](offline-installer/updates/README.md).
+- Ubuntu CI: 104 tests passed. New live checks remain **Pending**.
+- November 2 `d3dc1c30...` ZIP and preservation backups remain unchanged.
+  Its [historical release evidence](offline-installer/docs/evidence/2026-11-02-v1.13-corrected-release.md)
+  still records the pre-reload copies and their limits.
 
 ## Original production v1.13 artifact (retained payload baseline)
 
@@ -203,7 +204,10 @@ Last updated: 2026-11-03
   content/database. Repack ZIP Unix file modes are explicit on Windows too.
 - Focused portable fixtures passed 44 tests before final documentation refresh;
   all installer shell scripts parsed. Updated two technician PDFs and visually
-  reviewed every page. Final CI/artifact identity will be recorded separately.
+  reviewed every page. Native Ubuntu CI then passed all 104 tests. Full ZIP
+  independently passed 340-file verification; small offline update passed 29-file
+  extraction/inventory checks. [Final identities and limits](offline-installer/docs/evidence/2026-11-03-school-setup-update.md)
+  are recorded, with Windows copies and the small update retained in Git.
 - No actual server commands, AnyDesk resets or firewall changes performed here.
 
 ### 2026-11-02 - Corrected ZIP and Windows preservation handoff completed

@@ -31,14 +31,14 @@ Last updated: 2026-11-04
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
-| Corrected v1.13 ZIP and technician overview | November 4 candidate verified; manual AnyDesk recovery reported | [New evidence](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md): 341 files, hash `bc1b1f8e...`, 114 Ubuntu tests. Full ZIP and reviewed documents on Windows; earlier artifacts unchanged. Candidate installation and unattended/reboot acceptance remain Pending. |
+| Corrected v1.13 ZIP and technician overview | November 4 r2 verified and on Windows; fresh install Pending | [Release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): distinct `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Reviewed two-page overview/four-page technician guide and all copied documents match the ZIP. Earlier artifacts unchanged. |
 | tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. Owner subsequently reloaded the base and reported the standalone installation; backup restoration itself has not been tested. |
 | Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
-| Optional SSH / TigerVNC support | Browser SSH and direct saved-viewer VNC passed by operator report; new package Pending | Reauthentication addressed stale registration. The owner enabled browser SSH/operator and a persistent private Serve route, then connected directly with RealVNC after connecting the Windows Tailscale app. Source automates those settings. Updated activation/clean-image, reboot/disable/re-enable, native CI and new packaging remain Pending. |
+| Optional SSH / TigerVNC support | Browser SSH/direct saved-viewer passed manually; automated setup packaged in r2 | Reauthentication addressed stale registration. The owner connected directly with RealVNC after configuring Serve and connecting Windows Tailscale. r2 automates browser SSH/operator and persistent private forwarding; 120 native tests passed. Its own activation/clean-image and reboot/disable/re-enable remain Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -48,7 +48,19 @@ Last updated: 2026-11-04
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
 | Field rollout approval | Pending clean installation and remaining live acceptance | Corrected artifact includes storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2 and passed independent verification. No field acceptance inferred from packaging. |
 
-## Latest software-verified candidate (November 4)
+## Latest software-verified candidate (November 4 revision 2)
+
+- Source: `656cbc24a432588f3fd59940bfc1447bc49e0fdd`.
+- ZIP: `ARES_Q4_Offline_v0.94_amd64_v1.13_20261104-r2.zip`.
+- SHA-256: `fb10499cadc1abd1320347d39b20a7643823b8ec4b0241cec425e9e0fbe9bf8a`.
+- Windows folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261104_r2`.
+- 341 ZIP files independently verified; 120 Ubuntu tests passed.
+- [Release identity, reviewed handouts and acceptance limits](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md).
+- Manual browser SSH/direct RealVNC and AnyDesk recovery/reboot are reported
+  successful. This new artifact's own clean installation/activation and remaining
+  field checks stay Pending. It was built without running an installer.
+
+## Previous software-verified candidate (November 4)
 
 - Source: `29c3a1e11b48299b2021199a016ac0e17d213047`.
 - SHA-256: `bc1b1f8e1a79d38f6faa97527b2869e857aea2f74074f085e6be0c79b9d7edaa`.
@@ -196,6 +208,26 @@ Last updated: 2026-11-04
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-04 - Verified r2 Windows package and updated handouts
+
+- Built from canonical committed source `656cbc2`. Exact-source Ubuntu CI passed
+  all 120 tests and shell syntax checks (run `41955491774`, job `127009289837`).
+- Fresh independent extraction verified all 341 ZIP files; 267 untouched base
+  files were retained and 74 updated/new files recorded. Final ZIP hash is
+  `fb10499cadc1abd1320347d39b20a7643823b8ec4b0241cec425e9e0fbe9bf8a`.
+- Saved a distinct `20261104-r2.zip` in the new Windows r2 directory. Five PDFs
+  and three supplementary Markdown documents match their ZIP members. Visually
+  reviewed every page of the two-page overview and four-page technician guide.
+- No installer, Docker operation or download ran during packaging. Older ZIPs,
+  original media/inputs, private backups and v1.12 were retained unchanged.
+- Manual support results and the same-school AnyDesk retention policy are
+  recorded in the [r2 evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md).
+
+Still open:
+
+- Fresh r2 installation/activation, direct-route reboot/disable/re-enable,
+  explicit identity/password comparisons and remaining field acceptance.
 
 ### 2026-11-04 - Simplify routine support login after the full rerun
 

@@ -36,6 +36,11 @@ with the technician overview.
 ## Clean-test boundary
 
 Use the clean Clonezilla base plus the corrected ZIP for the installation test.
+For first-school identity tests, the reusable base must predate AnyDesk school
+personalization and must not contain its completed
+`/var/lib/ares/anydesk-setup/` record. A full reinstall on an already personalized
+server intentionally retains its ID. See `docs/ANYDESK_SETUP.md` for deliberate
+reassignment or an image that already contains school-specific support state.
 Do not automatically restore old `/etc`, firewall rules, private support state
 or a working Lesson3 database onto it: that would mix the old installation into
 the clean test. Retain backups for recovery or deliberate data migration.

@@ -4,6 +4,24 @@ AnyDesk must already be installed in the approved Ubuntu base. This setup does
 not download or update the AnyDesk application. It personalizes the installed
 client after cloning the school image.
 
+## First school setup versus a reinstall
+
+The goal is a unique ID for each deployed server, retained for later support.
+On first school setup, confirm RESET to replace the cloned ID. A completed
+same-school reinstall preserves that ID and its password; it does not reset them
+for every full installer run. The completion record is stored privately under
+`/var/lib/ares/anydesk-setup/` (`school-code`, `reset-done`, `password-set`).
+
+A reusable Clonezilla base must not include a completed school-personalization
+record or a deployed school's private support identity. Capture the base before
+school setup. If an image was captured afterward, support must explicitly reset
+each deployed copy from independent access; a same-code completion record could
+otherwise make a clone appear already personalized. Changing school code also
+requires an explicit reset. Preserve backups and the working server's ID; do not
+delete its completion record as a routine update step.
+
+## Personalize the server
+
 The master installer prepares these commands and offers setup after the core
 installation succeeds. Use a local console or independent SSH connection:
 

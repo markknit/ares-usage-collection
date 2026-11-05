@@ -21,7 +21,7 @@ Keep the ZIP and this overview on a separate Windows computer or external drive.
 - **Admin tools:** the approved admin page, Admin_tools module entry and ARES Sync user guide, installed as one content update. The admin folder keeps its existing password protection.
 - **Tsavo Trust:** the module page, logo, six offline videos and tracking mapping.
 - **Local addressing:** ares.local alongside the school hostname (for example tsavo3.local). Publication starts automatically when a LAN address is available.
-- **AnyDesk:** reset the cloned identity once per school, enter the standard unattended password and save the displayed new ID. If disconnected registration is pending, retrieve the ID later.
+- **AnyDesk:** reset the cloned identity once per school server, set the unattended password and save its new ID. Same-school reinstalls retain it. Use a base image captured before school personalization.
 - **Optional remote support:** Tailscale browser SSH and a saved VNC connection; activation requires a separate choice and server Internet access.
 - **Internet Lockdown v1.4.2:** the supplied tools and operating manual. Setup does not apply firewall rules or enable reboot lockdown. Existing active lockdown is preserved.
 

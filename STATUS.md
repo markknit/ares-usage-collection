@@ -220,11 +220,18 @@ Last updated: 2026-11-04
   normal retries still do not force reauthentication. Updated technician and
   acceptance Markdown records the simpler workflow. The earlier RunSSH=false
   default is superseded by the owner's requested browser SSH workflow.
+- Clarified school identity handling: first setup replaces the cloned AnyDesk
+  ID, while completed same-school reinstalls preserve it. The reusable base must
+  predate school personalization; otherwise a copied completion record can make
+  a clone appear configured. Deliberate reassignment remains an explicit reset.
 - Forty-one local remote-support/source tests passed on Windows/Git Bash.
   The owner subsequently confirmed direct RealVNC access after reconnecting the
   Windows Tailscale app. Browser SSH alone had not connected the desktop client.
-  Updated activation, reboot/disable/re-enable, native Ubuntu CI,
-  regenerated release PDFs and a new full ZIP remain Pending. The existing
+  Updated activation, reboot/disable/re-enable, regenerated release PDFs and a
+  new full ZIP remain Pending. Native Ubuntu CI passed all 120 tests for
+  `4e8e748e986f6b3c1dc67303483e5f7eac214cdf`, plus shell syntax checks:
+  https://github.com/markknit/ares-usage-collection/actions/runs/41955233294
+  (job `127008447489`). The existing
   November 4 ZIP is unchanged and contains the older activation behavior.
 
 ### 2026-11-04 - Manual AnyDesk profile recovery restored a connection

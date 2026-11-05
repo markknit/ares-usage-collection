@@ -125,6 +125,11 @@ Last updated: 2026-11-04
 
 ## Known Issues / Lessons Learned
 
+- Published technician PDFs have three tracked copies: `output/pdf/`,
+  `offline-installer/docs/pdf/` and the embedded rollout's `guides/`. After
+  regeneration, synchronize all three and refresh the embedded SHA256SUMS.
+  Run the source-guide/manifest checks before publishing; updating only the
+  installer-docs copy caused a CI mismatch during the r2 documentation sync.
 - Browser Tailscale SSH has its own ephemeral tailnet connection. It does not
   connect the Windows desktop apps to the tailnet. For saved VNC/PowerShell
   access, the support computer's Tailscale app must be connected separately.
@@ -223,6 +228,10 @@ Last updated: 2026-11-04
   original media/inputs, private backups and v1.12 were retained unchanged.
 - Manual support results and the same-school AnyDesk retention policy are
   recorded in the [r2 evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md).
+- The documentation publication check caught the older duplicate technician
+  PDFs. Synchronized all three tracked copies and refreshed the embedded
+  checksum; all 11 source checks then passed locally. This aligns repository
+  documentation with the already verified ZIP and does not change ZIP bytes.
 
 Still open:
 

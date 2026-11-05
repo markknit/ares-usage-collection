@@ -72,7 +72,14 @@ Its log is `/var/log/ares-anydesk-desktop.log`. Do not repeatedly reset a valid
 new ID to troubleshoot a desktop IPC error. The November 4 operator report
 showed a root-owned user profile and a client abort; correcting ownership and
 launching the client did not by itself establish recovery. A reboot/retest was
-requested, and live recovery remains Pending until the operator confirms it.
+requested. Later the operator confirmed a successful remote connection after
+repairing user-profile permissions and trying a fresh profile. The previous
+profile was retained. The password was reported lost: restore it, record the
+current ID and test actual unattended access and reboot/reconnection. That
+manual recovery does not establish clean installation of the updated candidate.
+The operator subsequently confirmed a successful connection after restart.
+Explicit password/ID comparison and corrected-installer rerun remain Pending.
+Do not clear a working profile automatically on ordinary installer reruns.
 
 Existing active or boot-enabled Internet Lockdown defers AnyDesk setup, because
 restarting its service could invalidate service-specific firewall allowances.

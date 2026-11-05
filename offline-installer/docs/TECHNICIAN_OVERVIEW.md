@@ -22,7 +22,7 @@ Keep the ZIP and this overview on a separate Windows computer or external drive.
 - **Tsavo Trust:** the module page, logo, six offline videos and tracking mapping.
 - **Local addressing:** ares.local alongside the school hostname (for example tsavo3.local). Publication starts automatically when a LAN address is available.
 - **AnyDesk:** reset the cloned identity once per school, enter the standard unattended password and save the displayed new ID. If disconnected registration is pending, retrieve the ID later.
-- **Optional remote support:** bundled Tailscale and TigerVNC preparation; activation requires a separate choice and server Internet access.
+- **Optional remote support:** Tailscale browser SSH and a saved VNC connection; activation requires a separate choice and server Internet access.
 - **Internet Lockdown v1.4.2:** the supplied tools and operating manual. Setup does not apply firewall rules or enable reboot lockdown. Existing active lockdown is preserved.
 
 The server installation needs no Internet downloads. Central phone enrollment
@@ -70,6 +70,11 @@ run separate checksum or build-qualification commands at every school.
 - Open the protected Admin Tools page and its ARES Sync user-guide link.
 - Confirm the support connections the school uses still work. Remote preparation
   preserves existing support services. New Tailscale/VNC activation is separate.
+  After activation, keep Tailscale connected on the support computer and save the
+  school's Tailscale address in the VNC viewer, port 5901. Open the saved connection
+  and enter the VNC password. No PowerShell tunnel is needed. Browser SSH is
+  available through the Tailscale admin console when permitted by its policy.
+  Browser SSH alone does not connect the Windows Tailscale app.
 
 Before reloading a test server, follow docs/PRE_RELOAD_PRESERVATION.md. Keep the
 Clonezilla base image, final installer ZIP and backups off the disk being erased.

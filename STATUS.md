@@ -24,21 +24,21 @@ Last updated: 2026-11-04
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Full SSH rerun passed core installation and preserved Lesson3 | November 4 transcript `20261104_102223` confirms healthy existing Lesson3/corpus and core verification passed. Remote activation failed at the empty-name prompt; AnyDesk desktop client subsequently crashed. |
+| Simplified offline installation | Latest full rerun passed core checks and retained working services | Operator run `20261104_171914` preserved healthy Lesson3/corpus and the running AnyDesk client. Remote preparation preserved active Tailscale/TigerVNC. Activation correctly rejected an offline coordination connection; subsequent diagnostics found a stale registration. |
 | School hostname and generic mDNS alias | Follow-up packaged; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
-| AnyDesk school identity | ID/password created; desktop connection failed; recovery Pending | Operator reports `desk_rt_ipc_error`, active X11 and online AnyDesk service but user client aborts. Root-owned user profile was found. Ownership repair/relaunch and reboot did not restore access; trace/crash details requested. Source now isolates root CLI HOME, repairs user ownership and reports client abort as Pending. |
+| AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
-| Corrected v1.13 ZIP and technician overview | November 4 candidate verified; live remote recovery unresolved | [New evidence](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md): 341 files, hash `bc1b1f8e...`, 114 Ubuntu tests. Full ZIP and reviewed documents on Windows; earlier artifacts unchanged. |
+| Corrected v1.13 ZIP and technician overview | November 4 candidate verified; manual AnyDesk recovery reported | [New evidence](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md): 341 files, hash `bc1b1f8e...`, 114 Ubuntu tests. Full ZIP and reviewed documents on Windows; earlier artifacts unchanged. Candidate installation and unattended/reboot acceptance remain Pending. |
 | tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. Owner subsequently reloaded the base and reported the standalone installation; backup restoration itself has not been tested. |
 | Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
-| Optional OpenSSH / TigerVNC support | Preparation passed; November 4 activation failed before enabling services | Empty/unusable school name caused a traceback; x11vnc had already been disabled by preparation. Follow-up retains current hostname on Enter, reprompts invalid names and preserves existing support services. Actual updated activation Pending. |
+| Optional SSH / TigerVNC support | Browser SSH and direct saved-viewer VNC passed by operator report; new package Pending | Reauthentication addressed stale registration. The owner enabled browser SSH/operator and a persistent private Serve route, then connected directly with RealVNC after connecting the Windows Tailscale app. Source automates those settings. Updated activation/clean-image, reboot/disable/re-enable, native CI and new packaging remain Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -55,8 +55,10 @@ Last updated: 2026-11-04
 - Windows folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261104`.
 - 341 ZIP files independently verified; 114 Ubuntu tests passed.
 - [Candidate identity and limits](offline-installer/docs/evidence/2026-11-04-v1.13-remote-support-candidate.md).
-- **AnyDesk live crash remains unresolved after reboot.** Pending trace/crash
-  evidence; no field-rollout or updated remote desktop acceptance claimed.
+- **Manual AnyDesk recovery and a connection after reboot passed by operator
+  report**, following ownership repair and a fresh user profile. Explicit
+  unattended authentication/ID comparison, corrected-installer rerun and clean
+  installation of this candidate remain Pending; no field rollout is approved.
 
 ## Current production v1.13 artifact (November 3)
 
@@ -111,6 +113,12 @@ Last updated: 2026-11-04
 
 ## Known Issues / Lessons Learned
 
+- Browser Tailscale SSH has its own ephemeral tailnet connection. It does not
+  connect the Windows desktop apps to the tailnet. For saved VNC/PowerShell
+  access, the support computer's Tailscale app must be connected separately.
+  Keep this explicit in the technician workflow; the owner confirmed direct
+  RealVNC worked after connecting the Windows app. Use private persistent Serve
+  forwarding for routine VNC rather than requiring a manual SSH tunnel.
 - Preserve the supplied Internet Lockdown release and its own checksum manifest
   unchanged, excluding it from profile substitution. Its handoff STATUS is a
   historical upstream document; repository-root STATUS and the integration guide
@@ -188,6 +196,62 @@ Last updated: 2026-11-04
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-04 - Simplify routine support login after the full rerun
+
+- Latest operator run `20261104_171914` passed package/core checks, retained healthy
+  Lesson3/corpus and existing AnyDesk personalization/client, and preserved active
+  Tailscale/TigerVNC during preparation. Nginx reported duplicate MIME warnings
+  but its configuration check passed; no unrelated Nginx change was made.
+- Tailscale 1.104.1 reported Running but Self.Online false and repeated coordination
+  `404: node not found`, while UDP/IPv4/IPv6 relay tests succeeded. A fresh sign-in
+  was requested through independent access. The owner subsequently confirmed
+  browser SSH after enabling Tailscale SSH/operator manually. No enrollment URL,
+  password or real tailnet address is stored in this record.
+- TigerVNC binaries and the enabled :1 unit were present, listening on loopback
+  port 5901. The owner confirmed a working VNC desktop through the LAN SSH tunnel
+  but rejected that sequence as too complicated for routine technician use.
+- Source follow-up enables Tailscale SSH and operator ares automatically. A
+  persistent private Serve TCP/5901 forward reaches the existing loopback VNC
+  listener. Existing matching routes are reused; unrelated routes, conflicting
+  handlers and public Funnel configurations are not overwritten. A forwarding
+  failure leaves working SSH and local TigerVNC running.
+- Activation prints saved-viewer instructions and actual coordination health;
+  normal retries still do not force reauthentication. Updated technician and
+  acceptance Markdown records the simpler workflow. The earlier RunSSH=false
+  default is superseded by the owner's requested browser SSH workflow.
+- Forty-one local remote-support/source tests passed on Windows/Git Bash.
+  The owner subsequently confirmed direct RealVNC access after reconnecting the
+  Windows Tailscale app. Browser SSH alone had not connected the desktop client.
+  Updated activation, reboot/disable/re-enable, native Ubuntu CI,
+  regenerated release PDFs and a new full ZIP remain Pending. The existing
+  November 4 ZIP is unchanged and contains the older activation behavior.
+
+### 2026-11-04 - Manual AnyDesk profile recovery restored a connection
+
+- The SSH desktop launch test found X11 display `:0` but exited with SIGABRT.
+  The available Apport report records an earlier 10:26 `--backend` crash and
+  contains no usable function names; it does not establish the current cause.
+- The first fresh-profile attempt failed at the profile move with Permission
+  denied, before launch. After user-profile ownership/permission repair, the
+  operator's successful rerun retained the previous profile in
+  `/home/ares/anydesk-profile-test.f9wZUSgP/previous-profile` and launched the
+  client through a temporary user service. The operator confirmed a remote
+  connection and reported that the unattended password was lost.
+- This is manual recovery evidence, not a clean installation of the November 4
+  candidate. Password restoration, actual unattended authentication, recording
+  the current ID and reboot/autostart/reconnection remain Pending. Do not clear
+  a working profile automatically on ordinary installer reruns.
+- No runtime code, release ZIP or live-host setting was changed by the agent
+  while recording this operator evidence.
+- The operator subsequently confirmed AnyDesk still works after restart. This
+  establishes a post-reboot connection, not corrected-installer rerun behavior
+  or a separately documented password/ID comparison.
+- Rechecked the November 4 ZIP's master installer, AnyDesk preparation/setup and
+  desktop helper against committed source: all four match. Fourteen existing
+  school-setup/desktop tests passed on Windows with Git Bash after allowing
+  normal temporary-file access; the restricted run failed on fixture directory
+  permissions. These are simulated lifecycle tests, not a real AnyDesk rerun.
 
 ### 2026-11-04 - SSH rerun and remote-support recovery
 

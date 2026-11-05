@@ -1,6 +1,6 @@
 # Two-profile acceptance record
 
-Updated: 2026-11-01. Baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
+Updated: 2026-11-04. Historical baseline: published 5ac6911a24e93381d5f54150e1d897453bf41936.
 Implementation commits: `785825f`, `3dccba4`, and `608cb7e` (Lesson3 v0.94 / bundle v1.12).
 Current source targets bundle v1.13 with Lesson3 v0.94; v1.12 artifact evidence
 is retained unchanged. See [Tsavo Trust](TSAVO_TRUST.md) for external-source
@@ -74,8 +74,8 @@ when enabling that optional feature; they do not gate ordinary offline use.
 | Nginx and Lesson3 URLs | Host checks passed; requested browser checks passed by operator report | Pending | Client browser, Host-header HTTP checks, ADMIN_URL and empty SERVER_URL check |
 | ARES Sync discovery/collection | Requested phone check passed by operator report; detailed due/upload traces not supplied | Pending | Actual phone using the matching approved profile APK against the selected server alias |
 | Tailscale enrollment | Pending | Pending | Device approved, matching machine identity, Tailscale IP; no secrets in evidence |
-| Standard OpenSSH over Tailscale | Pending | Pending | Actual SSH login to Tailscale IP and RunSSH=false |
-| VNC tunnel and desktop | Pending | Pending | SSH forwarding, VNC authentication, usable Cinnamon 2D desktop |
+| Tailscale SSH and LAN OpenSSH | Browser SSH passed by operator report; updated activation Pending | Pending | Browser and PowerShell login, RunSSH=true, operator ares, preserved LAN SSH |
+| Saved VNC connection and desktop | Direct RealVNC passed by operator report after Windows Tailscale connected; updated activation/reboot Pending | Pending | Windows Tailscale connected; saved viewer at tailnet port 5901, authentication and usable Cinnamon 2D desktop without a tunnel |
 | Disable/re-enable | Pending | Pending | Service states, closed 5901 after disable, successful reconnection and reboot autostart |
 | Activation partial failure and retry | Pending | Pending | Fail TigerVNC after Tailscale/SSH succeed; capture diagnostics before VNC stop, working command-line path, preserved identity and enrollment-free VNC retry |
 | SSH service/socket baseline restoration | Pending | Pending | Ubuntu 24.04 active/enabled ssh.socket and inactive/disabled ssh.service; saved pair restored by disable without unnecessary service enablement |
@@ -135,9 +135,11 @@ teacher install page, Lesson Plans links and Lesson3 login on the selected alias
 Test ARES Sync local discovery/collection on the matching test/production app.
 
 Reconnect Internet and activate from the console. Complete browser enrollment,
-then run standard SSH and a real VNC viewer through the printed tunnel. Verify
-`tailscale debug prefs` reports RunSSH false (redact other preferences/state).
-Confirm every 5901 listener is loopback. Reboot and verify autostart/reconnection.
+then test Tailscale browser/PowerShell SSH and a saved VNC viewer connection from
+a Windows computer connected to the tailnet, without an SSH tunnel. Verify
+RunSSH true and operator ares (redact other preferences/state), a persistent
+Serve TCP/5901 route to 127.0.0.1:5901, and loopback-only OS VNC listeners.
+Reboot and verify browser SSH and the saved VNC connection again.
 Disable; verify remote services inactive/disabled and 5901 closed. Re-enable and
 repeat the desktop connection. Confirm pre-existing SSH was preserved.
 
@@ -145,7 +147,9 @@ On a disposable fixture, separately defer/deny enrollment and force VNC failure
 after Tailscale/SSH succeed. The latter must return partial failure, print VNC
 diagnostics before stopping only TigerVNC, and preserve working Tailscale/SSH and
 identity. Retry must repair VNC without re-enrollment. Verify both SSH unit baseline
-states on disable, including Ubuntu socket activation. Verify timeout/retry and
+states on disable, including Ubuntu socket activation. Separately fail private
+forwarding after VNC is healthy; both SSH and the working VNC service must remain.
+Reject unrelated/public port-5901 routes without changing them. Verify timeout/retry and
 authentication-URL omission from both logs without storing the URL in evidence.
 Exercise post-core default-No, partial and failed paths; record core success separately.
 Do not deliberately break the online demo or alter real school identities/data.

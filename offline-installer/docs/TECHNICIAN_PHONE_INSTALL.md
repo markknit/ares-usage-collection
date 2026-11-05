@@ -68,7 +68,12 @@ Remote-support preparation is attempted after the core installation succeeds.
 It may require additional server prerequisites; its failure leaves the completed
 offline installation usable. ARES support can arrange preparation and activation
 later. Preparation preserves existing support services. Activation needs outbound
-Internet on the server. Press Enter at the school-name prompt to keep its hostname. See `docs/REMOTE_ACCESS.md`.
+Internet on the server. Press Enter at the school-name prompt to keep its hostname.
+Activation configures browser SSH and private VNC forwarding automatically.
+For later support, keep Tailscale connected on Windows, open a saved VNC connection
+to the school's Tailscale address on port 5901 and enter the VNC password. No
+PowerShell tunnel is needed. Browser SSH alone does not connect Windows apps to
+Tailscale. See `docs/REMOTE_ACCESS.md`.
 
 The bundled Internet Lockdown v1.4.2 project is prepared afterward, with activation
 and reboot persistence left as separate choices. Commands install with no

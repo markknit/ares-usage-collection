@@ -118,8 +118,9 @@ class OfflineInstallerSourceTests(unittest.TestCase):
         self.assertIn('TAILSCALE_ACTIVE', prepare)
         self.assertNotIn("tailscale up", prepare)
         self.assertIn('$localhost = "yes";', activate)
-        self.assertIn('tailscale set --ssh=false', activate)
-        self.assertIn('tailscale up --hostname="$new_hostname" --ssh=false --timeout=', activate)
+        self.assertIn('tailscale set --ssh=true --operator=ares', activate)
+        self.assertIn('tailscale up --hostname="$new_hostname" --ssh=true --operator=ares --timeout=', activate)
+        self.assertIn('tailscale serve --bg --yes --tcp=5901 tcp://127.0.0.1:5901', activate)
         self.assertIn('trap cleanup EXIT', activate)
 
     def test_mdns_selector_excludes_non_lan_networks(self):

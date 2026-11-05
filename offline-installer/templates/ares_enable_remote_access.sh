@@ -8,7 +8,7 @@ COMMON_TOOL=/usr/local/lib/ares/remote_support_common.sh
 STATE_DIR=/var/lib/ares/remote-support
 VNC_USERS_FILE=/etc/tigervnc/vncserver.users
 ENROLL_TIMEOUT_SECONDS=120
-COMPLETE=0; STARTED=0; CLI_READY=0; VNC_PHASE=0; VNC_OWNED=0; SSH_TOUCHED=0; HOST_CHANGED=0
+COMPLETE=0; STARTED=0; CLI_READY=0; VNC_PHASE=0; VNC_OWNED=0; VNC_READY=0; SSH_TOUCHED=0; HOST_CHANGED=0
 
 retry_instructions() { echo "Retry when ready: sudo ares-enable-remote-access"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -66,7 +66,7 @@ enroll_tailscale() {
   echo "Open the authentication URL on a technician phone using cellular data; the phone need not be on the ARES network."
   if tailscale_connected; then
     echo "Tailscale is already enrolled and connected; reusing its identity."
-    timeout 10s tailscale set --hostname="$new_hostname" --ssh=false || return 1
+    timeout 10s tailscale set --hostname="$new_hostname" --ssh=true --operator=ares || return 1
   else
     printf 'Begin or resume enrollment now (maximum %s seconds)? [y/N]: ' "$ENROLL_TIMEOUT_SECONDS" >&3
     IFS= read -r -u 4 reply || reply=N
@@ -75,18 +75,38 @@ enroll_tailscale() {
     # /dev/tty is independent of this script's tee AND any parent installer tee.
     # Neither an auth URL nor command output containing it is written to a file.
     if ! timeout --foreground --kill-after=5s "$((ENROLL_TIMEOUT_SECONDS + 5))s" \
-        tailscale up --hostname="$new_hostname" --ssh=false --timeout="${ENROLL_TIMEOUT_SECONDS}s" >&3 2>&3; then
+        tailscale up --hostname="$new_hostname" --ssh=true --operator=ares --timeout="${ENROLL_TIMEOUT_SECONDS}s" >&3 2>&3; then
       echo "Tailscale enrollment did not finish (offline, timed out, or not approved)."
       retry_instructions
       return 3
     fi
   fi
   if ! tailscale_connected; then
-    echo "Tailscale is not connected. Check outbound Internet and tailnet approval."
+    echo "Tailscale has not established its coordination connection."
+    timeout 10s tailscale status --json 2>/dev/null | python3 "$CONFIG_TOOL" connection-summary || true
+    echo 'A restored image or removed device may need a fresh sign-in; see REMOTE_ACCESS.md.'
     retry_instructions
     return 3
   fi
-  timeout 10s tailscale set --ssh=false
+  timeout 10s tailscale set --ssh=true --operator=ares
+}
+
+configure_vnc_route() {
+  local route
+  route=$(timeout 10s tailscale serve status --json | python3 "$CONFIG_TOOL" vnc-route) || return 1
+  if [[ "$route" == conflict ]]; then
+    echo 'ERROR: Tailscale port 5901 has another or public route; its configuration was retained.' >&2
+    return 1
+  fi
+  if [[ "$route" == absent ]]; then
+    timeout 20s tailscale serve --bg --yes --tcp=5901 tcp://127.0.0.1:5901 || return 1
+  fi
+  route=$(timeout 10s tailscale serve status --json | python3 "$CONFIG_TOOL" vnc-route) || return 1
+  [[ "$route" == configured ]] || {
+    echo 'ERROR: private VNC forwarding was not confirmed; SSH and local TigerVNC remain available.' >&2
+    return 1
+  }
+  echo 'Private VNC connection saved in Tailscale; it resumes after reboot.'
 }
 
 create_vnc_password() {
@@ -193,9 +213,9 @@ vnc_diagnostics() {
 print_ssh_instructions() {
   local address
   address="$(timeout 10s tailscale ip -4 2>/dev/null)" || address='<TAILSCALE-IP>'
-  printf 'Standard OpenSSH: ssh ares@%s\n' "$address" >&3
+  printf 'SSH: ssh ares@%s\nBrowser SSH is available from the Tailscale admin console, subject to its access policy.\n' "$address" >&3
   if (( COMPLETE )); then
-    printf 'Tunnel: ssh -N -L 5901:127.0.0.1:5901 ares@%s\nConnect VNC to 127.0.0.1:5901.\n' "$address" >&3
+    printf 'Save a VNC connection to host %s, port 5901.\nTigerVNC viewer address: %s::5901\nNo PowerShell tunnel is needed. Keep Tailscale connected on the support computer.\n' "$address" "$address" >&3
   fi
 }
 
@@ -203,7 +223,7 @@ cleanup() {
   local rc=$?
   trap - EXIT HUP INT TERM
   if (( STARTED && ! COMPLETE )); then
-    if (( VNC_PHASE )); then
+    if (( VNC_PHASE && ! VNC_READY )); then
       vnc_diagnostics
       if (( VNC_OWNED )); then
         systemctl disable --now "$VNC_SERVICE" || echo "ERROR: TigerVNC could not be disabled" >&2
@@ -213,7 +233,11 @@ cleanup() {
     fi
     if (( CLI_READY )); then
       rc=2
-      echo "PARTIAL FAILURE: Tailscale and standard OpenSSH remain operational; ARES TigerVNC was not activated."
+      if (( VNC_READY )); then
+        echo 'PARTIAL FAILURE: SSH and local TigerVNC remain running; direct VNC over Tailscale is Pending.'
+      else
+        echo 'PARTIAL FAILURE: Tailscale and SSH remain operational; ARES TigerVNC was not activated.'
+      fi
       print_ssh_instructions || true
     else
       if (( SSH_TOUCHED )); then restore_ssh_baseline "$STATE_DIR/ssh-before.conf" || echo "ERROR: SSH baseline restoration needs attention" >&2; fi
@@ -275,10 +299,12 @@ main() {
   SSH_TOUCHED=1
   ensure_ssh || die "standard OpenSSH could not be started"
   CLI_READY=1
-  echo "Tailscale and standard OpenSSH are operational; Tailscale SSH is disabled."
+  echo 'Tailscale SSH is enabled; ares is the Tailscale operator. Ubuntu OpenSSH is also available on the LAN.'
   VNC_PHASE=1
   configure_vnc || die "TigerVNC configuration failed"
   start_vnc || die "TigerVNC startup/localhost verification failed"
+  VNC_READY=1
+  configure_vnc_route || die 'Direct VNC over Tailscale could not be prepared'
   COMPLETE=1
   echo "Remote support active; actual client SSH/VNC and desktop acceptance remain Pending."
   print_ssh_instructions

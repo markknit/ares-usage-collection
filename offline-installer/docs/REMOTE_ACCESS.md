@@ -1,4 +1,22 @@
-# Optional remote support: OpenSSH over Tailscale, localhost TigerVNC
+# Optional remote support: Tailscale SSH and a saved VNC connection
+
+## Normal technician use
+
+Complete activation once on each school server. On the support computer, sign
+into the approved Tailscale account and keep its app connected. Save the school's
+Tailscale address in the VNC viewer with port **5901**. Open that saved connection
+and enter the VNC password; no PowerShell tunnel is needed. RealVNC and TigerVNC
+single address fields accept `<TAILSCALE-IP>::5901`. The browser SSH button in the Tailscale
+admin console is also available when the tailnet's SSH policy permits access.
+Connecting in that browser console does not connect Windows applications to the
+tailnet. Sign into the Windows Tailscale app separately. The owner confirmed
+direct RealVNC access after doing so on November 4; updated activation and
+reboot/disable/re-enable checks remain separate acceptance steps.
+
+This simpler workflow is a source follow-up to the November 4 ZIP, whose
+activation still prints tunnel instructions and disables Tailscale SSH. Use the
+updated complete package when published; rerunning that older activation helper
+would undo the manually enabled browser SSH setting.
 
 After core installation and verification succeed, the installer attempts to
 prepare the pinned offline Tailscale/TigerVNC payloads. Preparation preserves
@@ -57,9 +75,30 @@ Retry after providing outbound Internet/approval. Failure handling preserves
 Tailscale identity and does not shut down its daemon. It never uses logout,
 forced reauthentication or a state-file reset.
 
-Activation explicitly disables Tailscale SSH with `tailscale set --ssh=false`.
-SSH uses the ordinary Ubuntu OpenSSH service/socket, tailnet TCP 22 permission,
-and existing SSH credentials/authorized keys. No credentials are bundled.
+Activation applies `tailscale set --ssh=true --operator=ares` automatically.
+`--ssh=true` enables Tailscale SSH, including the browser console; `--operator`
+allows ares to manage the local Tailscale client without sudo. It does not replace
+tailnet access policy or authorize a new account. Ubuntu OpenSSH remains
+available on the LAN and its service/socket baseline is retained. No credentials
+are bundled. Windows PowerShell access also requires the Windows Tailscale app
+to be connected; the browser console establishes its own separate connection.
+
+### Restored-image or deleted-device registration
+
+`Running` with `Self.Online=false` is not an accepted coordination connection.
+The November 4 target reached relays but repeatedly received `404: node not
+found`. That indicates an unrecognized stored registration; it is not evidence
+of a missing network adapter. Activation now prints the actual health message.
+From an independent LAN SSH, AnyDesk or local console connection, an operator
+can request a fresh sign-in:
+
+```bash
+sudo tailscale up --force-reauth --hostname=YOUR-SCHOOL-NAME --ssh=true --operator=ares --timeout=120s
+```
+
+Use the actual school hostname, open the displayed URL privately and approve
+the device. Then retry `sudo ares-enable-remote-access`. Reauthentication can
+interrupt Tailscale sessions; ordinary installer retries never force it.
 
 ## SSH baseline and socket activation
 
@@ -84,7 +123,9 @@ accepting an upgraded target; no missing historical socket evidence is invented.
 ## TigerVNC desktop and password
 
 The standalone desktop uses user `ares`, display `:1`, port 5901, and loopback-only
-binding. It neither terminates nor reconfigures the physical GNOME/AnyDesk session.
+binding. Tailscale Serve forwards its private port 5901 to that local listener,
+so viewers connect to the school's Tailscale address directly. It neither
+terminates nor reconfigures the physical GNOME/AnyDesk session.
 It never kills desktop processes or another service owning a conflicting port.
 
 For a new password, the script explicitly prompts:
@@ -116,6 +157,20 @@ The display map preserves other displays and rejects `:1` ownership conflicts.
 Activation requires three consecutive samples of an active unit and exclusively
 IPv4/IPv6-loopback port 5901 listeners within a 20-sample startup window.
 
+It then saves and verifies this private forwarding rule:
+
+```bash
+sudo tailscale serve --bg --tcp=5901 tcp://127.0.0.1:5901
+```
+
+The background rule resumes after reboot. Activation reuses an exact existing
+rule, preserves routes on other ports, and refuses a conflicting/foreground or
+public Funnel configuration on port 5901. It never resets the whole Serve
+configuration. The local VNC listener remains loopback-only; the new path is
+private to the tailnet and subject to its access rules. See
+[Tailscale TCP forwarding](https://tailscale.com/docs/reference/tailscale-cli/serve)
+and [browser SSH](https://tailscale.com/docs/features/tailscale-ssh/tailscale-ssh-console).
+
 ## Partial failure and retry
 
 If Tailscale is connected and SSH is available but TigerVNC fails, activation
@@ -130,28 +185,35 @@ user's existing unit.
 The retry reuses connected Tailscale enrollment and the original SSH baseline,
 then repairs/restarts TigerVNC. Status 0 means host-side activation checks passed;
 status 1 is another failure. These checks do not establish a working client login,
-tunnel or usable desktop. Complete the live acceptance matrix separately.
+saved viewer connection or usable desktop. If forwarding setup fails after
+TigerVNC is healthy, the helper retains both SSH and TigerVNC and reports partial
+failure. Complete the live acceptance matrix separately.
 
 Activation logs are root-only under `/var/lib/ares/remote-support`. In addition to
 the terminal-only enrollment output, the logging pipeline omits HTTP(S) URLs from
 diagnostics as defense in depth. Do not capture passwords, authentication URLs or
 unredacted Tailscale addresses in field evidence.
 
-The command prints the SSH address directly on the console. After full activation,
-use standard SSH forwarding from an authorized support computer:
+The command prints the SSH address and the VNC host/port directly on the console.
+After full activation, save this address in a Windows VNC viewer:
 
-```powershell
-ssh -N -L 5901:127.0.0.1:5901 ares@<TAILSCALE-IP>
+```text
+Host: <TAILSCALE-IP>
+Port: 5901
+TigerVNC address: <TAILSCALE-IP>::5901
 ```
 
-Connect the viewer to `127.0.0.1:5901` while the tunnel remains open.
+Keep the Windows Tailscale app connected. The already-tested LAN SSH tunnel
+remains a support fallback for the loopback listener, not a routine login step.
 
 ## Disable and remaining acceptance
 
 `sudo ares-disable-remote-access` deliberately stops/disables Tailscale and
 TigerVNC, verifies port 5901 is closed and restores the original SSH service/socket
 active/enabled configuration. Identity, password, configuration and baseline are
-retained for re-enable. Errors are reported if restoration or shutdown fails.
+retained for re-enable, including the private Serve rule. Stopping Tailscale
+stops that route; re-enabling restores it. Errors are reported if restoration or
+shutdown fails.
 
 Packaged display `:1`, actual Tailscale-path SSH/VNC, reboot/autostart, full
 disable/re-enable, partial-failure recovery and physical-session coexistence remain

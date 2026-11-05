@@ -450,6 +450,93 @@ tailscale() { echo "$*" >> "$STATE_DIR/tailscale-calls"; [[ "$1" != up ]]; }
                                 input="Diagnostic https://login.tailscale.com/a/TEST_ONLY retained\n", capture_output=True, text=True)
         self.assertEqual(result.stdout, "Diagnostic [URL omitted] retained\n")
 
+    def test_private_vnc_route_rejects_foreground_public_tls_and_other_targets(self):
+        route = {'TCPForward': '127.0.0.1:5901'}
+        for value, expected in (
+                (None, 'absent'), ({}, 'absent'),
+                ({'TCP': {'443': {'HTTPS': True}}}, 'absent'),
+                ({'TCP': {'5901': route, '443': {'HTTPS': True}}}, 'configured'),
+                ({'TCP': {'5901': {'TCPForward': '127.0.0.1:9999'}}}, 'conflict'),
+                ({'TCP': {'5901': dict(route, TerminateTLS='school.test.ts.net')}}, 'conflict'),
+                ({'TCP': {'5901': route}, 'AllowFunnel': {'school.test.ts.net:5901': True}}, 'conflict'),
+                ({'Foreground': {'session': {'TCP': {'5901': route}}}}, 'conflict')):
+            with self.subTest(value=value):
+                self.assertEqual(config.vnc_route(value), expected)
+        with self.assertRaises(ValueError):
+            config.vnc_route([])
+
+    def test_private_vnc_forwarding_is_persistent_and_rerun_reuses_existing_route(self):
+        result = shell('ares_enable_remote_access.sh', r'''
+printf '{"TCP":{"443":{"HTTPS":true}}}' > "$STATE_DIR/serve.json"
+timeout() { shift; "$@"; }
+tailscale() {
+  echo "$*" >> "$STATE_DIR/tailscale-calls"
+  if [[ "$*" == 'serve status --json' ]]; then cat "$STATE_DIR/serve.json"; return; fi
+  [[ "$*" == 'serve --bg --yes --tcp=5901 tcp://127.0.0.1:5901' ]] || return 1
+  printf '{"TCP":{"443":{"HTTPS":true},"5901":{"TCPForward":"127.0.0.1:5901"}}}' > "$STATE_DIR/serve.json"
+}
+configure_vnc_route
+configure_vnc_route
+''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = result.artifacts['tailscale-calls'].decode()
+        self.assertEqual(calls.count('serve --bg --yes --tcp=5901'), 1)
+        self.assertNotIn('reset', calls)
+        import json
+        self.assertEqual(json.loads(result.artifacts['serve.json'])['TCP']['443'], {'HTTPS': True})
+
+    def test_route_conflict_or_failed_configuration_does_not_replace_existing_settings(self):
+        for conflict in (True, False):
+            before = '{"TCP":{"5901":{"TCPForward":"127.0.0.1:9999"}}}' if conflict else '{}'
+            result = shell('ares_enable_remote_access.sh',
+                           "printf '%s' '" + before + "' > \"$STATE_DIR/serve.json\"\n" + r'''
+timeout() { shift; "$@"; }
+tailscale() {
+  echo "$*" >> "$STATE_DIR/tailscale-calls"
+  if [[ "$*" == 'serve status --json' ]]; then cat "$STATE_DIR/serve.json"; else return 1; fi
+}
+configure_vnc_route
+''')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(result.artifacts['serve.json'].decode(), before)
+            if conflict:
+                self.assertNotIn('--bg', result.artifacts['tailscale-calls'].decode())
+
+    def test_private_route_failure_preserves_healthy_vnc_and_ssh(self):
+        result = shell('ares_enable_remote_access.sh', SYSTEMD_FIXTURE + '''
+STARTED=1; CLI_READY=1; VNC_PHASE=1; VNC_OWNED=1; VNC_READY=1
+ACTIVE[tigervncserver@:1.service]=yes
+print_ssh_instructions() { :; }
+trap cleanup EXIT
+exit 1
+''')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('SSH and local TigerVNC remain running', result.stdout)
+        self.assertNotIn('disable --now', result.artifacts.get('calls', b'').decode())
+
+    def test_connection_summary_reports_actual_health_and_omits_authentication_urls(self):
+        import json
+        value = {'BackendState': 'Running', 'Self': {'Online': False},
+                 'Health': ['Cannot synchronize; visit https://login.tailscale.com/a/TEST_ONLY']}
+        result = subprocess.run([sys.executable, '-B', str(BUILDER / 'tools/remote_support_config.py'), 'connection-summary'],
+                                input=json.dumps(value), capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Coordination connection: offline', result.stdout)
+        self.assertIn('Cannot synchronize', result.stdout)
+        self.assertNotIn('TEST_ONLY', result.stdout)
+
+    def test_ready_instructions_offer_saved_viewer_connection(self):
+        result = shell('ares_enable_remote_access.sh', '''
+exec 3>"$STATE_DIR/terminal"
+timeout() { echo 100.64.0.99; }
+COMPLETE=1
+print_ssh_instructions
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        terminal = result.artifacts['terminal'].decode()
+        self.assertIn('100.64.0.99::5901', terminal)
+        self.assertNotIn('ssh -N', terminal)
+
     def test_optional_decline_and_failure_preserve_core_success(self):
         for reply in ("", "N", "y"):
             code = '''function /usr/local/sbin/ares-enable-remote-access() { echo CALLED; return 7; }

@@ -40,7 +40,7 @@ Last updated: 2026-11-06
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional SSH / TigerVNC support | Browser SSH/direct saved-viewer passed manually; automated setup packaged in r2 | Reauthentication addressed stale registration. The owner connected directly with RealVNC after configuring Serve and connecting Windows Tailscale. r2 automates browser SSH/operator and persistent private forwarding; 120 native tests passed. Its own activation/clean-image and reboot/disable/re-enable remain Pending. |
-| Offline LAN/headless desktop | November 6 implementation and focused fixtures passed; packaging/native CI in progress | LAN SSH/TigerVNC start before enrollment. `--lan-only` skips hostname/Tailscale changes; password-required port 5901 accepts local IP connections and retains the loopback Serve target. Support-only update avoids content installation and identity resets. Actual disconnected-LAN/headless/reboot and simultaneous Tailscale client checks remain Pending. |
+| Offline LAN/headless desktop | November 6 implementation, 124 Ubuntu tests and independent packaging passed | Source aa0011c, full dated ZIP 73efc019... (341 files), support update 4862a66c... (8 files), both in `Downloads/ARES_v1.13_Release_20261106`. LAN-first password-required port 5901 and `--lan-only` retain Tailscale state/forwarding. [Release evidence](offline-installer/docs/evidence/2026-11-06-v1.13-lan-desktop.md). Actual disconnected-LAN/headless/reboot and retained Tailscale viewer checks remain Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -50,7 +50,24 @@ Last updated: 2026-11-06
 | TsavoTrust v1.13 integration | Host verification and requested browser/video check passed by operator report; tracking/recovery Pending | Run `20261101_111100` passed content/link/mapping and HTTP checks. Operator reports all three requested feature checks passed, including Tsavo videos. Report attribution, repeat/failure recovery and remaining acceptance are Pending. |
 | Field rollout approval | Pending clean installation and remaining live acceptance | Corrected artifact includes storage-alias/direct-page fixes, approved admin content and Internet Lockdown v1.4.2 and passed independent verification. No field acceptance inferred from packaging. |
 
-## Latest software-verified candidate (November 4 revision 2)
+## Latest software-verified candidate (November 6 LAN desktop)
+
+- Source: `aa0011ca320a7b014d1e174bae96039abd6ddb3f`.
+- ZIP: `ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip`.
+- SHA-256: `73efc0192fb0fc732139d5720e16cd9dfb6c59e61b4d7dc9d3464f14a7fa7457`.
+- Windows folder: `C:/Users/MRKni/Downloads/ARES_v1.13_Release_20261106`.
+- Full installer: 341 independently verified ZIP files. Support-only update:
+  eight verified files; no content/AnyDesk rerun needed for an installed server.
+- 121 Windows tests run, 119 passed and two native-only tests skipped. Native
+  Ubuntu CI run 42187158472 passed all 124 tests for the exact packaging source,
+  including the Linux/root cases unavailable on Windows.
+- Two PDF guides and a new editable Word guide reviewed; all six packaged PDF
+  page images match the reviewed pages. Documents and instructions copied off-server.
+- [Release identity and limits](offline-installer/docs/evidence/2026-11-06-v1.13-lan-desktop.md).
+- No installer/update ran during packaging. Live offline/headless/reboot and
+  remaining acceptance stay Pending. Earlier artifacts remain unchanged.
+
+## Previous software-verified candidate (November 4 revision 2)
 
 - Source: `656cbc24a432588f3fd59940bfc1447bc49e0fdd`.
 - ZIP: `ARES_Q4_Offline_v0.94_amd64_v1.13_20261104-r2.zip`.
@@ -239,8 +256,13 @@ Last updated: 2026-11-06
   previous full installers remain unchanged.
 - Windows regression passed: 121 tests run, 119 passed and two native-only tests
   skipped; the three Linux/root corpus tests are reserved for Ubuntu CI. All
-  installer shell syntax checks passed. Native CI/packaging results will be
-  recorded in the release evidence when complete.
+  installer shell syntax checks passed. Full packaging independently verified 341
+  ZIP files, retaining 267 base files and classifying 74 updated/new entries.
+  The eight-file support-only ZIP was independently extracted and verified too.
+  Both are in a new November 6 Windows Downloads folder. Source aa0011c is pushed;
+  native Ubuntu CI run 42187158472 passed all 124 tests and shell checks. Exact
+  hashes/verification are in the release evidence. Packaged PDF page images match
+  the reviewed pages; all published copies match the delivered PDF bytes.
 - Confirmed from supplied logs that tsavo3 publishes/resolves ares.local. Another
   server using the same name explains the reported coexistence concern; the
   older server lacks the new alias service. Supplied an Avahi-only rename
@@ -248,7 +270,6 @@ Last updated: 2026-11-06
 
 Still open:
 
-- Finish native CI and new independently verified ZIP delivery.
 - Actual LAN VNC with Internet disconnected, headless/reboot access, and retained
   Tailscale viewer access. Remaining field acceptance/rollout stay Pending.
 

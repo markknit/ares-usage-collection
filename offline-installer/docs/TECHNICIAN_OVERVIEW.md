@@ -13,6 +13,13 @@ code, administrator access and an Android phone for the final collection check.
 Phone enrollment uses a separate one-time key supplied by ARES staff.
 Keep the ZIP and this overview on a separate Windows computer or external drive.
 
+Before travelling, open `https://areseducation.org/monitor_upload/staff_enrollment.php`
+on an Internet-connected device. Sign in with the shared ARES staff enrollment
+password, search for the school and record its displayed School ID. Confirm the
+school name; ask ARES administration if it is missing. Use that permanent ID in
+the server installer. Later, use **Generate one-time code** for each teacher phone;
+its `XXXX-XXXX` installation key is separate from the permanent School ID.
+
 ## Included components
 
 - **Lesson Plans:** the local lesson-plan directory, PDF material and Lesson3 user guide.

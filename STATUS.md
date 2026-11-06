@@ -29,7 +29,8 @@ Last updated: 2026-11-06
 | AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
-| Editable technician installation guide | Updated and visually reviewed on November 6 | New `output/docx/ARES_Technician_Installation_Guide_20261106.docx` includes offline LAN support. Four pages, 69 editable source content blocks, all final pages reviewed. November 5 copy retained; owner's own additions have not been supplied. |
+| Editable technician installation guide | November 6 revision 2 adds portal/school-code lookup | `output/docx/ARES_Technician_Installation_Guide_20261106_r2.docx`, five pages and 80 editable content blocks. Matching five-page PDF and two-page overview reviewed. Portal URL, school-name/ID lookup, installed-code check and distinction from a phone key included. Earlier Word/installer artifacts retained. |
+| Staff enrollment portal password | Reset procedure documented; live reset not performed | `docs/STAFF_ENROLLMENT_CODES.md` explains changing only staff_enrollment_password in the central website's monitor_upload/config.php. Source confirms no password expiry and a 15-minute inactive-session timeout. Hosting access is required; this is separate from school/Ubuntu/Lesson3 passwords. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
 | Corrected v1.13 ZIP and technician overview | November 4 r2 verified and on Windows; fresh install Pending | [Release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): distinct `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Reviewed two-page overview/four-page technician guide and all copied documents match the ZIP. Earlier artifacts unchanged. |
@@ -144,6 +145,11 @@ Last updated: 2026-11-06
 
 ## Known Issues / Lessons Learned
 
+- Do not assume technicians arrive with the canonical school ID. Include the
+  exact staff portal URL, name search, permanent ID lookup, installed-code check
+  and distinction from each phone's one-time key in the source/PDF/Word guides.
+  A portal session timeout is not password expiry. Password reset guidance must
+  identify the central website configuration, not the school server.
 - On-site headless support must not depend on Tailscale enrollment or Internet.
   Activate password-required LAN VNC before optional enrollment, preserve it when
   enrollment is deferred, and offer an explicit LAN-only command. Retain the
@@ -238,6 +244,29 @@ Last updated: 2026-11-06
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-06 - School-code lookup and portal password guidance
+
+- Added the exact staff enrollment URL and lookup steps to both technician
+  source guides and the overview. Explained the permanent School ID versus the
+  one-time phone key, unknown-school escalation, and the installed-code check.
+- Regenerated and visually reviewed the five-page technician PDF, two-page
+  overview and five-page editable Word revision 2. All 80 source content blocks
+  remain editable in Word. Checked the portal URL, lookup content and command
+  in both formats. Synchronized all three technician PDF copies and its manifest.
+- Added staff password reset instructions based on the actual PHP implementation:
+  shared staff_enrollment_password in the central host's monitor_upload/config.php;
+  no password expiry, with a 900-second inactive-session timeout. No live password
+  or enrollment state was accessed or changed.
+- Eleven existing source/guide/manifest checks passed. This is a documentation
+  update; runtime installer scripts and verified ZIPs remain unchanged. Revised
+  companion guides are delivered under the November 6 release Documents folder,
+  in School_Code_Update_20261106_r2. Future builds use the revised source guides.
+
+Still open:
+
+- Owner performs the staff password reset in the hosting account and checks login.
+- Remaining live installation/remote-access acceptance gates remain Pending.
 
 ### 2026-11-06 - Offline LAN desktop alongside Tailscale
 

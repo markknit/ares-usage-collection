@@ -37,6 +37,35 @@ Use a password of at least six characters. Keep the live value only in the prote
 
 The existing `enrollment_admin_key` remains separate and is still used by `admin_enrollment_code.php` for automation and diagnostics. Routine staff do not need to know or use that API key.
 
+## Reset a forgotten staff portal password
+
+The staff password has no expiry in this implementation. The 15-minute timeout
+expires the signed-in session; signing in again uses the same password.
+This is the enrollment portal password, separate from the school's Ubuntu,
+Lesson3, protected admin-folder, AnyDesk or VNC credentials.
+
+An ARES administrator with access to the central website's hosting control panel
+or SFTP can reset it:
+
+1. Open the live website's `monitor_upload/config.php`, beside `staff_enrollment.php`. This is on the central website host, not the school ARES server.
+2. Keep a private backup of that file, outside the public website directory.
+3. Change only the value of `staff_enrollment_password` to the new shared password. Retain the PHP quotes and trailing comma. Do not replace the whole configuration or change `enrollment_admin_key`, `enrollment_secret`, registry paths or device/enrollment state.
+4. Save the file. If a PHP command line is available on the host, run `php -l /actual/path/to/monitor_upload/config.php` to check its syntax without printing its contents.
+5. Open the staff portal in a private/incognito browser window and sign in with the new password. Give it privately to authorized staff; never include the real value in the guides, GitHub or support logs.
+
+The configuration entry has this form; replace the placeholder privately on the host:
+
+```php
+'staff_enrollment_password' => 'YOUR_NEW_PASSWORD',
+```
+
+Use at least six characters. PHP single-quoted strings require escaping a literal
+apostrophe or backslash; a password manager can generate a value without those
+characters if editing the configuration directly. Resetting this setting does not
+reset school IDs or enrolled phones. Existing authenticated sessions may remain
+valid until sign-out or the normal inactivity timeout; changing the password is
+not an immediate forced logout of every session.
+
 ## Existing unused code
 
 If an unused code already exists for the selected school, the portal does not silently replace it. Because plaintext codes are not stored, ARES cannot display the earlier code again.

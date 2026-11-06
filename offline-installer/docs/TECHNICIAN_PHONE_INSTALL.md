@@ -33,6 +33,35 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
 - Obtain or be able to generate the teacher's one-time installation key from the protected ARES staff enrollment system.
 - Use the normal master command below; it checks the package and prerequisites automatically.
 
+## Obtain the school ID before the visit
+
+Use an Internet-connected staff computer or phone to open:
+
+`https://areseducation.org/monitor_upload/staff_enrollment.php`
+
+1. Sign in with the shared **ARES staff enrollment password** supplied by ARES administration.
+2. Search for the school by name.
+3. Confirm the canonical school name and the displayed **School ID**, such as `ARES-S0035`.
+4. Record that ID on the installation worksheet and use the same ID in the server installer command. `ARES-S00XX` in this guide is a placeholder, not an assigned ID.
+5. If the school is missing, ask ARES administration to register it and assign its ID before phone enrollment. Do not invent an ID or reuse another school's ID.
+
+The **School ID** is permanent and identifies the school/server. The
+**installation key** is a separate, one-time `XXXX-XXXX` value for one phone.
+Looking up the School ID does not require generating an installation key.
+Obtain the School ID before travelling; the server can then be installed offline.
+Central phone enrollment still needs Internet or mobile data.
+
+On an already configured school server, check its stored ID with:
+
+```bash
+sudo grep '^SCHOOL_CODE=' /etc/ares/usage-upload.conf
+```
+
+Confirm that it matches the portal's ID for the intended school. A restored image
+may contain another school's ID. If the code is provisional or incorrect, have
+ARES support confirm the assignment, then run `sudo ares-set-school-code ARES-S00XX`
+with the final ID. Continue to phone enrollment only after reassignment succeeds.
+
 ## 1. Install and verify the school server
 
 1. Copy the complete offline field ZIP to the server and extract it into a new folder.
@@ -99,12 +128,15 @@ not evidence of failure; an installation error or failed browser check needs sup
 
 ## 2. Generate the one-time installation key
 
-1. On a trusted ARES staff device with Internet access, open the protected enrollment portal.
-2. Confirm the teacher's school and canonical `ARES-S00XX` ID.
-3. Generate the one-time installation/enrollment code.
-4. Keep it private and use it only for the intended phone.
+1. On a trusted staff device with Internet access, open `https://areseducation.org/monitor_upload/staff_enrollment.php` and sign in with the shared staff enrollment password.
+2. Search for the school and confirm its name and School ID match the installed server.
+3. Select **Generate one-time code**. Keep the displayed `XXXX-XXXX` installation key private and use it for the intended phone.
+4. Sign out when finished. Each additional phone or reinstallation needs a new installation key.
 
 The teacher guide calls this an **installation key**. The app or staff portal may call it an **enrollment code**. They are the same one-time value.
+If an unused key already exists, replace it only if the earlier key is lost or
+must be revoked. If staff sign-in fails, contact ARES administration; the portal
+password is separate from Ubuntu, Lesson3, AnyDesk and VNC passwords.
 
 ## 3. Install ARES Sync from the school server
 
@@ -117,6 +149,8 @@ The teacher guide calls this an **installation key**. The app or staff portal ma
 7. Tap **Install**, then **Open**.
 
 The APK download and installation can be completed while the school has no Internet connection.
+
+<!-- pagebreak -->
 
 ## 4. Enroll the phone
 
@@ -151,6 +185,8 @@ Tell the teacher:
 - A new phone or reinstallation requires a new one-time installation key.
 - Contact the ARES Advocate if the app shows the wrong school, repeatedly needs attention, or fails to return to the ready state.
 - The local page `http://ares.local/app_install/index.html` is for installing/reinstalling ARES Sync while connected to the school ARES network.
+
+<!-- pagebreak -->
 
 ## Quick troubleshooting
 

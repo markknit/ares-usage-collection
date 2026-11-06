@@ -20,6 +20,32 @@ ARES Sync does **not** read the teacher's messages, contacts, photos, documents,
 - Bring the official setup address: `https://areseducation.org/phone-setup/`.
 - Do not send staff passwords, administrator keys, device credentials, or stored enrollment data to the teacher.
 
+## Obtain the school ID before the visit
+
+Open `https://areseducation.org/monitor_upload/staff_enrollment.php` on an
+Internet-connected staff computer or phone. Sign in with the shared ARES staff
+enrollment password supplied by ARES administration, then search for the school
+by name. Confirm its canonical name and displayed School ID, such as `ARES-S0035`.
+Record that ID on the installation worksheet and use it in the server installer
+command. `ARES-S00XX` in this guide is a placeholder, not an assigned ID.
+
+The permanent **School ID** identifies the school/server. A separate one-time
+**installation key**, formatted `XXXX-XXXX`, enrolls one teacher phone. Looking up
+the School ID does not require generating a key. Obtain the School ID before
+travelling so the server can be installed offline; central phone enrollment
+still needs Internet or mobile data. If the school is missing, ARES administration
+must register it and assign its ID. Do not invent an ID or reuse another school's.
+
+Check the ID on an already configured server with:
+
+```bash
+sudo grep '^SCHOOL_CODE=' /etc/ares/usage-upload.conf
+```
+
+Confirm that it matches the portal's ID for the intended school. A restored image
+may contain another school's ID. If staff sign-in fails, contact ARES
+administration; see [staff portal password reset](STAFF_ENROLLMENT_CODES.md).
+
 ## What you need at the school
 
 - The teacher's Android phone, with sufficient battery and storage.
@@ -80,7 +106,7 @@ not evidence of failure; an installation error or failed browser check needs sup
 
 ## 2. Generate the one-time installation key
 
-1. On your own trusted device, open the protected ARES staff enrollment portal.
+1. On your own trusted device, open `https://areseducation.org/monitor_upload/staff_enrollment.php` with Internet available.
 2. Sign in with the shared staff password.
 3. Search for the school and confirm both its canonical name and `ARES-S00XX` ID.
 4. Select **Generate one-time code**.

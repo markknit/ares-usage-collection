@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-04
+Last updated: 2026-11-05
 
 ## Current checkout
 
@@ -24,11 +24,12 @@ Last updated: 2026-11-04
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Latest full rerun passed core checks and retained working services | Operator run `20261104_171914` preserved healthy Lesson3/corpus and the running AnyDesk client. Remote preparation preserved active Tailscale/TigerVNC. Activation correctly rejected an offline coordination connection; subsequent diagnostics found a stale registration. |
-| School hostname and generic mDNS alias | Follow-up packaged; live check Pending | Preserve hostname.local and add the profile alias, including both Nginx names. Wait for connection, accept link-local LAN and retry exited publishers. Shared-name collisions still require one ARES per LAN. |
+| Simplified offline installation | Fresh installation reported working on November 5 except generic mDNS alias | Owner reports another fresh ARES installation worked, with tsavo3.local available but ares.local missing. No new raw installation log or detailed acceptance trace supplied; diagnose alias publication before closing the remaining field checks. |
+| School hostname and generic mDNS alias | Fresh-run alias failure reported; diagnostics requested | tsavo3.local works but ares.local does not, by owner report. Alias service/configuration, selected address, recent journal and local resolution were requested. Do not assume the cause or claim a fix from the hostname's success alone. |
 | AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
+| Editable technician installation guide | Completed and visually reviewed on November 5 | `output/docx/ARES_Technician_Installation_Guide_20261105.docx` and matching Windows Downloads copy. Editable text/native headings and lists, four pages, all 68 source content blocks retained from the r2 technician guide. Reviewed every rendered page; user additions are not incorporated yet. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
 | Corrected v1.13 ZIP and technician overview | November 4 r2 verified and on Windows; fresh install Pending | [Release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): distinct `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Reviewed two-page overview/four-page technician guide and all copied documents match the ZIP. Earlier artifacts unchanged. |
@@ -213,6 +214,29 @@ Last updated: 2026-11-04
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-05 - Fresh-install report and editable technician guide
+
+- Owner reports the fresh installation worked except that only tsavo3.local,
+  rather than both it and ares.local, was available. Requested read-only alias
+  service status/journal, selected address and resolution output, plus whether
+  another ARES server is on the LAN. Root cause and recovery remain Pending.
+  No live-host network or installer source change was made on this evidence.
+- Created an editable Word version of the published r2 technician guide for the
+  owner's additions. All 68 source content blocks are retained as editable text;
+  the document uses native Word heading/list structures and is not protected.
+- Rendered with native Microsoft Word conversion through the packaged renderer's
+  PNG pipeline because LibreOffice is not bundled on this Windows host. Reviewed
+  all four final pages, including restarted lists and clear section boundaries.
+- Saved the document in `output/docx/` and Windows Downloads; copied bytes match
+  the reviewed file. Existing PDFs and the verified r2 ZIP remain unchanged.
+
+Still open:
+
+- Review the server's alias diagnostics, correct the confirmed mDNS cause and
+  verify ares.local from another LAN device alongside the hostname.
+- Incorporate the owner's Word edits when supplied; remaining unperformed field
+  checks and rollout acceptance remain Pending.
 
 ### 2026-11-04 - Verified r2 Windows package and updated handouts
 

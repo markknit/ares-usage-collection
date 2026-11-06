@@ -191,10 +191,12 @@ choose_remote_hostname
             with self.assertRaises(ValueError):
                 urls.configure(original, expected, expected)
 
-    def test_vnc_rejects_all_nonloopback_listeners(self):
-        for addresses, passes in (("127.0.0.1:5901 [::1]:5901", True),
+    def test_vnc_requires_ipv4_lan_and_loopback_reachability(self):
+        for addresses, passes in (("127.0.0.1:5901 [::1]:5901", False),
                                   ("127.0.0.1:5901 192.168.1.2:5901", False),
-                                  ("0.0.0.0:5901", False), ("[::]:5901", False), ("", False)):
+                                  ("0.0.0.0:5901", True), ("*:5901", True),
+                                  ("0.0.0.0:5901 [::]:5901", True),
+                                  ("[::]:5901", False), ("", False)):
             rows = "\n".join("LISTEN 0 5 " + value + " *:*" for value in addresses.split())
             result = shell("ares_enable_remote_access.sh", "ss() { printf '%s\\n' '" + rows + "'; }; verify_vnc_listeners")
             self.assertEqual(result.returncode == 0, passes, result.stderr)
@@ -320,6 +322,8 @@ configure_vnc
         self.assertEqual(result.returncode, 0, result.stderr)
         value = result.artifacts["home/.vnc/tigervnc.conf"].decode()
         self.assertIn('$AlwaysShared = "yes";', value)
+        self.assertIn('$localhost = "no";', value)
+        self.assertIn('$SecurityTypes = "VncAuth,TLSVnc";', value)
         self.assertNotIn("$alwaysShared", value)
         self.assertIn('Xtigervnc-session', value)
         startup = result.artifacts["home/.vnc/Xtigervnc-session"].decode()
@@ -359,7 +363,7 @@ function /usr/local/sbin/ares-enable-remote-access() { return 2; }
 run_optional_remote_support y
 ''')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Tailscale and SSH remain operational", result.stdout)
+        self.assertIn("partially configured", result.stdout)
         self.assertIn("core installation remains successful", result.stdout)
 
     def test_password_prompts_matching_bounds_single_filtered_record_and_no_secret_output(self):
@@ -529,13 +533,105 @@ exit 1
         result = shell('ares_enable_remote_access.sh', '''
 exec 3>"$STATE_DIR/terminal"
 timeout() { echo 100.64.0.99; }
-COMPLETE=1
+COMPLETE=1; VNC_READY=1; TAILSCALE_READY=1
 print_ssh_instructions
 ''')
         self.assertEqual(result.returncode, 0, result.stderr)
         terminal = result.artifacts['terminal'].decode()
         self.assertIn('100.64.0.99::5901', terminal)
+        self.assertIn('<SERVER-LAN-IP>::5901', terminal)
         self.assertNotIn('ssh -N', terminal)
+
+    def test_lan_only_starts_desktop_without_calling_tailscale(self):
+        result = shell('ares_enable_remote_access.sh', SYSTEMD_FIXTURE + '''
+STARTED=1
+exec 3>"$STATE_DIR/terminal"
+configure_vnc() { VNC_OWNED=1; }
+verify_vnc_listeners() { return 0; }
+sleep() { :; }
+tailscale() { echo UNEXPECTED_TAILSCALE >> "$CALLS"; return 1; }
+trap cleanup EXIT
+activate_support test-school 1
+[[ $VNC_READY -eq 1 && $COMPLETE -eq 1 && $TAILSCALE_READY -eq 0 ]]
+[[ "${ACTIVE[tigervncserver@:1.service]}" == yes ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = result.artifacts['calls'].decode()
+        self.assertIn('restart tigervncserver@:1.service', calls)
+        self.assertNotIn('tailscaled.service', calls)
+        self.assertNotIn('UNEXPECTED_TAILSCALE', calls)
+        self.assertIn('no Internet or Tailscale required', result.artifacts['terminal'].decode())
+
+    def test_default_activation_keeps_lan_desktop_when_enrollment_is_offline_or_declined(self):
+        for rc in (1, 3):
+            result = shell('ares_enable_remote_access.sh', SYSTEMD_FIXTURE + '''
+PRESENT[tailscaled.service]=yes
+STARTED=1
+exec 3>"$STATE_DIR/terminal"
+configure_vnc() { VNC_OWNED=1; }
+verify_vnc_listeners() { return 0; }
+sleep() { :; }
+tailscale() { :; }
+enroll_tailscale() {
+  [[ "${ACTIVE[tigervncserver@:1.service]}" == yes && $VNC_READY -eq 1 ]] || return 99
+  echo ENROLL_AFTER_LAN >> "$CALLS"
+  return ''' + str(rc) + '''
+}
+trap cleanup EXIT
+activate_support test-school 0
+''')
+            self.assertEqual(result.returncode, 3 if rc == 3 else 2, result.stdout + result.stderr)
+            calls = result.artifacts['calls'].decode()
+            self.assertIn('ENROLL_AFTER_LAN', calls)
+            self.assertNotIn('disable --now', calls)
+            self.assertIn('SSH and local TigerVNC remain running', result.stdout)
+
+    def test_both_routes_are_ready_after_online_activation(self):
+        result = shell('ares_enable_remote_access.sh', SYSTEMD_FIXTURE + '''
+PRESENT[tailscaled.service]=yes
+STARTED=1
+exec 3>"$STATE_DIR/terminal"
+configure_vnc() { VNC_OWNED=1; }
+verify_vnc_listeners() { return 0; }
+sleep() { :; }
+tailscale() { :; }
+timeout() { echo 100.64.0.99; }
+enroll_tailscale() { [[ $VNC_READY -eq 1 ]]; }
+configure_vnc_route() { [[ $TAILSCALE_READY -eq 1 && $VNC_READY -eq 1 ]]; }
+trap cleanup EXIT
+activate_support test-school 0
+[[ $COMPLETE -eq 1 && $VNC_READY -eq 1 && $TAILSCALE_READY -eq 1 ]]
+''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        terminal = result.artifacts['terminal'].decode()
+        self.assertIn('<SERVER-LAN-IP>::5901', terminal)
+        self.assertIn('100.64.0.99::5901', terminal)
+
+    def test_support_update_contains_canonical_controls_and_a_complete_manifest(self):
+        import importlib.util
+        import zipfile
+        spec = importlib.util.spec_from_file_location('lan_update', BUILDER / 'build_lan_support_update.py')
+        update = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(update)
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'update.zip'
+            update.build(output)
+            with zipfile.ZipFile(output) as archive:
+                manifest = archive.read('SHA256SUMS').decode().splitlines()
+                self.assertEqual(len(manifest), len(archive.namelist()) - 1)
+                for line in manifest:
+                    checksum, name = line.split('  ', 1)
+                    self.assertEqual(hashlib.sha256(archive.read(name)).hexdigest(), checksum)
+                for name, source in update.FILES.items():
+                    self.assertEqual(archive.read(name), (BUILDER / source).read_bytes().replace(b'\r\n', b'\n'))
+                installer = archive.read('apply_lan_support_update.sh').decode()
+                self.assertIn('ares-enable-remote-access --lan-only', installer)
+                self.assertNotIn('tailscale up', installer)
+                self.assertNotIn('setup-anydesk', installer)
+            original = output.read_bytes()
+            with self.assertRaises(FileExistsError):
+                update.build(output)
+            self.assertEqual(output.read_bytes(), original)
 
     def test_optional_decline_and_failure_preserve_core_success(self):
         for reply in ("", "N", "y"):

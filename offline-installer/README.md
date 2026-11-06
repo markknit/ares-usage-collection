@@ -31,8 +31,8 @@ The builder now seals a production (`ares.local`, default) or permanent test
 [two-profile acceptance matrix](docs/PROFILE_ACCEPTANCE.md). Live target/client
 acceptance has not been completed by the source changes. v1.13 includes validated
 external-source TsavoTrust content; the legacy Tsavo installer and historical
-checksum-bypass wrapper are excluded. Remote support uses standard OpenSSH over
-Tailscale with Tailscale SSH explicitly disabled and a default-No activation prompt
+checksum-bypass wrapper are excluded. Optional support provides offline LAN SSH/VNC,
+plus Tailscale SSH and private VNC forwarding, with a default-No activation prompt
 after successful core installation. The connected build machine also requires
 Python ReportLab to regenerate profile-specific printed rollout guides.
 
@@ -45,7 +45,9 @@ Python ReportLab to regenerate profile-specific printed rollout guides.
   Component manifests remain available for release inspection and standalone utilities.
 - Remote-support preparation runs after successful core installation. Missing
   desktop/SSH prerequisites or preparation failure report a warning and preserve
-  core success. Routine offline installations decline optional activation.
+  core success. LAN desktop activation works offline; only Tailscale enrollment
+  requires Internet. `sudo ares-enable-remote-access --lan-only` enables on-site
+  headless access without touching existing Tailscale identity or forwarding.
 - Makes optional remote activation finite and enrollment output terminal-only,
   preserves SSH service/socket baselines, and keeps working Tailscale/SSH after
   a TigerVNC failure. See [remote support](docs/REMOTE_ACCESS.md) for status codes,

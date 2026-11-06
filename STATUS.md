@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-05
+Last updated: 2026-11-06
 
 ## Current checkout
 
@@ -25,11 +25,11 @@ Last updated: 2026-11-05
 | Thread | Status | Evidence / next action |
 |---|---|---|
 | Simplified offline installation | Fresh installation reported working on November 5 except generic mDNS alias | Owner reports another fresh ARES installation worked, with tsavo3.local available but ares.local missing. No new raw installation log or detailed acceptance trace supplied; diagnose alias publication before closing the remaining field checks. |
-| School hostname and generic mDNS alias | Fresh-run alias failure reported; diagnostics requested | tsavo3.local works but ares.local does not, by owner report. Alias service/configuration, selected address, recent journal and local resolution were requested. Do not assume the cause or claim a fix from the hostname's success alone. |
+| School hostname and generic mDNS alias | tsavo3 alias publication confirmed; other-server rename Pending | Supplied journal reports ares.local established on 192.168.12.113 and local resolution agrees. Owner confirms another ares.local server on the LAN. That older server lacks the new alias service; its failed commands made no changes. Avahi host-name=ares2 instructions supplied; resulting rename/client resolution not yet reported. |
 | AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
-| Editable technician installation guide | Completed and visually reviewed on November 5 | `output/docx/ARES_Technician_Installation_Guide_20261105.docx` and matching Windows Downloads copy. Editable text/native headings and lists, four pages, all 68 source content blocks retained from the r2 technician guide. Reviewed every rendered page; user additions are not incorporated yet. |
+| Editable technician installation guide | Updated and visually reviewed on November 6 | New `output/docx/ARES_Technician_Installation_Guide_20261106.docx` includes offline LAN support. Four pages, 69 editable source content blocks, all final pages reviewed. November 5 copy retained; owner's own additions have not been supplied. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
 | Corrected v1.13 ZIP and technician overview | November 4 r2 verified and on Windows; fresh install Pending | [Release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): distinct `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Reviewed two-page overview/four-page technician guide and all copied documents match the ZIP. Earlier artifacts unchanged. |
@@ -40,6 +40,7 @@ Last updated: 2026-11-05
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional SSH / TigerVNC support | Browser SSH/direct saved-viewer passed manually; automated setup packaged in r2 | Reauthentication addressed stale registration. The owner connected directly with RealVNC after configuring Serve and connecting Windows Tailscale. r2 automates browser SSH/operator and persistent private forwarding; 120 native tests passed. Its own activation/clean-image and reboot/disable/re-enable remain Pending. |
+| Offline LAN/headless desktop | November 6 implementation and focused fixtures passed; packaging/native CI in progress | LAN SSH/TigerVNC start before enrollment. `--lan-only` skips hostname/Tailscale changes; password-required port 5901 accepts local IP connections and retains the loopback Serve target. Support-only update avoids content installation and identity resets. Actual disconnected-LAN/headless/reboot and simultaneous Tailscale client checks remain Pending. |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -126,6 +127,12 @@ Last updated: 2026-11-05
 
 ## Known Issues / Lessons Learned
 
+- On-site headless support must not depend on Tailscale enrollment or Internet.
+  Activate password-required LAN VNC before optional enrollment, preserve it when
+  enrollment is deferred, and offer an explicit LAN-only command. Retain the
+  loopback endpoint for existing private Tailscale forwarding. Test both the
+  disconnected LAN path and remote path; a failed local-IP connection to the old
+  loopback-only configuration did not establish that the VNC service was stopped.
 - Published technician PDFs have three tracked copies: `output/pdf/`,
   `offline-installer/docs/pdf/` and the embedded rollout's `guides/`. After
   regeneration, synchronize all three and refresh the embedded SHA256SUMS.
@@ -214,6 +221,36 @@ Last updated: 2026-11-05
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-06 - Offline LAN desktop alongside Tailscale
+
+- Owner authorized direct LAN VNC for school visits without Internet, including
+  headless servers. Added password-required network listening while retaining the
+  loopback endpoint used by Tailscale Serve and the existing VNC password.
+- LAN SSH and VNC start before optional Tailscale enrollment. Deferral keeps them
+  running. `sudo ares-enable-remote-access --lan-only` skips hostname changes and
+  all Tailscale operations. Existing service/identity/forwarding are retained.
+- Added a separately packaged support-only updater for installed v1.13 servers;
+  it installs canonical controls, backs up previous controls and runs LAN-only
+  activation. No Lesson3 import, AnyDesk reset or Internet download is involved.
+- Updated technician source guides, acceptance procedure, two reviewed PDFs and
+  a new four-page editable Word guide. Synchronized the three technician PDF
+  copies and refreshed the embedded rollout checksum. November 5 Word copy and
+  previous full installers remain unchanged.
+- Windows regression passed: 121 tests run, 119 passed and two native-only tests
+  skipped; the three Linux/root corpus tests are reserved for Ubuntu CI. All
+  installer shell syntax checks passed. Native CI/packaging results will be
+  recorded in the release evidence when complete.
+- Confirmed from supplied logs that tsavo3 publishes/resolves ares.local. Another
+  server using the same name explains the reported coexistence concern; the
+  older server lacks the new alias service. Supplied an Avahi-only rename
+  procedure; no resulting client test has been reported yet.
+
+Still open:
+
+- Finish native CI and new independently verified ZIP delivery.
+- Actual LAN VNC with Internet disconnected, headless/reboot access, and retained
+  Tailscale viewer access. Remaining field acceptance/rollout stay Pending.
 
 ### 2026-11-05 - Fresh-install report and editable technician guide
 

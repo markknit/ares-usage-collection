@@ -2,7 +2,7 @@
 # Source and call after the core installer has passed all verification.
 prepare_optional_remote_support() {
   echo
-  echo "Preparing optional remote support (not needed for offline use)."
+  echo "Preparing optional LAN desktop and Internet remote support."
   # Replacing/restarting Tailscale can invalidate a live service-cgroup firewall
   # exception. Preserve existing support when lockdown is active or boot-enabled.
   if { command -v nft >/dev/null 2>&1 && nft list table inet ares_internet_lockdown >/dev/null 2>&1; } \
@@ -36,19 +36,20 @@ run_optional_remote_support() {
     esac
   case "$result" in
     activated) echo "Remote support activated; verify the client SSH/VNC connection." ;;
-    partial) echo "WARNING: TigerVNC activation failed; Tailscale and SSH remain operational; core installation remains successful." ;;
+    partial) echo "WARNING: optional support is partially configured; read the activation details above; core installation remains successful." ;;
     failed) echo "WARNING: optional remote support failed; core installation remains successful." ;;
-    deferred) echo "Remote support deferred; core installation remains successful." ;;
+    deferred) echo "Internet support deferred; any successfully activated LAN desktop remains available; core installation remains successful." ;;
   esac
   echo "Later activation: sudo ares-enable-remote-access"
+  echo "Offline LAN-only activation: sudo ares-enable-remote-access --lan-only"
   return 0
 }
 
 optional_remote_support() {
   local reply=N
   if [[ -t 0 ]]; then
-    echo "The ARES server needs outbound Internet. A technician can open the Tailscale URL on a phone using cellular data, off the ARES network."
-    read -r -p "Activate remote support now? [y/N]: " reply || reply=N
+    echo "Local desktop access works without Internet. Tailscale enrollment is a separate choice after local access starts."
+    read -r -p "Activate LAN desktop and optional Internet support now? [y/N]: " reply || reply=N
   fi
   run_optional_remote_support "$reply"
 }

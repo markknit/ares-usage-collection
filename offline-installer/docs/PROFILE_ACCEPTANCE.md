@@ -76,6 +76,7 @@ when enabling that optional feature; they do not gate ordinary offline use.
 | Tailscale enrollment | Pending | Pending | Device approved, matching machine identity, Tailscale IP; no secrets in evidence |
 | Tailscale SSH and LAN OpenSSH | Browser SSH passed by operator report; updated activation Pending | Pending | Browser and PowerShell login, RunSSH=true, operator ares, preserved LAN SSH |
 | Saved VNC connection and desktop | Direct RealVNC passed by operator report after Windows Tailscale connected; updated activation/reboot Pending | Pending | Windows Tailscale connected; saved viewer at tailnet port 5901, authentication and usable Cinnamon 2D desktop without a tunnel |
+| Offline LAN/headless VNC | November 6 source and fixtures added; live check Pending | Pending | Internet disconnected, technician on school LAN, local-IP port 5901 login, usable desktop without monitor/local login; repeat after reboot and confirm Tailscale route still works when online |
 | Disable/re-enable | Pending | Pending | Service states, closed 5901 after disable, successful reconnection and reboot autostart |
 | Activation partial failure and retry | Pending | Pending | Fail TigerVNC after Tailscale/SSH succeed; capture diagnostics before VNC stop, working command-line path, preserved identity and enrollment-free VNC retry |
 | SSH service/socket baseline restoration | Pending | Pending | Ubuntu 24.04 active/enabled ssh.socket and inactive/disabled ssh.service; saved pair restored by disable without unnecessary service enablement |
@@ -115,7 +116,9 @@ it does not establish a hosted CI run.
 - Shell syntax and isolated profile/remote-support/source checks pass.
 - Both scaffold profiles package successfully, preserve checksum generation, and
   reject modified package content using actual `sha256sum -c`.
-- Fixture tests reject display conflicts, non-loopback VNC listeners, wrong/mixed
+- Earlier loopback-only checks were superseded on November 6 by password-required
+  LAN plus loopback listeners and LAN-first activation. Fixture tests reject
+  display conflicts, loopback-only listeners for the new LAN mode, wrong/mixed
   APK endpoints, and public SERVER_URL posture during offline setup.
 - Service stubs verify activation cleanup commands and core success after optional
   failure/decline. These do not prove real systemd, Tailscale, SSH or VNC behavior.
@@ -134,17 +137,23 @@ on the first run. Reboot, resolve the alias from a separate device, and open the
 teacher install page, Lesson Plans links and Lesson3 login on the selected alias.
 Test ARES Sync local discovery/collection on the matching test/production app.
 
+While Internet remains disconnected, activate with
+`sudo ares-enable-remote-access --lan-only`. From a separate LAN computer, connect
+the viewer to `<SERVER-LAN-IP>::5901`, authenticate and verify the desktop.
+Reboot with no monitor and no Internet and repeat the local connection.
+
 Reconnect Internet and activate from the console. Complete browser enrollment,
 then test Tailscale browser/PowerShell SSH and a saved VNC viewer connection from
 a Windows computer connected to the tailnet, without an SSH tunnel. Verify
 RunSSH true and operator ares (redact other preferences/state), a persistent
-Serve TCP/5901 route to 127.0.0.1:5901, and loopback-only OS VNC listeners.
+Serve TCP/5901 route to 127.0.0.1:5901, and password-required network VNC listeners.
 Reboot and verify browser SSH and the saved VNC connection again.
 Disable; verify remote services inactive/disabled and 5901 closed. Re-enable and
 repeat the desktop connection. Confirm pre-existing SSH was preserved.
 
-On a disposable fixture, separately defer/deny enrollment and force VNC failure
-after Tailscale/SSH succeed. The latter must return partial failure, print VNC
+On a disposable fixture, separately defer/deny enrollment and confirm working
+LAN SSH/VNC are retained. Force VNC failure after LAN SSH succeeds, with existing
+Tailscale access retained. The latter must return partial failure, print VNC
 diagnostics before stopping only TigerVNC, and preserve working Tailscale/SSH and
 identity. Retry must repair VNC without re-enrollment. Verify both SSH unit baseline
 states on disable, including Ubuntu socket activation. Separately fail private

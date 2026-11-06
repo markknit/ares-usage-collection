@@ -1,8 +1,14 @@
-# Optional remote support: Tailscale SSH and a saved VNC connection
+# Optional support: offline LAN desktop and Tailscale remote access
 
 ## Normal technician use
 
-Complete activation once on each school server. On the support computer, sign
+Complete activation once on each school server. For on-site work, connect the
+technician computer to the school LAN and open `<SERVER-LAN-IP>::5901` in RealVNC
+or TigerVNC Viewer. Enter the VNC password. No Internet connection or Tailscale
+sign-in is needed. `<SCHOOL-HOSTNAME>.local::5901` also works where mDNS is supported.
+The virtual desktop works without a monitor or a physical desktop login.
+
+For off-site support, on the support computer, sign
 into the approved Tailscale account and keep its app connected. Save the school's
 Tailscale address in the VNC viewer with port **5901**. Open that saved connection
 and enter the VNC password; no PowerShell tunnel is needed. RealVNC and TigerVNC
@@ -13,10 +19,9 @@ tailnet. Sign into the Windows Tailscale app separately. The owner confirmed
 direct RealVNC access after doing so on November 4; updated activation and
 reboot/disable/re-enable checks remain separate acceptance steps.
 
-This simpler workflow is a source follow-up to the November 4 ZIP, whose
-activation still prints tunnel instructions and disables Tailscale SSH. Use the
-updated complete package when published; rerunning that older activation helper
-would undo the manually enabled browser SSH setting.
+The November 6 source adds LAN access to the November 4 r2 Tailscale setup.
+Previously released ZIPs are unchanged; use the newly dated package or its
+reviewed support-only update. Do not run an older activation helper over it.
 
 After core installation and verification succeed, the installer attempts to
 prepare the pinned offline Tailscale/TigerVNC payloads. Preparation preserves
@@ -39,7 +44,23 @@ The v1.13 source uses the canonical activation/disable scripts and the shared
 Lesson3 remains v0.94. No final v1.13 field ZIP or live acceptance is established
 by this source change. Preserve the v1.12 artifact and dated evidence unchanged.
 
-## Enrollment and command-line access
+## Offline activation and later Internet support
+
+To enable the LAN desktop and ordinary LAN SSH without touching Tailscale,
+run at an interactive console or an existing LAN SSH session:
+
+```bash
+sudo ares-enable-remote-access --lan-only
+```
+
+Set the VNC password when prompted, or retain the existing one. The command
+enables the TigerVNC service at boot. It works without an active adapter;
+the listener becomes reachable when the school LAN is connected. It does not
+rename the server, sign into Tailscale or alter its existing forwarding rules.
+Save `<SERVER-LAN-IP>::5901` in the viewer. A changing LAN address can instead
+be reached by the school's unique `.local` hostname where supported.
+
+To add or retry Internet support later, run:
 
 Run at an interactive console:
 
@@ -51,7 +72,9 @@ Press Enter at the school-name prompt to keep the current hostname, then
 confirm it (default Yes). To rename deliberately, enter a school name and approve
 the normalized name (default No). Invalid names reprompt; EOF defers without a
 Python traceback or service changes. This never
-changes the selected mDNS profile alias. The ARES server needs outbound Internet
+changes the selected mDNS profile alias. LAN SSH and TigerVNC start first.
+If offline, decline the subsequent Tailscale enrollment prompt; the LAN desktop
+remains available. The ARES server needs outbound Internet
 for enrollment and connectivity. The technician may open the authentication URL
 on a phone using cellular data; the phone need not be on the ARES network. The
 phone's connection does not provide Internet to an otherwise offline server.
@@ -65,7 +88,8 @@ authentication URL into an evidence record or support log.
 Enrollment uses `tailscale up --timeout=120s`, with an outer 125-second deadline
 and a further five-second forced-termination grace. It cannot wait indefinitely.
 See [Tailscale's timeout reference](https://tailscale.com/docs/reference/tailscale-cli/up).
-Offline, deferred or incomplete approval returns status 3 and prints:
+Offline, deferred or incomplete approval returns status 3, retains the working
+LAN SSH/desktop, and prints:
 
 ```bash
 sudo ares-enable-remote-access
@@ -122,8 +146,9 @@ accepting an upgraded target; no missing historical socket evidence is invented.
 
 ## TigerVNC desktop and password
 
-The standalone desktop uses user `ares`, display `:1`, port 5901, and loopback-only
-binding. Tailscale Serve forwards its private port 5901 to that local listener,
+The standalone desktop uses user `ares`, display `:1`, port 5901, and network
+binding for direct LAN connections. It also retains loopback access.
+Tailscale Serve forwards its private port 5901 to that local listener,
 so viewers connect to the school's Tailscale address directly. It neither
 terminates nor reconfigures the physical GNOME/AnyDesk session.
 It never kills desktop processes or another service owning a conflicting port.
@@ -143,7 +168,8 @@ Passwords are neither command-line arguments nor printed/logged. An existing
 eight-byte normal-access record is reused; a missing or other-sized record requires
 the explicit prompts. See the [pinned Ubuntu password manual](https://manpages.ubuntu.com/manpages/noble/man1/tigervncpasswd.1.html).
 
-`~/.vnc/tigervnc.conf` uses supported `$AlwaysShared` spelling, `$localhost = "yes"`
+`~/.vnc/tigervnc.conf` uses supported `$AlwaysShared` spelling, `$localhost = "no"`,
+and `$SecurityTypes = "VncAuth,TLSVnc"` (password authentication on both paths)
 and an explicit `$vncStartup` pointing to `~/.vnc/Xtigervnc-session`. That executable
 startup file clears inherited session-bus variables and runs:
 
@@ -154,8 +180,12 @@ exec dbus-run-session -- cinnamon-session-cinnamon2d
 This is a separate session bus for the VNC desktop. The per-user startup mechanism
 is documented in [Ubuntu's exact-version configuration manual](https://manpages.ubuntu.com/manpages/noble/man5/tigervnc.conf.5x.html).
 The display map preserves other displays and rejects `:1` ownership conflicts.
-Activation requires three consecutive samples of an active unit and exclusively
-IPv4/IPv6-loopback port 5901 listeners within a 20-sample startup window.
+Activation requires three consecutive samples of an active unit and an IPv4
+wildcard port 5901 listener within a 20-sample startup window. This includes the
+loopback destination used by Tailscale and does not depend on a current LAN lease.
+Other host firewall rules must permit technician LAN traffic to TCP 5901;
+activation does not flush or replace firewall rules. The supplied lockdown
+project already permits TCP 5901/5909.
 
 It then saves and verifies this private forwarding rule:
 
@@ -166,24 +196,25 @@ sudo tailscale serve --bg --tcp=5901 tcp://127.0.0.1:5901
 The background rule resumes after reboot. Activation reuses an exact existing
 rule, preserves routes on other ports, and refuses a conflicting/foreground or
 public Funnel configuration on port 5901. It never resets the whole Serve
-configuration. The local VNC listener remains loopback-only; the new path is
-private to the tailnet and subject to its access rules. See
+configuration. LAN clients reach TigerVNC directly; the Tailscale forwarding path
+remains private to the tailnet and subject to its access rules. See
 [Tailscale TCP forwarding](https://tailscale.com/docs/reference/tailscale-cli/serve)
 and [browser SSH](https://tailscale.com/docs/features/tailscale-ssh/tailscale-ssh-console).
 
 ## Partial failure and retry
 
-If Tailscale is connected and SSH is available but TigerVNC fails, activation
+If LAN SSH is available but TigerVNC fails, activation
 returns **2 (partial failure)**. It prints unit status, recent VNC journal entries
 and existing current-display VNC logs **before** stopping/disabling only
 `tigervncserver@:1.service`. Logs are read as `ares`, not through root-followed
-symlinks. Working Tailscale and SSH remain operational; SSH/hostname rollback is
+symlinks. Existing Tailscale and working LAN SSH remain operational; SSH/hostname rollback is
 not performed on this path. Retry instructions are always printed. If display
 ownership conflicts with another user, activation fails without stopping that
 user's existing unit.
 
-The retry reuses connected Tailscale enrollment and the original SSH baseline,
-then repairs/restarts TigerVNC. Status 0 means host-side activation checks passed;
+The retry reuses the existing VNC password and original SSH baseline, then
+repairs/restarts TigerVNC before reusing any connected Tailscale enrollment.
+Status 0 means host-side activation checks passed for the requested mode;
 status 1 is another failure. These checks do not establish a working client login,
 saved viewer connection or usable desktop. If forwarding setup fails after
 TigerVNC is healthy, the helper retains both SSH and TigerVNC and reports partial
@@ -203,8 +234,10 @@ Port: 5901
 TigerVNC address: <TAILSCALE-IP>::5901
 ```
 
-Keep the Windows Tailscale app connected. The already-tested LAN SSH tunnel
-remains a support fallback for the loopback listener, not a routine login step.
+Keep the Windows Tailscale app connected for that off-site address. On-site,
+use `<SERVER-LAN-IP>::5901` instead; no Tailscale or SSH tunnel is required.
+Applying the update/re-running activation restarts the virtual VNC desktop,
+so use LAN SSH, AnyDesk or a local terminal for that step.
 
 ## Disable and remaining acceptance
 
@@ -215,7 +248,8 @@ retained for re-enable, including the private Serve rule. Stopping Tailscale
 stops that route; re-enabling restores it. Errors are reported if restoration or
 shutdown fails.
 
-Packaged display `:1`, actual Tailscale-path SSH/VNC, reboot/autostart, full
+The new direct LAN path with Internet disconnected, headless desktop startup,
+packaged display `:1`, actual Tailscale-path SSH/VNC, reboot/autostart, full
 disable/re-enable, partial-failure recovery and physical-session coexistence remain
 **Pending** for both profiles in [PROFILE_ACCEPTANCE.md](PROFILE_ACCEPTANCE.md).
 TsavoTrust is documented separately in [TSAVO_TRUST.md](TSAVO_TRUST.md).

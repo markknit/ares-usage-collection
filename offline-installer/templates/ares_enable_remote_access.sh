@@ -9,6 +9,7 @@ STATE_DIR=/var/lib/ares/remote-support
 VNC_USERS_FILE=/etc/tigervnc/vncserver.users
 ENROLL_TIMEOUT_SECONDS=120
 COMPLETE=0; STARTED=0; CLI_READY=0; VNC_PHASE=0; VNC_OWNED=0; VNC_READY=0; SSH_TOUCHED=0; HOST_CHANGED=0
+TAILSCALE_READY=0
 
 retry_instructions() { echo "Retry when ready: sudo ares-enable-remote-access"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -44,16 +45,17 @@ choose_remote_hostname() {
 }
 
 verify_vnc_listeners() {
-  local listener seen=0
+  local listener loopback=0 network=0
   while IFS= read -r listener; do
     [[ -n "$listener" ]] || continue
-    seen=1
     case "$listener" in
-      127.0.0.1:5901|'[::1]:5901') ;;
-      *) echo "Unsafe VNC listener: $listener" >&2; return 1 ;;
+      0.0.0.0:5901|'*:5901') loopback=1; network=1 ;;
+      127.0.0.1:5901) loopback=1 ;;
     esac
-  done < <(ss -H -ltn | awk '$4 ~ /:5901$/ {print $4}')
-  [[ $seen -eq 1 ]]
+  done < <(ss -H -4 -ltn | awk '$4 ~ /:5901$/ {print $4}')
+  # IPv4 wildcard includes loopback for the existing Tailscale Serve route,
+  # and works before a LAN adapter receives an address. IPv6 is optional.
+  [[ $loopback -eq 1 && $network -eq 1 ]]
 }
 
 tailscale_connected() {
@@ -165,7 +167,8 @@ configure_vnc() {
   cat > "$WORK/tigervnc.conf" <<'EOF'
 $geometry = "1280x800";
 $depth = "24";
-$localhost = "yes";
+$localhost = "no";
+$SecurityTypes = "VncAuth,TLSVnc";
 $AlwaysShared = "yes";
 $rfbport = "5901";
 $vncStartup = "$ENV{HOME}/.vnc/Xtigervnc-session";
@@ -194,7 +197,7 @@ start_vnc() {
     fi
     sleep 1
   done
-  echo "ERROR: TigerVNC did not remain active with loopback-only port 5901." >&2
+  echo "ERROR: TigerVNC did not remain active with LAN and loopback port 5901." >&2
   return 1
 }
 
@@ -212,6 +215,11 @@ vnc_diagnostics() {
 
 print_ssh_instructions() {
   local address
+  if (( VNC_READY )); then
+    printf 'On-site VNC (no Internet or Tailscale required): %s.local::5901 or <SERVER-LAN-IP>::5901\nUse the existing VNC password. The service starts automatically after reboot.\n' "$(hostname -s)" >&3
+    printf 'On-site SSH: ssh ares@%s.local\n' "$(hostname -s)" >&3
+  fi
+  (( TAILSCALE_READY )) || return 0
   address="$(timeout 10s tailscale ip -4 2>/dev/null)" || address='<TAILSCALE-IP>'
   printf 'SSH: ssh ares@%s\nBrowser SSH is available from the Tailscale admin console, subject to its access policy.\n' "$address" >&3
   if (( COMPLETE )); then
@@ -232,11 +240,15 @@ cleanup() {
       fi
     fi
     if (( CLI_READY )); then
-      rc=2
+      [[ $rc -eq 3 ]] || rc=2
       if (( VNC_READY )); then
-        echo 'PARTIAL FAILURE: SSH and local TigerVNC remain running; direct VNC over Tailscale is Pending.'
+        if [[ $rc -eq 3 ]]; then
+          echo 'Internet support deferred; SSH and local TigerVNC remain running without Internet.'
+        else
+          echo 'PARTIAL FAILURE: SSH and local TigerVNC remain running; direct VNC over Tailscale is Pending.'
+        fi
       else
-        echo 'PARTIAL FAILURE: Tailscale and SSH remain operational; ARES TigerVNC was not activated.'
+        echo 'PARTIAL FAILURE: LAN SSH remains operational; ARES TigerVNC was not activated. Existing Tailscale state was retained.'
       fi
       print_ssh_instructions || true
     else
@@ -255,10 +267,47 @@ cleanup() {
   exit "$rc"
 }
 
+activate_support() {
+  local new_hostname=$1 lan_only=$2
+  SSH_TOUCHED=1
+  ensure_ssh || die "standard OpenSSH could not be started"
+  CLI_READY=1
+  echo 'Ubuntu OpenSSH is available on the LAN.'
+  VNC_PHASE=1
+  configure_vnc || die "TigerVNC configuration failed"
+  start_vnc || die "TigerVNC startup/LAN verification failed"
+  VNC_READY=1
+  print_ssh_instructions
+  if (( lan_only )); then
+    COMPLETE=1
+    echo 'LAN support active. Existing Tailscale services, identity and forwarding were retained.'
+    echo 'Internet support can be enabled later with sudo ares-enable-remote-access.'
+    return 0
+  fi
+  command -v tailscale >/dev/null || die 'Tailscale is missing; LAN support remains available'
+  systemctl cat tailscaled.service >/dev/null || die 'tailscaled.service is missing; LAN support remains available'
+  systemctl enable --now tailscaled.service
+  enroll_tailscale "$new_hostname" || return $?
+  TAILSCALE_READY=1
+  echo 'Tailscale SSH is enabled; ares is the Tailscale operator.'
+  configure_vnc_route || die 'Direct VNC over Tailscale could not be prepared'
+  COMPLETE=1
+  echo "Remote support active; actual client SSH/VNC and desktop acceptance remain Pending."
+  print_ssh_instructions
+  echo "Disable with sudo ares-disable-remote-access."
+}
+
 main() {
+  local lan_only=0
+  case "${1:-}" in
+    '') ;;
+    --lan-only) lan_only=1 ;;
+    *) die 'usage: sudo ares-enable-remote-access [--lan-only]' ;;
+  esac
+  [[ $# -le 1 ]] || die 'usage: sudo ares-enable-remote-access [--lan-only]'
   [[ ${EUID:-$(id -u)} -eq 0 ]] || die "run sudo ares-enable-remote-access"
   [[ -t 0 ]] || die "interactive terminal required; retry: sudo ares-enable-remote-access"
-  for cmd in python3 getent cut flock hostnamectl install systemctl tailscale timeout \
+  for cmd in python3 getent cut flock hostnamectl install systemctl timeout \
     ss awk mktemp cp mv chmod chown tee date sleep touch grep dirname; do
     command -v "$cmd" >/dev/null || die "required command missing: $cmd"
   done
@@ -266,7 +315,7 @@ main() {
   source "$COMMON_TOOL"
   TARGET_HOME="$(getent passwd ares | cut -d: -f6)"
   [[ -d "$TARGET_HOME" ]] || die "ares home is missing"
-  for unit in tailscaled.service ssh.service; do
+  for unit in ssh.service; do
     systemctl cat "$unit" >/dev/null || die "$unit is missing"
   done
   install -d -m 0700 "$STATE_DIR"
@@ -282,8 +331,11 @@ main() {
   trap 'exit 130' HUP INT TERM
   OLD_HOSTNAME="$(hostnamectl --static)"
   local new_hostname
-  choose_remote_hostname || { retry_instructions; exit 3; }
-  new_hostname=$SELECTED_HOSTNAME
+  new_hostname=$OLD_HOSTNAME
+  if (( ! lan_only )); then
+    choose_remote_hostname || { retry_instructions; exit 3; }
+    new_hostname=$SELECTED_HOSTNAME
+  fi
   capture_ssh_baseline "$STATE_DIR/ssh-before.conf"
   STARTED=1
   cp -a /etc/hosts "$WORK/hosts"
@@ -294,20 +346,6 @@ main() {
     install -o root -g root -m 0644 "$WORK/hosts.new" /etc/hosts
     systemctl try-restart avahi-daemon.service
   fi
-  systemctl enable --now tailscaled.service
-  enroll_tailscale "$new_hostname" || exit $?
-  SSH_TOUCHED=1
-  ensure_ssh || die "standard OpenSSH could not be started"
-  CLI_READY=1
-  echo 'Tailscale SSH is enabled; ares is the Tailscale operator. Ubuntu OpenSSH is also available on the LAN.'
-  VNC_PHASE=1
-  configure_vnc || die "TigerVNC configuration failed"
-  start_vnc || die "TigerVNC startup/localhost verification failed"
-  VNC_READY=1
-  configure_vnc_route || die 'Direct VNC over Tailscale could not be prepared'
-  COMPLETE=1
-  echo "Remote support active; actual client SSH/VNC and desktop acceptance remain Pending."
-  print_ssh_instructions
-  echo "Disable with sudo ares-disable-remote-access."
+  activate_support "$new_hostname" "$lan_only"
 }
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi

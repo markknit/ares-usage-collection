@@ -53,8 +53,9 @@ The one-time installation key is still supplied by ARES staff. Installing the AP
 5. AnyDesk setup asks for `RESET` and the standard unattended-access password.
    Use a local console; reset disconnects AnyDesk sessions. Save the printed ID.
    If Pending, follow `docs/ANYDESK_SETUP.md`; retry preserves the new identity.
-   If asked to activate remote support, press Enter for No during an offline
-   installation. A warning about unavailable remote support does not invalidate
+   For headless/local desktop support, choose Yes at the LAN desktop activation
+   prompt and set or retain the VNC password. With no Internet, decline the later
+   Tailscale enrollment prompt; LAN access stays active. A support warning does not invalidate
    a successful core installation. Save the installation log path printed on screen.
 6. From another device on the school network, open `http://ares.local`, check
    Lesson Plans and the Lesson3 login, and open Tsavo Trust and play a video.
@@ -67,10 +68,17 @@ installation log. Do not run individual component installers to work around it.
 Remote-support preparation is attempted after the core installation succeeds.
 It may require additional server prerequisites; its failure leaves the completed
 offline installation usable. ARES support can arrange preparation and activation
-later. Preparation preserves existing support services. Activation needs outbound
-Internet on the server. Press Enter at the school-name prompt to keep its hostname.
-Activation configures browser SSH and private VNC forwarding automatically.
-For later support, keep Tailscale connected on Windows, open a saved VNC connection
+later. Preparation preserves existing support services. For offline activation,
+run `sudo ares-enable-remote-access --lan-only` in a normal terminal or LAN SSH.
+Connect the technician computer to the school LAN and use
+`<SERVER-LAN-IP>::5901` in the VNC viewer with the VNC password. No monitor,
+Internet or Tailscale is required after setup; the desktop service starts at boot.
+Save this connection for on-site visits.
+
+For off-site support, run `sudo ares-enable-remote-access` with Internet available.
+Press Enter at the school-name prompt to keep its hostname. Activation configures
+browser SSH and private VNC forwarding automatically. Keep Tailscale connected
+on Windows, open a saved VNC connection
 to the school's Tailscale address on port 5901 and enter the VNC password. No
 PowerShell tunnel is needed. Browser SSH alone does not connect Windows apps to
 Tailscale. See `docs/REMOTE_ACCESS.md`.

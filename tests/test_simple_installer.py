@@ -123,7 +123,7 @@ class SimpleInstallerTests(unittest.TestCase):
         result, calls = self.run_install()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("completed successfully", result.stdout)
-        self.assertIn("Remote support deferred", result.stdout)
+        self.assertIn("Internet support deferred", result.stdout)
         self.assertTrue(calls.endswith("tsavo/install.sh\nANYDESK_PREPARATION\nREMOTE_PREPARATION\nLOCKDOWN_PREPARATION\n"), calls)
 
     def test_anydesk_deferral_or_failure_preserves_core_success(self):

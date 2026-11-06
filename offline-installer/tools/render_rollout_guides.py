@@ -153,7 +153,8 @@ def header_footer(canvas, doc):
     canvas.line(18 * mm, 15 * mm, width - 18 * mm, 15 * mm)
     canvas.setFillColor(colors.HexColor("#66757D"))
     canvas.setFont("DejaVu", 7.5)
-    canvas.drawString(18 * mm, 10 * mm, "ARES Education - ARES Sync rollout guide - Revision 2026-11-04")
+    revision = getattr(doc, 'guide_revision', '2026-11-04')
+    canvas.drawString(18 * mm, 10 * mm, "ARES Education - ARES Sync rollout guide - Revision " + revision)
     canvas.drawRightString(width - 18 * mm, 10 * mm, f"Page {doc.page}")
     canvas.restoreState()
 
@@ -266,6 +267,8 @@ def build(source: Path, destination: Path) -> None:
         author="ARES Education",
         subject="ARES Sync rollout guidance",
     )
+    doc.guide_revision = ('2026-11-06' if source.stem in
+                          ('TECHNICIAN_PHONE_INSTALL', 'TECHNICIAN_OVERVIEW') else '2026-11-04')
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="normal")
     doc.addPageTemplates([PageTemplate(id="ares", frames=[frame], onPage=header_footer)])
     doc.build(parse_markdown(source, styles()))

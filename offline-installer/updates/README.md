@@ -1,4 +1,23 @@
-# Historical November 3 offline update
+# November 6 LAN desktop update
+
+For an already installed v1.13 server, the support-only update enables direct
+password-protected LAN VNC while retaining existing Tailscale access. It does not
+rerun Lesson3, import content, reset AnyDesk or change Tailscale registration.
+From LAN SSH, AnyDesk or a local terminal in the extracted update folder, run:
+
+```bash
+sudo bash apply_lan_support_update.sh
+```
+
+The virtual desktop restarts. Existing VNC credentials are retained. Connect the
+technician computer to the school LAN and open `<SERVER-LAN-IP>::5901` in the
+viewer. Internet is not required. See [remote access](../docs/REMOTE_ACCESS.md).
+
+Build a fresh archive from the reviewed source with
+`python3 offline-installer/build_lan_support_update.py <NEW-OUTPUT.zip>`.
+The complete installer includes the same canonical activation controls.
+
+## Historical November 3 offline update
 
 This retained ZIP predates the November 4 remote-support/AnyDesk corrections.
 Use the newest full installer for further testing. The source packager now

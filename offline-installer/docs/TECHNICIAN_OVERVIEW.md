@@ -41,8 +41,11 @@ and later uploads still need normal Internet or mobile data on the phone.
 
 1. **Prepare the server.** Start from the approved ARES base image. Connect the
    school LAN and keep a working local console or support connection available.
-2. **Extract the whole ZIP into a new folder.** Open a normal Ubuntu terminal in
-   that folder. Run the master command, replacing the example with the real code:
+2. **Extract the full installer `ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip` into a new folder.**
+   It already includes LAN desktop support. The smaller
+   `ARES_v1.13_LAN_Desktop_Update_20261106.zip` is for existing older installations
+   only; a full installation does not need both ZIPs. Open a normal Ubuntu terminal
+   in the extracted full installer folder. Run the master command with the real code:
 
    ```bash
    sudo bash install_offline.sh ARES-S00XX

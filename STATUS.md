@@ -1,6 +1,6 @@
 # ARES Usage Collection Status
 
-Last updated: 2026-11-06
+Last updated: 2026-11-07
 
 ## Current checkout
 
@@ -33,7 +33,8 @@ Last updated: 2026-11-06
 | AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
 | Offline ARES Sync manuals | Current handoff consolidated in Documents-Final | `Downloads/ARES_v1.13_Release_20261106/Documents-Final`: 12 verified document copies plus START_HERE.txt, no nested folders. Includes teacher/user/Lesson3 guides, current overview and support instructions. The old Documents folder is now absent. The verified installer ZIP is unchanged; companion documentation is newer. |
-| Editable technician installation guide | Owner edits preserved in the local current master | Documents-Final/ARES_Technician_Installation_Guide.docx and matching .pdf are exact copies of the owner's edited r2 files. Later passages are absent from the published generic technician PDF; an earlier edited PDF with additional content is retained under a REFERENCE filename. Tracked source and ZIP do not yet include these owner edits. |
+| Editable technician installation guide | ZIP selection clarified; owner edits preserved locally | November 7 updates name the full installation ZIP and distinguish the optional older-server LAN update. Documents-Final Word/PDF retain all other owner-edited paragraphs; the earlier edited reference PDF is unchanged. Generic published source/Word/PDF received the same ZIP clarification, without importing private owner additions. Installer ZIPs are unchanged. |
+| Full installer versus LAN desktop update | Documentation clarified and checked | Full installation uses ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip, which already contains LAN desktop support. ARES_v1.13_LAN_Desktop_Update_20261106.zip is only for older installed servers. Current Word/PDF, overview, remote/update instructions and both Downloads indexes state the distinction. Eleven source/guide checks passed; rendered pages reviewed. |
 | Staff enrollment portal password | Reset procedure documented; operator outcome not reported | `docs/STAFF_ENROLLMENT_CODES.md` explains changing only staff_enrollment_password in the central website's monitor_upload/config.php. Source confirms no password expiry and a 15-minute inactive-session timeout. The agent did not change the live password; do not infer a confirmed reset from the supplied browser context. |
 | School registry reconciliation | Final local registry validated; website deployment unconfirmed | `Downloads/ARES_School_Registry_Merge_20261106/Final/schools.json`: 73 records, 71 active and 2 retained inactive; all 49 prior IDs preserved and 24 new schools added. Only the first Directory worksheet was used. Owner chose prior registry IDs and confirmed both uncertain identity matches. Final lookup/provenance/validation accompany the file. No private roster was committed or uploaded by the agent. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
@@ -160,6 +161,10 @@ Last updated: 2026-11-06
   non-sensitive counts/paths in continuity notes; live rosters and mappings
   remain outside Git. Use the final lookup for installations because many
   original spreadsheet assignments can differ from the reconciled codes.
+- When a release folder contains a complete installer and a small update ZIP,
+  name the exact full installer in the extraction step and put that path first
+  in START_HERE. Explain that the update is only for older installed servers;
+  a fresh full installation already includes its support controls.
 - Nested guide updates caused version confusion. Use one Documents-Final folder
   with an index, preserve owner-edited Word/PDF bytes, and label older edited
   content as reference instead of discarding it. A newer published generic PDF
@@ -265,6 +270,32 @@ Last updated: 2026-11-06
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-07 - Distinguish full installer from optional LAN desktop update
+
+- Clarified the exact ZIP names in both technician sources, overview,
+  remote-access instructions and update README. The full November 6 installer
+  already includes LAN desktop support; the smaller ZIP only updates an older
+  installed server. Reordered the release START_HERE to present full installation first.
+- Updated the current owner-edited Documents-Final Word/PDF pair with two
+  sentence replacements and one added paragraph. Compared paragraph XML against
+  a private backup: all other 100 original paragraphs are intact. Applied the
+  same clarification to the generic tracked Word, preserving its other 94
+  paragraphs. Private owner additions remain local and are not published.
+- Refreshed published technician/overview PDFs and matching source/reference
+  copies. Reviewed all five pages of each Word rendering, five published
+  technician pages and two overview pages. The current local handoff still
+  contains 13 flat files; the earlier edited reference remains unchanged.
+- Eleven source/guide/manifest checks passed. Independently rehashed both
+  Downloads ZIPs against their existing release identities; both are unchanged.
+  No installer, update, rebuild or server operation was performed.
+
+Still open:
+
+- Owner's other local manual additions need deliberate source reconciliation
+  before future generated or packaged guides can claim to contain them.
+- Existing field acceptance and central registry deployment remain Pending
+  where no new operator evidence has been supplied.
 
 ### 2026-11-06 - Final registry and consolidated document handoff
 

@@ -267,7 +267,7 @@ def build(source: Path, destination: Path) -> None:
         author="ARES Education",
         subject="ARES Sync rollout guidance",
     )
-    doc.guide_revision = ('2026-11-06 r2' if source.stem in
+    doc.guide_revision = ('2026-11-07' if source.stem in
                           ('TECHNICIAN_PHONE_INSTALL', 'TECHNICIAN_OVERVIEW') else '2026-11-04')
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="normal")
     doc.addPageTemplates([PageTemplate(id="ares", frames=[frame], onPage=header_footer)])

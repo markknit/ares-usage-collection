@@ -1,5 +1,10 @@
 # November 6 LAN desktop update
 
+For a complete installation, use `ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip`.
+It already includes LAN desktop support. The separate
+`ARES_v1.13_LAN_Desktop_Update_20261106.zip` described below is for an existing
+older installation only; technicians do not need both ZIPs for a fresh install.
+
 For an already installed v1.13 server, the support-only update enables direct
 password-protected LAN VNC while retaining existing Tailscale access. It does not
 rerun Lesson3, import content, reset AnyDesk or change Tailscale registration.

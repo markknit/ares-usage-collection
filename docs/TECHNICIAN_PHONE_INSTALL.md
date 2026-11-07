@@ -68,7 +68,9 @@ administration; see [staff portal password reset](STAFF_ENROLLMENT_CODES.md).
 
 ## 1. Install and verify the school server
 
-1. Copy the complete offline field ZIP to the server and extract it into a new folder.
+The full installer below includes LAN desktop support. `ARES_v1.13_LAN_Desktop_Update_20261106.zip` updates older installed servers only; you do not need both ZIPs for a full installation.
+
+1. Copy `ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip` to the server and extract that full installer into a new folder.
 2. Open a terminal in the extracted `ARES_Q4_Offline_...` directory and run:
 
    ```bash

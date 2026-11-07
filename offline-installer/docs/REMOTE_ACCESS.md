@@ -23,6 +23,11 @@ The November 6 source adds LAN access to the November 4 r2 Tailscale setup.
 Previously released ZIPs are unchanged; use the newly dated package or its
 reviewed support-only update. Do not run an older activation helper over it.
 
+For a full installation, extract `ARES_Q4_Offline_v0.94_amd64_v1.13_20261106.zip`.
+That installer already includes these LAN/Tailscale support controls. Use
+`ARES_v1.13_LAN_Desktop_Update_20261106.zip` only to update an already installed
+older server; it is not required after installing the complete November 6 ZIP.
+
 After core installation and verification succeed, the installer attempts to
 prepare the pinned offline Tailscale/TigerVNC payloads. Preparation preserves
 existing active services, enablement, Tailscale identity and x11vnc console access.

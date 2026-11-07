@@ -6,7 +6,11 @@ Last updated: 2026-11-06
 
 - Repository: `C:/Users/MRKni/Documents/ChatGPT/ares-usage-collection` (separate local clone).
 - Branch: `simplify-offline-install`.
-- Implementation baseline for this step: `728741b611d35ef9af1d69f7efcebd0bdda1bca7`.
+- Historical C1 baseline: `728741b611d35ef9af1d69f7efcebd0bdda1bca7`.
+- Latest packaged runtime source: `aa0011ca320a7b014d1e174bae96039abd6ddb3f`.
+- Published school-code/portal documentation: `8b0aa5a686183360179ce7cd14b947f0bb0f6c6d`.
+- Current owner-edited technician master is the local `Documents-Final` Word/PDF
+  pair below; its later edits have not been incorporated into tracked source or ZIPs.
 - The C1-qualified tsavo3 checkout, normalized source and sealed evidence remain
   at the old baseline. Build this simplified source from a separate checkout;
   do not run the earlier C2 commands expecting the old behavior.
@@ -24,24 +28,25 @@ Last updated: 2026-11-06
 
 | Thread | Status | Evidence / next action |
 |---|---|---|
-| Simplified offline installation | Fresh installation reported working on November 5 except generic mDNS alias | Owner reports another fresh ARES installation worked, with tsavo3.local available but ares.local missing. No new raw installation log or detailed acceptance trace supplied; diagnose alias publication before closing the remaining field checks. |
+| Simplified offline installation | Fresh installation reported working; alias publication confirmed | November 5 owner report recorded the generic-name exception. Subsequent supplied diagnostics confirmed tsavo3 publishes/resolves the alias while another LAN server advertises the same name. Client resolution after the other-server rename and remaining field checks are Pending. |
 | School hostname and generic mDNS alias | tsavo3 alias publication confirmed; other-server rename Pending | Supplied journal reports ares.local established on 192.168.12.113 and local resolution agrees. Owner confirms another ares.local server on the LAN. That older server lacks the new alias service; its failed commands made no changes. Avahi host-name=ares2 instructions supplied; resulting rename/client resolution not yet reported. |
 | AnyDesk school identity | Manual recovery/reboot passed; latest rerun retained client and setup | Operator run `20261104_171914` reports existing personalization and desktop client retained. Earlier manual recovery/reboot connection passed. Explicit password/ID comparison and clean-image acceptance remain separate checks. |
 | Phone installation-page link | Corrected source and ZIP complete | Installer, checks, guides and supplied admin link use `/app_install/index.html`; direct-page client acceptance on the fresh install remains Pending. |
-| Offline ARES Sync manuals | Packaged and copied to Windows | Technician/teacher guides, approved protected manual and two-page component/process overview are in the corrected ZIP and Windows Documents folder. All five copied PDFs match their ZIP entries. |
-| Editable technician installation guide | November 6 revision 2 adds portal/school-code lookup | `output/docx/ARES_Technician_Installation_Guide_20261106_r2.docx`, five pages and 80 editable content blocks. Matching five-page PDF and two-page overview reviewed. Portal URL, school-name/ID lookup, installed-code check and distinction from a phone key included. Earlier Word/installer artifacts retained. |
-| Staff enrollment portal password | Reset procedure documented; live reset not performed | `docs/STAFF_ENROLLMENT_CODES.md` explains changing only staff_enrollment_password in the central website's monitor_upload/config.php. Source confirms no password expiry and a 15-minute inactive-session timeout. Hosting access is required; this is separate from school/Ubuntu/Lesson3 passwords. |
+| Offline ARES Sync manuals | Current handoff consolidated in Documents-Final | `Downloads/ARES_v1.13_Release_20261106/Documents-Final`: 12 verified document copies plus START_HERE.txt, no nested folders. Includes teacher/user/Lesson3 guides, current overview and support instructions. The old Documents folder is now absent. The verified installer ZIP is unchanged; companion documentation is newer. |
+| Editable technician installation guide | Owner edits preserved in the local current master | Documents-Final/ARES_Technician_Installation_Guide.docx and matching .pdf are exact copies of the owner's edited r2 files. Later passages are absent from the published generic technician PDF; an earlier edited PDF with additional content is retained under a REFERENCE filename. Tracked source and ZIP do not yet include these owner edits. |
+| Staff enrollment portal password | Reset procedure documented; operator outcome not reported | `docs/STAFF_ENROLLMENT_CODES.md` explains changing only staff_enrollment_password in the central website's monitor_upload/config.php. Source confirms no password expiry and a 15-minute inactive-session timeout. The agent did not change the live password; do not infer a confirmed reset from the supplied browser context. |
+| School registry reconciliation | Final local registry validated; website deployment unconfirmed | `Downloads/ARES_School_Registry_Merge_20261106/Final/schools.json`: 73 records, 71 active and 2 retained inactive; all 49 prior IDs preserved and 24 new schools added. Only the first Directory worksheet was used. Owner chose prior registry IDs and confirmed both uncertain identity matches. Final lookup/provenance/validation accompany the file. No private roster was committed or uploaded by the agent. |
 | Owner-approved admin pages and manual | Published and included in corrected ZIP | Supplied pages/manual remain unchanged. The teacher-app stage deploys the three together, backs up old files and preserves metadata/folder protection. No additional manual functional tests were run. |
 | Internet Lockdown v1.4.2 | Disconnected-safe command installation packaged; live check Pending | Original release/rule bytes retained. New wrapper installs commands without an adapter/terminal and asks for the actual student LAN at first use; restore works without a LAN selection. Active/boot lockdown preserved. |
-| Corrected v1.13 ZIP and technician overview | November 4 r2 verified and on Windows; fresh install Pending | [Release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): distinct `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Reviewed two-page overview/four-page technician guide and all copied documents match the ZIP. Earlier artifacts unchanged. |
+| Corrected v1.13 ZIP and technician overview | Historical November 4 r2 retained; November 6 is the latest candidate | [Historical release evidence](offline-installer/docs/evidence/2026-11-04-v1.13-simple-remote-release.md): `20261104-r2.zip`, 341 files, hash `fb10499c...`, 120 Ubuntu tests. Use the November 6 artifact identified below and Documents-Final for current companion guides; do not replace the retained ZIP bytes. |
 | tsavo3 pre-reload preservation | Known changes/build inputs verified off-server | Private configuration/web/database backup passed all 29 checks on host and Windows; original/normalized sources and sealed evidence archive also copied and hash-verified. Owner supplies Clonezilla base/library. Temporary SSH key removed. Owner subsequently reloaded the base and reported the standalone installation; backup restoration itself has not been tested. |
-| Simplified-r3 production artifact | Historical payload retained; corrected ZIP now available | Original `1f0993a8...` artifact remains unchanged and retained on Windows. Use the corrected `d3dc1c30...` ZIP for the next installation test; see the new release evidence. |
+| Simplified-r3 production artifact | Historical payload retained | Original `1f0993a8...` and the November 2 correction `d3dc1c30...` remain historical artifacts. The latest installation candidate is the dated November 6 ZIP identified below. |
 | Explicit root-checksum recovery | Retired by project-owner direction | Historical fixture evidence retained; the simplified source removes the alternate installer and its receipt/controller code. Replace an incomplete ZIP rather than bypassing its check. |
 | v1.13 native Linux fixture validation | Passed for tested commit; field gates Pending | Ubuntu 24.04.2 LTS x86_64, commit `350690f`: 24 shell checks, 87 unprivileged Python tests, three root corpus-status tests, portal/PHP fixtures and native POSIX symlinks passed; repository clean. External archive SHA-256 and four log hashes verified. See [native fixture evidence](offline-installer/docs/evidence/2026-10-31-v1.13-linux-fixture-validation.md). |
 | Complete recovery-through-PTY CI regression | Retired with recovery feature | Replaced by normal-workflow rejection and optional-support failure tests. Historical native evidence is unchanged. |
 | Canonical release metadata and sealed profiles | Implemented; live acceptance pending | `785825f` records release configuration, profile rendering and Android endpoint changes. Verified with `git show --stat 785825f`. |
 | Optional SSH / TigerVNC support | Browser SSH/direct saved-viewer passed manually; automated setup packaged in r2 | Reauthentication addressed stale registration. The owner connected directly with RealVNC after configuring Serve and connecting Windows Tailscale. r2 automates browser SSH/operator and persistent private forwarding; 120 native tests passed. Its own activation/clean-image and reboot/disable/re-enable remain Pending. |
-| Offline LAN/headless desktop | November 6 implementation, 124 Ubuntu tests and independent packaging passed | Source aa0011c, full dated ZIP 73efc019... (341 files), support update 4862a66c... (8 files), both in `Downloads/ARES_v1.13_Release_20261106`. LAN-first password-required port 5901 and `--lan-only` retain Tailscale state/forwarding. [Release evidence](offline-installer/docs/evidence/2026-11-06-v1.13-lan-desktop.md). Actual disconnected-LAN/headless/reboot and retained Tailscale viewer checks remain Pending. |
+| Offline LAN/headless desktop | November 6 software checks passed; owner reports the update worked | Source aa0011c, full ZIP 73efc019... (341 files), support update 4862a66c... (8 files), 124 Ubuntu tests. Owner subsequently said the process worked, without a new raw test transcript. Explicit disconnected-LAN/headless/reboot and retained Tailscale checks remain Pending. [Release evidence](offline-installer/docs/evidence/2026-11-06-v1.13-lan-desktop.md). |
 | Manual TigerVNC component field test | Successful - user-reported; packaged acceptance Pending | See [2026-10-30 remote-access evidence](offline-installer/docs/evidence/2026-10-30-v1.12-remote-access-field-test.md). Packaged display `:1`, Tailscale-path SSH/VNC, reboot/autostart, disable/re-enable and failure cleanup remain Pending. |
 | Compiled profile and guide validation | Software evidence recorded; live acceptance pending | `608cb7e` records compiled profile checks, guide rendering, alias audit, CI configuration and acceptance records. Verified with `git show --stat 608cb7e`; earlier software-test results are recorded in `offline-installer/docs/PROFILE_ACCEPTANCE.md`, not rerun by this documentation update. |
 | Obfuscated APK policy resources | Fixed and locally validated; live acceptance pending | `verify_apk()` discovers compiled policies beneath `res/` using structural strings, ignores unparseable resources, and rejects missing/wrong/mixed policies. 27 local tests passed on 2026-10-30; approved production APK and both debug profiles pass verification. |
@@ -64,6 +69,9 @@ Last updated: 2026-11-06
   including the Linux/root cases unavailable on Windows.
 - Two PDF guides and a new editable Word guide reviewed; all six packaged PDF
   page images match the reviewed pages. Documents and instructions copied off-server.
+- Current companion handoff: `Documents-Final` in this release directory, with
+  the owner-edited technician Word/PDF pair. The old Documents/r2 folders are now
+  absent. These later edits are not in the verified ZIP or tracked guide source.
 - [Release identity and limits](offline-installer/docs/evidence/2026-11-06-v1.13-lan-desktop.md).
 - No installer/update ran during packaging. Live offline/headless/reboot and
   remaining acceptance stay Pending. Earlier artifacts remain unchanged.
@@ -145,6 +153,19 @@ Last updated: 2026-11-06
 
 ## Known Issues / Lessons Learned
 
+- A spreadsheet's school-code column may renumber existing identities. Match
+  school names against the prior registry, preserve prior IDs, retain former
+  names as aliases and confirm ambiguous identities before finalizing. Keep
+  absent prior records inactive rather than reusing their IDs. Publish only
+  non-sensitive counts/paths in continuity notes; live rosters and mappings
+  remain outside Git. Use the final lookup for installations because many
+  original spreadsheet assignments can differ from the reconciled codes.
+- Nested guide updates caused version confusion. Use one Documents-Final folder
+  with an index, preserve owner-edited Word/PDF bytes, and label older edited
+  content as reference instead of discarding it. A newer published generic PDF
+  can still omit owner edits. Check content and retain those edits before
+  choosing the primary manual; local owner edits are not automatically synced
+  back into generated guides or sealed installer ZIPs.
 - Do not assume technicians arrive with the canonical school ID. Include the
   exact staff portal URL, name search, permanent ID lookup, installed-code check
   and distinction from each phone's one-time key in the source/PDF/Word guides.
@@ -244,6 +265,55 @@ Last updated: 2026-11-06
   paths explicitly; do not use broad staging for this update.
 
 ## Session Log
+
+### 2026-11-06 - Final registry and consolidated document handoff
+
+- Began with a clean tracked checkout at published `8b0aa5a`, matching the live
+  remote branch. No additional tracked implementation changes were present.
+- Read only the first Directory worksheet from the owner-supplied workbook.
+  It contains 71 school records with unique codes; the supplied registry has
+  49 records and is marked provisional. The worksheet reassigns many existing
+  codes. Owner explicitly chose to preserve registry IDs and use the worksheet
+  as the current school list, then confirmed both uncertain identity matches.
+- Final local registry: 73 total records, 71 active and 2 inactive historical
+  records. It retains all 49 prior IDs, matches 47 existing schools and adds 24.
+  Five additions required fresh unused codes. Forty-nine spreadsheet assignments
+  differ from the final lookup. Old names remain searchable aliases; original
+  workbook/registry bytes and root version/provisional metadata were preserved.
+- Final handoff is `C:/Users/MRKni/Downloads/ARES_School_Registry_Merge_20261106/Final`:
+  schools.json, original backup, searchable School_Code_Lookup.html, reconciliation
+  and validation records, deployment instructions and a file-copy verification
+  record. JSON/validator-contract, uniqueness, completeness, retained-ID/alias
+  checks and both identity confirmations passed. No live website upload was
+  performed by the agent; operator deployment has not been reported.
+- Registry data, workbook extracts, school mappings and one-off helpers stay in
+  Downloads or ignored tmp/output-reconciliation locations. No live roster,
+  phone state, credential or private school data is included in this commit.
+- Compared the guide variants: the owner-edited r2 Word file and its matching
+  PDF contain later passages absent from the generic published technician PDF.
+  The earlier edited technician PDF also contains content absent from that Word
+  master. Preserved both edited versions without modifying their bytes.
+- Consolidated `Downloads/ARES_v1.13_Release_20261106/Documents-Final`: 12 document
+  copies plus START_HERE.txt, all in one flat folder. The edited primary files
+  are ARES_Technician_Installation_Guide.docx/.pdf. The earlier PDF and published
+  source text are clearly labelled REFERENCE; other current guides/support
+  instructions are included. The release START_HERE points to Documents-Final.
+- Rechecked this update against disk: 13 files, zero nested directories, all
+  12 copies still matching the consolidation record; the old Documents folder
+  is absent. Re-read the final registry and confirmed all counts and zero pending
+  identity questions. Historical source paths in the copy record may now be gone;
+  use Documents-Final rather than trying to restore from the removed r2 folder.
+- This continuity update changes STATUS.md only. No installer build, server
+  command, password reset or new software test was required or performed.
+
+Still open:
+
+- Owner uploads the finalized registry to the configured central website path
+  and confirms portal/phone school search; do not infer deployment from local validation.
+- Owner's local manual edits need deliberate source reconciliation before a
+  future regenerated guide or installer can claim to contain them.
+- Explicit offline/headless/reboot and retained Tailscale checks, other remaining
+  field acceptance, and any unreported staff-password reset result remain Pending.
 
 ### 2026-11-06 - School-code lookup and portal password guidance
 
